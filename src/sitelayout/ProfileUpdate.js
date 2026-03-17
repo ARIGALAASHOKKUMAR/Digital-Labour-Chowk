@@ -30,21 +30,20 @@ import {
 import { new_dist, profileMenu } from "../commonFunction";
 
 // ==================== Basic Details Component ====================
+
 const BasicDetails = () => {
   const dispatch = useDispatch();
   const state = useSelector((state) => state.LoginReducer);
+
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  console.log("state", state.roleName);
-
+  // ✅ SIMPLE REQUIRED VALIDATION
   const validationSchema = Yup.object().shape({
-    fullName: Yup.string().required("Full name is required"),
-    mobileNumber: Yup.string()
-      .required("Mobile number is required")
-      .matches(/^[0-9]{10}$/, "Mobile number must be 10 digits"),
-    email: Yup.string().email("Invalid email format"),
-    dateOfBirth: Yup.string().nullable(),
-    gender: Yup.string().nullable(),
+    fullName: Yup.string().required("Required"),
+    mobileNumber: Yup.string().required("Required"),
+    email: Yup.string().required("Required"),
+    dateOfBirth: Yup.string().required("Required"),
+    gender: Yup.string().required("Required"),
   });
 
   const formik = useFormik({
@@ -58,40 +57,40 @@ const BasicDetails = () => {
       userType: "WORKER",
       employerTypeId: 1,
     },
-    validationSchema: validationSchema,
+    validationSchema,
     onSubmit: handleSubmit,
   });
 
-  async function handleSubmit(values) {
-    const payload = {
-      fullName: values.fullName,
-      email: values.email,
-      mobileNumber: values.mobileNumber,
-      userType: state.roleName,
-      gender: values.gender ? values.gender.toUpperCase() : "",
-      dateOfBirth: values.dateOfBirth,
-      profileImage: values.profileImage,
-      employerTypeId: values.employerTypeId,
-      stageName: "BASIC_INFO",
-    };
-
-    const response = await commonAPICall(
-      BASICPROFILE,
-      payload,
-      "POST",
-      dispatch,
-    );
-    console.log("natt", payload);
-
-    if (response?.status === 200) {
-      const updatedPayload = {
-        ...state,
-        isProfileUpdated: "Y",
-        officerName: values.officerName,
-        mobile: values.mobileNumber,
+  async function handleSubmit(values, { setSubmitting, resetForm }) {
+    try {
+      const payload = {
+        fullName: values.fullName,
+        email: values.email,
+        mobileNumber: values.mobileNumber,
+        userType: state.roleName,
+        gender: values.gender,
+        dateOfBirth: values.dateOfBirth,
+        profileImage: values.profileImage,
+        employerTypeId: values.employerTypeId,
+        stageName: "BASIC_INFO",
       };
-      // dispatch(login(updatedPayload));
-      formik.resetForm();
+
+      const response = await commonAPICall(
+        BASICPROFILE,
+        payload,
+        "POST",
+        dispatch,
+      );
+
+      console.log("payload", payload);
+
+      if (response?.status === 200) {
+        resetForm();
+      }
+    } catch (error) {
+      console.log("Error:", error);
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -117,8 +116,6 @@ const BasicDetails = () => {
               onChangeText={formik.handleChange("fullName")}
               onBlur={formik.handleBlur("fullName")}
               placeholder="Enter full name"
-              placeholderTextColor="#999"
-              editable={!formik.isSubmitting}
             />
             {formik.errors.fullName && formik.touched.fullName && (
               <Text style={styles.errorText}>{formik.errors.fullName}</Text>
@@ -127,24 +124,33 @@ const BasicDetails = () => {
 
           {/* Date of Birth */}
           <View style={styles.inputBlock}>
-            <Text style={styles.label}>Date of Birth</Text>
+            <Text style={styles.label}>
+              Date of Birth <Text style={styles.requiredStar}>*</Text>
+            </Text>
+
             <TouchableOpacity
-              style={styles.datePickerButton}
-              onPress={() => setShowDatePicker(true)}
-              disabled={formik.isSubmitting}
+              style={[
+                styles.datePickerButton,
+                formik.errors.dateOfBirth &&
+                  formik.touched.dateOfBirth &&
+                  styles.inputError,
+              ]}
+              onPress={() => {
+                formik.setFieldTouched("dateOfBirth", true);
+                setShowDatePicker(true);
+              }}
             >
-              <Text
-                style={[
-                  styles.datePickerButtonText,
-                  !formik.values.dateOfBirth && styles.placeholderText,
-                ]}
-              >
-                {formik.values.dateOfBirth
-                  ? formik.values.dateOfBirth
-                  : "Select Date of Birth"}
+              <Text>
+                {formik.values.dateOfBirth || "Select Date of Birth"}
               </Text>
-              <Ionicons name="calendar-outline" size={20} color="#3856b5" />
+              <Ionicons name="calendar-outline" size={20} />
             </TouchableOpacity>
+
+            {formik.errors.dateOfBirth && formik.touched.dateOfBirth && (
+              <Text style={styles.errorText}>
+                {formik.errors.dateOfBirth}
+              </Text>
+            )}
 
             {showDatePicker && (
               <DateTimePicker
@@ -158,14 +164,10 @@ const BasicDetails = () => {
                 onChange={(event, selectedDate) => {
                   setShowDatePicker(false);
                   if (selectedDate) {
-                    const year = selectedDate.getFullYear();
-                    const month = String(selectedDate.getMonth() + 1).padStart(
-                      2,
-                      "0",
-                    );
-                    const day = String(selectedDate.getDate()).padStart(2, "0");
-                    const formattedDate = `${year}-${month}-${day}`;
-                    formik.setFieldValue("dateOfBirth", formattedDate);
+                    const formatted = selectedDate
+                      .toISOString()
+                      .split("T")[0];
+                    formik.setFieldValue("dateOfBirth", formatted);
                   }
                 }}
               />
@@ -174,62 +176,39 @@ const BasicDetails = () => {
 
           {/* Gender */}
           <View style={styles.inputBlock}>
-            <Text style={styles.label}>Gender</Text>
+            <Text style={styles.label}>
+              Gender <Text style={styles.requiredStar}>*</Text>
+            </Text>
+
             <View style={styles.radioRow}>
-              <TouchableOpacity
-                style={styles.radioItem}
-                onPress={() => formik.setFieldValue("gender", "MALE")}
-                disabled={formik.isSubmitting}
-              >
-                <Ionicons
-                  name={
-                    formik.values.gender === "MALE"
-                      ? "radio-button-on"
-                      : "radio-button-off"
-                  }
-                  size={22}
-                  color="#3856b5"
-                />
-                <Text style={styles.radioText}>Male</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.radioItem}
-                onPress={() => formik.setFieldValue("gender", "FEMALE")}
-                disabled={formik.isSubmitting}
-              >
-                <Ionicons
-                  name={
-                    formik.values.gender === "FEMALE"
-                      ? "radio-button-on"
-                      : "radio-button-off"
-                  }
-                  size={22}
-                  color="#3856b5"
-                />
-                <Text style={styles.radioText}>Female</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.radioItem}
-                onPress={() => formik.setFieldValue("gender", "OTHER")}
-                disabled={formik.isSubmitting}
-              >
-                <Ionicons
-                  name={
-                    formik.values.gender === "OTHER"
-                      ? "radio-button-on"
-                      : "radio-button-off"
-                  }
-                  size={22}
-                  color="#3856b5"
-                />
-                <Text style={styles.radioText}>Other</Text>
-              </TouchableOpacity>
+              {["MALE", "FEMALE", "OTHER"].map((g) => (
+                <TouchableOpacity
+                  key={g}
+                  style={styles.radioItem}
+                  onPress={() => {
+                    formik.setFieldTouched("gender", true);
+                    formik.setFieldValue("gender", g);
+                  }}
+                >
+                  <Ionicons
+                    name={
+                      formik.values.gender === g
+                        ? "radio-button-on"
+                        : "radio-button-off"
+                    }
+                    size={22}
+                  />
+                  <Text>{g}</Text>
+                </TouchableOpacity>
+              ))}
             </View>
+
+            {formik.errors.gender && formik.touched.gender && (
+              <Text style={styles.errorText}>{formik.errors.gender}</Text>
+            )}
           </View>
 
-          {/* Mobile Number */}
+          {/* Mobile */}
           <View style={styles.inputBlock}>
             <Text style={styles.label}>
               Mobile Number <Text style={styles.requiredStar}>*</Text>
@@ -245,19 +224,21 @@ const BasicDetails = () => {
               onChangeText={formik.handleChange("mobileNumber")}
               onBlur={formik.handleBlur("mobileNumber")}
               keyboardType="phone-pad"
-              placeholder="Enter 10-digit mobile number"
-              placeholderTextColor="#999"
+              placeholder="Enter mobile number"
               maxLength={10}
-              editable={!formik.isSubmitting}
             />
             {formik.errors.mobileNumber && formik.touched.mobileNumber && (
-              <Text style={styles.errorText}>{formik.errors.mobileNumber}</Text>
+              <Text style={styles.errorText}>
+                {formik.errors.mobileNumber}
+              </Text>
             )}
           </View>
 
           {/* Email */}
           <View style={styles.inputBlock}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>
+              Email <Text style={styles.requiredStar}>*</Text>
+            </Text>
             <TextInput
               style={[
                 styles.input,
@@ -268,70 +249,18 @@ const BasicDetails = () => {
               value={formik.values.email}
               onChangeText={formik.handleChange("email")}
               onBlur={formik.handleBlur("email")}
-              placeholder="Enter email address"
-              placeholderTextColor="#999"
+              placeholder="Enter email"
               keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!formik.isSubmitting}
             />
             {formik.errors.email && formik.touched.email && (
               <Text style={styles.errorText}>{formik.errors.email}</Text>
             )}
           </View>
 
-          {/* Photo Upload */}
-          {/* <View style={styles.inputBlock}>
-            <Text style={styles.label}>Profile Photo</Text>
-            <TouchableOpacity
-              style={styles.photoButton}
-              onPress={async () => {
-                try {
-                  Alert.alert(
-                    "Upload Photo",
-                    "Choose photo source",
-                    [
-                      { text: "Camera", onPress: () => console.log("Camera selected") },
-                      { text: "Gallery", onPress: () => console.log("Gallery selected") },
-                      { text: "Cancel", style: "cancel" }
-                    ]
-                  );
-                } catch (error) {
-                  Alert.alert("Error", "Failed to pick image");
-                }
-              }}
-              disabled={formik.isSubmitting}
-            >
-              <Ionicons name="camera-outline" size={22} color="#3856b5" />
-              <Text style={styles.photoButtonText}>
-                {formik.values.profileImage ? "Change Photo" : "Upload Photo"}
-              </Text>
-            </TouchableOpacity>
-            
-            {formik.values.profileImage && (
-              <View style={styles.fileInfoContainer}>
-                <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
-                <Text style={styles.fileNameText} numberOfLines={1}>
-                  Selected: {formik.values.profileImage.split('/').pop()}
-                </Text>
-                <TouchableOpacity
-                  onPress={() => formik.setFieldValue("profileImage", null)}
-                  style={styles.removeFileButton}
-                >
-                  <Ionicons name="close-circle" size={18} color="#ff4444" />
-                </TouchableOpacity>
-              </View>
-            )}
-          </View> */}
-
-          {/* Submit Button */}
+          {/* Submit */}
           <TouchableOpacity
-            style={[
-              styles.submitButton,
-              formik.isSubmitting && styles.disabledButton,
-            ]}
+            style={styles.submitButton}
             onPress={formik.handleSubmit}
-            disabled={formik.isSubmitting}
           >
             <Text style={styles.submitButtonText}>
               {formik.isSubmitting ? "UPDATING..." : "UPDATE PROFILE"}
@@ -343,55 +272,63 @@ const BasicDetails = () => {
   );
 };
 
+
 // ==================== Identity Verification Component ====================
+
 const IdentityVerification = () => {
   const state = useSelector((state) => state.LoginReducer);
-
   const dispatch = useDispatch();
 
   const validationSchema = Yup.object().shape({
-    documentType: Yup.string().required("Document type is required"),
-    documentNumber: Yup.string().required("Document number is required"),
-    eShramCardNumber: Yup.string(),
+    documentType: Yup.string().required("Required"),
+    documentNumber: Yup.string().required("Required"),
+    documentFile: Yup.string().required("Required"),
+    eShramCardNumber: Yup.string().required("Required"),
   });
 
   const formik = useFormik({
     initialValues: {
       documentType: "",
       documentNumber: "",
-      documentFile: "test",
+      documentFile: "",
       eShramCardNumber: "",
     },
-    validationSchema: validationSchema,
+    validationSchema,
     onSubmit: handleSubmit,
   });
 
-  async function handleSubmit(values) {
-    const payload = {
-      userType: state.roleName,
-      stageName: "DOCUMENT_VERIFICATION",
-      documentType: values.documentType,
-      documentNumber: values.documentNumber,
-      uploadDocument: "base64encodedfile",
-      eShramCardNumber: values.eShramCardNumber,
-    };
-    const response = await commonAPICall(
-      BASICPROFILE,
-      payload,
-      "POST",
-      dispatch,
-    );
-    console.log("natt", payload);
-
-    if (response?.status === 200) {
-      const updatedPayload = {
-        ...state,
-        isProfileUpdated: "Y",
-        officerName: values.officerName,
-        mobile: values.mobileNumber,
+  async function handleSubmit(values, { resetForm, setSubmitting }) {
+    try {
+      const payload = {
+        userType: state.roleName,
+        stageName: "DOCUMENT_VERIFICATION",
+        documentType: values.documentType,
+        documentNumber: values.documentNumber,
+        uploadDocument: values.documentFile,
+        eShramCardNumber: values.eShramCardNumber,
       };
-      dispatch(login(updatedPayload));
-      formik.resetForm();
+
+      const response = await commonAPICall(
+        BASICPROFILE,
+        payload,
+        "POST",
+        dispatch,
+      );
+
+      console.log("payload", payload);
+
+      if (response?.status === 200) {
+        const updatedPayload = {
+          ...state,
+          isProfileUpdated: "Y",
+        };
+        dispatch(login(updatedPayload));
+        resetForm();
+      }
+    } catch (error) {
+      console.log("Error:", error);
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -401,13 +338,23 @@ const IdentityVerification = () => {
         <Text style={styles.sectionTitle}>Identity & Verification</Text>
 
         <View style={styles.inputBlock}>
-          <Text style={styles.label}>Document Type</Text>
-          <View style={styles.selectBox}>
+          <Text style={styles.label}>
+            Document Type <Text style={styles.requiredStar}>*</Text>
+          </Text>
+          <View
+            style={[
+              styles.selectBox,
+              formik.errors.documentType &&
+                formik.touched.documentType &&
+                styles.inputError,
+            ]}
+          >
             <Picker
               selectedValue={formik.values.documentType}
-              onValueChange={(itemValue) =>
-                formik.setFieldValue("documentType", itemValue)
-              }
+              onValueChange={(itemValue) => {
+                formik.setFieldTouched("documentType", true);
+                formik.setFieldValue("documentType", itemValue);
+              }}
             >
               <Picker.Item label="Select Document Type" value="" />
               <Picker.Item label="PAN" value="PAN" />
@@ -421,7 +368,9 @@ const IdentityVerification = () => {
         </View>
 
         <View style={styles.inputBlock}>
-          <Text style={styles.label}>Document Number</Text>
+          <Text style={styles.label}>
+            Document Number <Text style={styles.requiredStar}>*</Text>
+          </Text>
           <TextInput
             style={[
               styles.input,
@@ -433,6 +382,7 @@ const IdentityVerification = () => {
             onChangeText={formik.handleChange("documentNumber")}
             onBlur={formik.handleBlur("documentNumber")}
             placeholder="Enter Document Number"
+            editable={!formik.isSubmitting}
           />
           {formik.errors.documentNumber && formik.touched.documentNumber && (
             <Text style={styles.errorText}>{formik.errors.documentNumber}</Text>
@@ -440,44 +390,79 @@ const IdentityVerification = () => {
         </View>
 
         <View style={styles.inputBlock}>
-          <Text style={styles.label}>Upload Document</Text>
+          <Text style={styles.label}>
+            Upload Document <Text style={styles.requiredStar}>*</Text>
+          </Text>
           <TouchableOpacity
-            style={styles.uploadButton}
+            style={[
+              styles.uploadButton,
+              formik.errors.documentFile &&
+                formik.touched.documentFile &&
+                styles.inputError,
+            ]}
             onPress={() => {
-              alert("Open Document Picker");
+              formik.setFieldTouched("documentFile", true);
+
+              // replace this with actual picker
+              Alert.alert("Upload", "Open Document Picker");
+              formik.setFieldValue("documentFile", "test-document.pdf");
             }}
+            disabled={formik.isSubmitting}
           >
             <Text style={styles.uploadButtonText}>Upload Document</Text>
           </TouchableOpacity>
 
           {formik.values.documentFile ? (
-            <Text style={styles.fileNameText}>
-              {formik.values.documentFile.name}
-            </Text>
+            <Text style={styles.fileNameText}>{formik.values.documentFile}</Text>
           ) : null}
+
+          {formik.errors.documentFile && formik.touched.documentFile && (
+            <Text style={styles.errorText}>{formik.errors.documentFile}</Text>
+          )}
         </View>
 
         <View style={styles.inputBlock}>
-          <Text style={styles.label}>e-Shram Card Number</Text>
+          <Text style={styles.label}>
+            e-Shram Card Number <Text style={styles.requiredStar}>*</Text>
+          </Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              formik.errors.eShramCardNumber &&
+                formik.touched.eShramCardNumber &&
+                styles.inputError,
+            ]}
             value={formik.values.eShramCardNumber}
             onChangeText={formik.handleChange("eShramCardNumber")}
             onBlur={formik.handleBlur("eShramCardNumber")}
             placeholder="Enter e-Shram Card Number"
+            editable={!formik.isSubmitting}
           />
+          {formik.errors.eShramCardNumber &&
+            formik.touched.eShramCardNumber && (
+              <Text style={styles.errorText}>
+                {formik.errors.eShramCardNumber}
+              </Text>
+            )}
         </View>
 
         <TouchableOpacity
-          style={styles.submitButton}
+          style={[
+            styles.submitButton,
+            formik.isSubmitting && styles.disabledButton,
+          ]}
           onPress={formik.handleSubmit}
+          disabled={formik.isSubmitting}
         >
-          <Text style={styles.submitButtonText}>SAVE</Text>
+          <Text style={styles.submitButtonText}>
+            {formik.isSubmitting ? "SAVING..." : "SAVE"}
+          </Text>
         </TouchableOpacity>
       </View>
     </FormikProvider>
   );
 };
+
 
 // ==================== Location Information Component ====================
 
@@ -539,16 +524,14 @@ const LocationInformation = () => {
   };
 
   const validationSchema = Yup.object().shape({
-    district: Yup.string().required("District is required"),
-    mandal: Yup.string().required("Mandal is required"),
-    village: Yup.string().required("Village is required"),
-    surveyOrHouseNo: Yup.string().required("Door No. is required"),
-    landmark: Yup.string().required("Landmark is required"),
-    pinCode: Yup.string()
-      .required("Pin Code is required")
-      .matches(/^[0-9]{6}$/, "Pin Code must be 6 digits"),
-    latitude: Yup.string(),
-    longitude: Yup.string(),
+    district: Yup.string().required("Required"),
+    mandal: Yup.string().required("Required"),
+    village: Yup.string().required("Required"),
+    surveyOrHouseNo: Yup.string().required("Required"),
+    landmark: Yup.string().required("Required"),
+    pinCode: Yup.string().required("Required"),
+    latitude: Yup.string().required("Required"),
+    longitude: Yup.string().required("Required"),
   });
 
   const formik = useFormik({
@@ -566,28 +549,37 @@ const LocationInformation = () => {
     onSubmit: handleSubmit,
   });
 
-  async function handleSubmit(values) {
-    const payload = {
-      userType: state.roleName,
-      stageName: "LOCATION_ADDRESS",
-      plotOrHouseNumber: values.surveyOrHouseNo,
-      landmark: values.landmark,
-      pincode: values.pinCode,
-      latitude: values.latitude,
-      longitude: values.longitude,
-      district: values.district,
-      mandal: values.mandal,
-      village: values.village,
-    };
+  async function handleSubmit(values, { setSubmitting, resetForm }) {
+    try {
+      const payload = {
+        userType: state.roleName,
+        stageName: "LOCATION_ADDRESS",
+        plotOrHouseNumber: values.surveyOrHouseNo,
+        landmark: values.landmark,
+        pincode: values.pinCode,
+        latitude: values.latitude,
+        longitude: values.longitude,
+        district: values.district,
+        mandal: values.mandal,
+        village: values.village,
+      };
 
-    const response = await commonAPICall(
-      BASICPROFILE,
-      payload,
-      "POST",
-      dispatch,
-    );
+      const response = await commonAPICall(
+        BASICPROFILE,
+        payload,
+        "POST",
+        dispatch,
+      );
 
-    if (response?.status === 200) {
+      if (response?.status === 200) {
+        resetForm();
+        setMandal([]);
+        setVillage([]);
+      }
+    } catch (error) {
+      console.log("Error:", error);
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -629,11 +621,21 @@ const LocationInformation = () => {
         <Text style={styles.sectionTitle}>Location Information</Text>
 
         <View style={styles.inputBlock}>
-          <Text style={styles.label}>District</Text>
-          <View style={styles.selectBox}>
+          <Text style={styles.label}>
+            District <Text style={styles.requiredStar}>*</Text>
+          </Text>
+          <View
+            style={[
+              styles.selectBox,
+              formik.errors.district &&
+                formik.touched.district &&
+                styles.inputError,
+            ]}
+          >
             <Picker
               selectedValue={formik.values.district}
               onValueChange={(itemValue) => {
+                formik.setFieldTouched("district", true);
                 formik.setFieldValue("district", itemValue);
                 formik.setFieldValue("mandal", "");
                 formik.setFieldValue("village", "");
@@ -661,11 +663,21 @@ const LocationInformation = () => {
         </View>
 
         <View style={styles.inputBlock}>
-          <Text style={styles.label}>Mandal</Text>
-          <View style={styles.selectBox}>
+          <Text style={styles.label}>
+            Mandal <Text style={styles.requiredStar}>*</Text>
+          </Text>
+          <View
+            style={[
+              styles.selectBox,
+              formik.errors.mandal &&
+                formik.touched.mandal &&
+                styles.inputError,
+            ]}
+          >
             <Picker
               selectedValue={formik.values.mandal}
               onValueChange={(itemValue) => {
+                formik.setFieldTouched("mandal", true);
                 formik.setFieldValue("mandal", itemValue);
                 formik.setFieldValue("village", "");
                 setVillage([]);
@@ -692,13 +704,23 @@ const LocationInformation = () => {
         </View>
 
         <View style={styles.inputBlock}>
-          <Text style={styles.label}>Village</Text>
-          <View style={styles.selectBox}>
+          <Text style={styles.label}>
+            Village <Text style={styles.requiredStar}>*</Text>
+          </Text>
+          <View
+            style={[
+              styles.selectBox,
+              formik.errors.village &&
+                formik.touched.village &&
+                styles.inputError,
+            ]}
+          >
             <Picker
               selectedValue={formik.values.village}
-              onValueChange={(itemValue) =>
-                formik.setFieldValue("village", itemValue)
-              }
+              onValueChange={(itemValue) => {
+                formik.setFieldTouched("village", true);
+                formik.setFieldValue("village", itemValue);
+              }}
               enabled={!!formik.values.mandal}
             >
               <Picker.Item label="---Select Village---" value="" />
@@ -717,7 +739,9 @@ const LocationInformation = () => {
         </View>
 
         <View style={styles.inputBlock}>
-          <Text style={styles.label}>Door No.</Text>
+          <Text style={styles.label}>
+            Door No. <Text style={styles.requiredStar}>*</Text>
+          </Text>
           <TextInput
             style={[
               styles.input,
@@ -739,7 +763,9 @@ const LocationInformation = () => {
         </View>
 
         <View style={styles.inputBlock}>
-          <Text style={styles.label}>Landmark</Text>
+          <Text style={styles.label}>
+            Landmark <Text style={styles.requiredStar}>*</Text>
+          </Text>
           <TextInput
             style={[
               styles.input,
@@ -759,7 +785,9 @@ const LocationInformation = () => {
         </View>
 
         <View style={styles.inputBlock}>
-          <Text style={styles.label}>Pin Code</Text>
+          <Text style={styles.label}>
+            Pin Code <Text style={styles.requiredStar}>*</Text>
+          </Text>
           <TextInput
             style={[
               styles.input,
@@ -780,39 +808,65 @@ const LocationInformation = () => {
         </View>
 
         <View style={styles.inputBlock}>
-          <Text style={styles.label}>Latitude</Text>
+          <Text style={styles.label}>
+            Latitude <Text style={styles.requiredStar}>*</Text>
+          </Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              formik.errors.latitude &&
+                formik.touched.latitude &&
+                styles.inputError,
+            ]}
             value={formik.values.latitude}
             onChangeText={formik.handleChange("latitude")}
+            onBlur={formik.handleBlur("latitude")}
             placeholder="Latitude"
           />
+          {formik.errors.latitude && formik.touched.latitude && (
+            <Text style={styles.errorText}>{formik.errors.latitude}</Text>
+          )}
         </View>
 
         <View style={styles.inputBlock}>
-          <Text style={styles.label}>Longitude</Text>
+          <Text style={styles.label}>
+            Longitude <Text style={styles.requiredStar}>*</Text>
+          </Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              formik.errors.longitude &&
+                formik.touched.longitude &&
+                styles.inputError,
+            ]}
             value={formik.values.longitude}
             onChangeText={formik.handleChange("longitude")}
+            onBlur={formik.handleBlur("longitude")}
             placeholder="Longitude"
           />
+          {formik.errors.longitude && formik.touched.longitude && (
+            <Text style={styles.errorText}>{formik.errors.longitude}</Text>
+          )}
         </View>
 
-        {/* <TouchableOpacity style={styles.locationButton} onPress={getLocation}>
-          <Text style={styles.locationButtonText}>Get Current Location</Text>
-        </TouchableOpacity> */}
-
         <TouchableOpacity
-          style={styles.submitButton}
+          style={[
+            styles.submitButton,
+            formik.isSubmitting && styles.disabledButton,
+          ]}
           onPress={formik.handleSubmit}
+          disabled={formik.isSubmitting}
         >
-          <Text style={styles.submitButtonText}>SAVE</Text>
+          <Text style={styles.submitButtonText}>
+            {formik.isSubmitting ? "SAVING..." : "SAVE"}
+          </Text>
         </TouchableOpacity>
       </View>
     </FormikProvider>
   );
 };
+
+
 
 const SkillDetails = () => {
   const state = useSelector((state) => state.LoginReducer);
@@ -822,18 +876,16 @@ const SkillDetails = () => {
   const [showSkillsDropdown, setShowSkillsDropdown] = useState(false);
 
   const validationSchema = Yup.object().shape({
-    skillIds: Yup.array()
-      .min(1, "Please select at least one skill")
-      .required("Skill is required"),
-    experience: Yup.string(),
-    preferredWorkType: Yup.string(),
-    dailyRate: Yup.string(),
-    availabilityForWork: Yup.string(),
+    skillIds: Yup.array().min(1, "Required").required("Required"),
+    experience: Yup.string().required("Required"),
+    preferredWorkType: Yup.string().required("Required"),
+    dailyRate: Yup.string().required("Required"),
+    availabilityForWork: Yup.string().required("Required"),
   });
 
   const formik = useFormik({
     initialValues: {
-      skillIds: [], // example: [1, 3, 5]
+      skillIds: [],
       experience: "",
       preferredWorkType: "",
       dailyRate: "",
@@ -850,9 +902,6 @@ const SkillDetails = () => {
       if (response?.status === 200) {
         const skillData = response?.data?.Skill_Info_Details || [];
         setSkillsList(skillData);
-
-        // if you want preselected skills from API or edit mode, set like this:
-        // formik.setFieldValue("skillIds", [1, 3, 5]);
       }
     } catch (error) {
       console.log("Error fetching skills:", error);
@@ -863,37 +912,45 @@ const SkillDetails = () => {
     getSkillsData();
   }, []);
 
-  async function handleSubmit(values) {
-    const payload = {
-      userType: state.roleName,
-      stageName: "SKILL_INFO",
-      skillIds: values.skillIds, // selected ids
-      experienceYears: values.experience ? Number(values.experience) : 0,
-      preferredWorkType: values.preferredWorkType,
-      dailyRate: values.dailyRate ? Number(values.dailyRate) : 0,
-      workAvailability: values.availabilityForWork,
-    };
-
-    const response = await commonAPICall(
-      BASICPROFILE,
-      payload,
-      "POST",
-      dispatch,
-    );
-
-    console.log("payload", payload);
-
-    if (response?.status === 200) {
-      const updatedPayload = {
-        ...state,
-        isProfileUpdated: "Y",
+  async function handleSubmit(values, { resetForm, setSubmitting }) {
+    try {
+      const payload = {
+        userType: state.roleName,
+        stageName: "SKILL_INFO",
+        skillIds: values.skillIds,
+        experienceYears: values.experience ? Number(values.experience) : 0,
+        preferredWorkType: values.preferredWorkType,
+        dailyRate: values.dailyRate ? Number(values.dailyRate) : 0,
+        workAvailability: values.availabilityForWork,
       };
-      dispatch(login(updatedPayload));
-      formik.resetForm();
+
+      const response = await commonAPICall(
+        BASICPROFILE,
+        payload,
+        "POST",
+        dispatch,
+      );
+
+      console.log("payload", payload);
+
+      if (response?.status === 200) {
+        const updatedPayload = {
+          ...state,
+          isProfileUpdated: "Y",
+        };
+        dispatch(login(updatedPayload));
+        resetForm();
+        setShowSkillsDropdown(false);
+      }
+    } catch (error) {
+      console.log("Error:", error);
+    } finally {
+      setSubmitting(false);
     }
   }
 
   const toggleSkill = (skillId) => {
+    formik.setFieldTouched("skillIds", true);
     const selectedIds = formik.values.skillIds || [];
 
     if (selectedIds.includes(skillId)) {
@@ -917,13 +974,23 @@ const SkillDetails = () => {
         <Text style={styles.sectionTitle}>Skill Details</Text>
 
         <View style={styles.inputBlock}>
-          <Text style={styles.label}>Select Skills</Text>
+          <Text style={styles.label}>
+            Select Skills <Text style={styles.requiredStar}>*</Text>
+          </Text>
 
           <TouchableOpacity
-            style={styles.selectBox}
-            onPress={() => setShowSkillsDropdown(!showSkillsDropdown)}
+            style={[
+              styles.selectBox,
+              formik.touched.skillIds &&
+                formik.errors.skillIds &&
+                styles.inputError,
+            ]}
+            onPress={() => {
+              formik.setFieldTouched("skillIds", true);
+              setShowSkillsDropdown(!showSkillsDropdown);
+            }}
           >
-            <Text style={{ color: selectedSkillNames ? "#000" : "#999" }}>
+            <Text style={{ color: selectedSkillNames ? "#000" : "#999", flex: 1 }}>
               {selectedSkillNames || "Select Skills"}
             </Text>
             <Ionicons
@@ -962,9 +1029,16 @@ const SkillDetails = () => {
         </View>
 
         <View style={styles.inputBlock}>
-          <Text style={styles.label}>Experience</Text>
+          <Text style={styles.label}>
+            Experience <Text style={styles.requiredStar}>*</Text>
+          </Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              formik.errors.experience &&
+                formik.touched.experience &&
+                styles.inputError,
+            ]}
             value={formik.values.experience}
             onChangeText={formik.handleChange("experience")}
             onBlur={formik.handleBlur("experience")}
@@ -972,16 +1046,22 @@ const SkillDetails = () => {
             keyboardType="numeric"
             maxLength={2}
           />
+          {formik.errors.experience && formik.touched.experience && (
+            <Text style={styles.errorText}>{formik.errors.experience}</Text>
+          )}
         </View>
 
         <View style={styles.inputBlock}>
-          <Text style={styles.label}>Preferred Work Type</Text>
+          <Text style={styles.label}>
+            Preferred Work Type <Text style={styles.requiredStar}>*</Text>
+          </Text>
           <View style={styles.radioColumn}>
             <TouchableOpacity
               style={styles.radioItem}
-              onPress={() =>
-                formik.setFieldValue("preferredWorkType", "daily_wage")
-              }
+              onPress={() => {
+                formik.setFieldTouched("preferredWorkType", true);
+                formik.setFieldValue("preferredWorkType", "daily_wage");
+              }}
             >
               <Ionicons
                 name={
@@ -997,9 +1077,10 @@ const SkillDetails = () => {
 
             <TouchableOpacity
               style={styles.radioItem}
-              onPress={() =>
-                formik.setFieldValue("preferredWorkType", "contract")
-              }
+              onPress={() => {
+                formik.setFieldTouched("preferredWorkType", true);
+                formik.setFieldValue("preferredWorkType", "contract");
+              }}
             >
               <Ionicons
                 name={
@@ -1013,12 +1094,25 @@ const SkillDetails = () => {
               <Text style={styles.radioText}>Contract</Text>
             </TouchableOpacity>
           </View>
+          {formik.errors.preferredWorkType &&
+            formik.touched.preferredWorkType && (
+              <Text style={styles.errorText}>
+                {formik.errors.preferredWorkType}
+              </Text>
+            )}
         </View>
 
         <View style={styles.inputBlock}>
-          <Text style={styles.label}>Daily Rate</Text>
+          <Text style={styles.label}>
+            Daily Rate <Text style={styles.requiredStar}>*</Text>
+          </Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              formik.errors.dailyRate &&
+                formik.touched.dailyRate &&
+                styles.inputError,
+            ]}
             value={formik.values.dailyRate}
             onChangeText={formik.handleChange("dailyRate")}
             onBlur={formik.handleBlur("dailyRate")}
@@ -1026,16 +1120,30 @@ const SkillDetails = () => {
             keyboardType="numeric"
             maxLength={6}
           />
+          {formik.errors.dailyRate && formik.touched.dailyRate && (
+            <Text style={styles.errorText}>{formik.errors.dailyRate}</Text>
+          )}
         </View>
 
         <View style={styles.inputBlock}>
-          <Text style={styles.label}>Select Availability for Work</Text>
-          <View style={styles.selectBox}>
+          <Text style={styles.label}>
+            Select Availability for Work{" "}
+            <Text style={styles.requiredStar}>*</Text>
+          </Text>
+          <View
+            style={[
+              styles.selectBox,
+              formik.errors.availabilityForWork &&
+                formik.touched.availabilityForWork &&
+                styles.inputError,
+            ]}
+          >
             <Picker
               selectedValue={formik.values.availabilityForWork}
-              onValueChange={(itemValue) =>
-                formik.setFieldValue("availabilityForWork", itemValue)
-              }
+              onValueChange={(itemValue) => {
+                formik.setFieldTouched("availabilityForWork", true);
+                formik.setFieldValue("availabilityForWork", itemValue);
+              }}
             >
               <Picker.Item label="Select Availability" value="" />
               <Picker.Item label="Available Immediately" value="immediate" />
@@ -1044,18 +1152,31 @@ const SkillDetails = () => {
               <Picker.Item label="Not Available Now" value="not_available" />
             </Picker>
           </View>
+          {formik.errors.availabilityForWork &&
+            formik.touched.availabilityForWork && (
+              <Text style={styles.errorText}>
+                {formik.errors.availabilityForWork}
+              </Text>
+            )}
         </View>
 
         <TouchableOpacity
-          style={styles.submitButton}
+          style={[
+            styles.submitButton,
+            formik.isSubmitting && styles.disabledButton,
+          ]}
           onPress={formik.handleSubmit}
+          disabled={formik.isSubmitting}
         >
-          <Text style={styles.submitButtonText}>SAVE</Text>
+          <Text style={styles.submitButtonText}>
+            {formik.isSubmitting ? "SAVING..." : "SAVE"}
+          </Text>
         </TouchableOpacity>
       </View>
     </FormikProvider>
   );
 };
+
 
 const WorkExperience = () => {
   const state = useSelector((state) => state.LoginReducer);
@@ -1102,20 +1223,20 @@ const WorkExperience = () => {
   const validationSchema = Yup.object().shape({
     experiences: Yup.array().of(
       Yup.object().shape({
-        employerName: Yup.string().required("Employer name is required"),
-        projectName: Yup.string(),
-        workPlace: Yup.string().required("Work place is required"),
-        workType: Yup.string(),
-        skillId: Yup.string().required("Skill is required"),
-        taskDesc: Yup.string(),
-        startDate: Yup.string().required("Start date is required"),
-        endDate: Yup.string().required("End date is required"),
-        daysWorked: Yup.string(),
-        dailyWage: Yup.string(),
-        totalAmount: Yup.string(),
-        paymentStatus: Yup.string(),
-        remarks: Yup.string(),
-        rating: Yup.string(),
+        employerName: Yup.string().required("Required"),
+        projectName: Yup.string().required("Required"),
+        workPlace: Yup.string().required("Required"),
+        workType: Yup.string().required("Required"),
+        skillId: Yup.string().required("Required"),
+        taskDesc: Yup.string().required("Required"),
+        startDate: Yup.string().required("Required"),
+        endDate: Yup.string().required("Required"),
+        daysWorked: Yup.string().required("Required"),
+        dailyWage: Yup.string().required("Required"),
+        totalAmount: Yup.string().required("Required"),
+        paymentStatus: Yup.string().required("Required"),
+        remarks: Yup.string().required("Required"),
+        rating: Yup.string().required("Required"),
       }),
     ),
   });
@@ -1153,7 +1274,7 @@ const WorkExperience = () => {
     return new Date(Number(yyyy), Number(mm) - 1, Number(dd));
   };
 
-  async function handleSubmit(values) {
+  async function handleSubmit(values, { resetForm, setSubmitting }) {
     const payload = {
       userType: state.roleName || "",
       stageName: "WORK_HISTORY",
@@ -1191,12 +1312,14 @@ const WorkExperience = () => {
           isProfileUpdated: "Y",
         };
         dispatch(login(updatedPayload));
-        formik.resetForm();
+        resetForm();
       } else {
         console.log("API failed =>", response);
       }
     } catch (error) {
       console.log("Submit Error =>", error);
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -1230,6 +1353,7 @@ const WorkExperience = () => {
 
   const openDatePicker = (field, index) => {
     const currentValue = formik.values.experiences[index]?.[field];
+    formik.setFieldTouched(`experiences[${index}].${field}`, true);
     setCurrentField(field);
     setCurrentIndex(index);
     setPickerDate(parseDisplayDateToDate(currentValue));
@@ -1281,7 +1405,7 @@ const WorkExperience = () => {
           );
 
           if (end < start) {
-            alert("End date cannot be before Start date");
+            Alert.alert("Invalid Date", "End date cannot be before Start date");
             return;
           }
         }
@@ -1313,7 +1437,9 @@ const WorkExperience = () => {
             </View>
 
             <View style={styles.inputBlock}>
-              <Text style={styles.label}>Employer Name</Text>
+              <Text style={styles.label}>
+                Employer Name <Text style={styles.requiredStar}>*</Text>
+              </Text>
               <TextInput
                 style={[
                   styles.input,
@@ -1337,9 +1463,16 @@ const WorkExperience = () => {
             </View>
 
             <View style={styles.inputBlock}>
-              <Text style={styles.label}>Project Name</Text>
+              <Text style={styles.label}>
+                Project Name <Text style={styles.requiredStar}>*</Text>
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  formik.touched.experiences?.[index]?.projectName &&
+                    formik.errors.experiences?.[index]?.projectName &&
+                    styles.inputError,
+                ]}
                 value={item.projectName}
                 onChangeText={formik.handleChange(
                   `experiences[${index}].projectName`,
@@ -1347,10 +1480,18 @@ const WorkExperience = () => {
                 onBlur={formik.handleBlur(`experiences[${index}].projectName`)}
                 placeholder="Enter Project Name"
               />
+              {formik.touched.experiences?.[index]?.projectName &&
+                formik.errors.experiences?.[index]?.projectName && (
+                  <Text style={styles.errorText}>
+                    {formik.errors.experiences[index].projectName}
+                  </Text>
+                )}
             </View>
 
             <View style={styles.inputBlock}>
-              <Text style={styles.label}>Work Place</Text>
+              <Text style={styles.label}>
+                Work Place <Text style={styles.requiredStar}>*</Text>
+              </Text>
               <TextInput
                 style={[
                   styles.input,
@@ -1374,9 +1515,16 @@ const WorkExperience = () => {
             </View>
 
             <View style={styles.inputBlock}>
-              <Text style={styles.label}>Work Type</Text>
+              <Text style={styles.label}>
+                Work Type <Text style={styles.requiredStar}>*</Text>
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  formik.touched.experiences?.[index]?.workType &&
+                    formik.errors.experiences?.[index]?.workType &&
+                    styles.inputError,
+                ]}
                 value={item.workType}
                 onChangeText={formik.handleChange(
                   `experiences[${index}].workType`,
@@ -1384,19 +1532,35 @@ const WorkExperience = () => {
                 onBlur={formik.handleBlur(`experiences[${index}].workType`)}
                 placeholder="Enter Work Type"
               />
+              {formik.touched.experiences?.[index]?.workType &&
+                formik.errors.experiences?.[index]?.workType && (
+                  <Text style={styles.errorText}>
+                    {formik.errors.experiences[index].workType}
+                  </Text>
+                )}
             </View>
 
             <View style={styles.inputBlock}>
-              <Text style={styles.label}>Skill</Text>
-              <View style={styles.selectBox}>
+              <Text style={styles.label}>
+                Skill <Text style={styles.requiredStar}>*</Text>
+              </Text>
+              <View
+                style={[
+                  styles.selectBox,
+                  formik.touched.experiences?.[index]?.skillId &&
+                    formik.errors.experiences?.[index]?.skillId &&
+                    styles.inputError,
+                ]}
+              >
                 <Picker
                   selectedValue={item.skillId}
-                  onValueChange={(itemValue) =>
+                  onValueChange={(itemValue) => {
+                    formik.setFieldTouched(`experiences[${index}].skillId`, true);
                     formik.setFieldValue(
                       `experiences[${index}].skillId`,
                       itemValue,
-                    )
-                  }
+                    );
+                  }}
                 >
                   <Picker.Item label="Select Skill" value="" />
                   {skillsList.map((skill) => (
@@ -1417,9 +1581,17 @@ const WorkExperience = () => {
             </View>
 
             <View style={styles.inputBlock}>
-              <Text style={styles.label}>Task Description</Text>
+              <Text style={styles.label}>
+                Task Description <Text style={styles.requiredStar}>*</Text>
+              </Text>
               <TextInput
-                style={[styles.input, styles.textArea]}
+                style={[
+                  styles.input,
+                  styles.textArea,
+                  formik.touched.experiences?.[index]?.taskDesc &&
+                    formik.errors.experiences?.[index]?.taskDesc &&
+                    styles.inputError,
+                ]}
                 value={item.taskDesc}
                 onChangeText={formik.handleChange(
                   `experiences[${index}].taskDesc`,
@@ -1430,12 +1602,25 @@ const WorkExperience = () => {
                 numberOfLines={4}
                 textAlignVertical="top"
               />
+              {formik.touched.experiences?.[index]?.taskDesc &&
+                formik.errors.experiences?.[index]?.taskDesc && (
+                  <Text style={styles.errorText}>
+                    {formik.errors.experiences[index].taskDesc}
+                  </Text>
+                )}
             </View>
 
             <View style={styles.inputBlock}>
-              <Text style={styles.label}>Start Date</Text>
+              <Text style={styles.label}>
+                Start Date <Text style={styles.requiredStar}>*</Text>
+              </Text>
               <TouchableOpacity
-                style={styles.input}
+                style={[
+                  styles.input,
+                  formik.touched.experiences?.[index]?.startDate &&
+                    formik.errors.experiences?.[index]?.startDate &&
+                    styles.inputError,
+                ]}
                 onPress={() => openDatePicker("startDate", index)}
               >
                 <Text style={{ color: item.startDate ? "#000" : "#999" }}>
@@ -1451,9 +1636,16 @@ const WorkExperience = () => {
             </View>
 
             <View style={styles.inputBlock}>
-              <Text style={styles.label}>End Date</Text>
+              <Text style={styles.label}>
+                End Date <Text style={styles.requiredStar}>*</Text>
+              </Text>
               <TouchableOpacity
-                style={styles.input}
+                style={[
+                  styles.input,
+                  formik.touched.experiences?.[index]?.endDate &&
+                    formik.errors.experiences?.[index]?.endDate &&
+                    styles.inputError,
+                ]}
                 onPress={() => openDatePicker("endDate", index)}
               >
                 <Text style={{ color: item.endDate ? "#000" : "#999" }}>
@@ -1469,9 +1661,16 @@ const WorkExperience = () => {
             </View>
 
             <View style={styles.inputBlock}>
-              <Text style={styles.label}>Days Worked</Text>
+              <Text style={styles.label}>
+                Days Worked <Text style={styles.requiredStar}>*</Text>
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  formik.touched.experiences?.[index]?.daysWorked &&
+                    formik.errors.experiences?.[index]?.daysWorked &&
+                    styles.inputError,
+                ]}
                 value={item.daysWorked}
                 onChangeText={(text) => {
                   formik.setFieldValue(
@@ -1480,46 +1679,94 @@ const WorkExperience = () => {
                   );
                   calculateTotalAmount(index, text, item.dailyWage);
                 }}
+                onBlur={formik.handleBlur(`experiences[${index}].daysWorked`)}
                 keyboardType="numeric"
                 placeholder="Enter Days Worked"
               />
+              {formik.touched.experiences?.[index]?.daysWorked &&
+                formik.errors.experiences?.[index]?.daysWorked && (
+                  <Text style={styles.errorText}>
+                    {formik.errors.experiences[index].daysWorked}
+                  </Text>
+                )}
             </View>
 
             <View style={styles.inputBlock}>
-              <Text style={styles.label}>Daily Wage</Text>
+              <Text style={styles.label}>
+                Daily Wage <Text style={styles.requiredStar}>*</Text>
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  formik.touched.experiences?.[index]?.dailyWage &&
+                    formik.errors.experiences?.[index]?.dailyWage &&
+                    styles.inputError,
+                ]}
                 value={item.dailyWage}
                 onChangeText={(text) => {
                   formik.setFieldValue(`experiences[${index}].dailyWage`, text);
                   calculateTotalAmount(index, item.daysWorked, text);
                 }}
+                onBlur={formik.handleBlur(`experiences[${index}].dailyWage`)}
                 keyboardType="numeric"
                 placeholder="Enter Daily Wage"
               />
+              {formik.touched.experiences?.[index]?.dailyWage &&
+                formik.errors.experiences?.[index]?.dailyWage && (
+                  <Text style={styles.errorText}>
+                    {formik.errors.experiences[index].dailyWage}
+                  </Text>
+                )}
             </View>
 
             <View style={styles.inputBlock}>
-              <Text style={styles.label}>Total Amount</Text>
+              <Text style={styles.label}>
+                Total Amount <Text style={styles.requiredStar}>*</Text>
+              </Text>
               <TextInput
-                style={[styles.input, styles.readOnlyInput]}
+                style={[
+                  styles.input,
+                  styles.readOnlyInput,
+                  formik.touched.experiences?.[index]?.totalAmount &&
+                    formik.errors.experiences?.[index]?.totalAmount &&
+                    styles.inputError,
+                ]}
                 value={item.totalAmount}
                 editable={false}
                 placeholder="Total Amount"
               />
+              {formik.touched.experiences?.[index]?.totalAmount &&
+                formik.errors.experiences?.[index]?.totalAmount && (
+                  <Text style={styles.errorText}>
+                    {formik.errors.experiences[index].totalAmount}
+                  </Text>
+                )}
             </View>
 
             <View style={styles.inputBlock}>
-              <Text style={styles.label}>Payment Status</Text>
-              <View style={styles.selectBox}>
+              <Text style={styles.label}>
+                Payment Status <Text style={styles.requiredStar}>*</Text>
+              </Text>
+              <View
+                style={[
+                  styles.selectBox,
+                  formik.touched.experiences?.[index]?.paymentStatus &&
+                    formik.errors.experiences?.[index]?.paymentStatus &&
+                    styles.inputError,
+                ]}
+              >
                 <Picker
                   selectedValue={item.paymentStatus}
-                  onValueChange={(itemValue) =>
+                  onValueChange={(itemValue) => {
+                    formik.setFieldTouched(
+                      `experiences[${index}].paymentStatus`,
+                      true,
+                    );
                     formik.setFieldValue(
                       `experiences[${index}].paymentStatus`,
                       itemValue,
-                    )
-                  }
+                    );
+                  }}
                 >
                   <Picker.Item label="Select Payment Status" value="" />
                   <Picker.Item label="Paid" value="paid" />
@@ -1527,12 +1774,26 @@ const WorkExperience = () => {
                   <Picker.Item label="Partial" value="partial" />
                 </Picker>
               </View>
+              {formik.touched.experiences?.[index]?.paymentStatus &&
+                formik.errors.experiences?.[index]?.paymentStatus && (
+                  <Text style={styles.errorText}>
+                    {formik.errors.experiences[index].paymentStatus}
+                  </Text>
+                )}
             </View>
 
             <View style={styles.inputBlock}>
-              <Text style={styles.label}>Remarks</Text>
+              <Text style={styles.label}>
+                Remarks <Text style={styles.requiredStar}>*</Text>
+              </Text>
               <TextInput
-                style={[styles.input, styles.textArea]}
+                style={[
+                  styles.input,
+                  styles.textArea,
+                  formik.touched.experiences?.[index]?.remarks &&
+                    formik.errors.experiences?.[index]?.remarks &&
+                    styles.inputError,
+                ]}
                 value={item.remarks}
                 onChangeText={formik.handleChange(
                   `experiences[${index}].remarks`,
@@ -1543,19 +1804,35 @@ const WorkExperience = () => {
                 numberOfLines={3}
                 textAlignVertical="top"
               />
+              {formik.touched.experiences?.[index]?.remarks &&
+                formik.errors.experiences?.[index]?.remarks && (
+                  <Text style={styles.errorText}>
+                    {formik.errors.experiences[index].remarks}
+                  </Text>
+                )}
             </View>
 
             <View style={styles.inputBlock}>
-              <Text style={styles.label}>Rating</Text>
-              <View style={styles.selectBox}>
+              <Text style={styles.label}>
+                Rating <Text style={styles.requiredStar}>*</Text>
+              </Text>
+              <View
+                style={[
+                  styles.selectBox,
+                  formik.touched.experiences?.[index]?.rating &&
+                    formik.errors.experiences?.[index]?.rating &&
+                    styles.inputError,
+                ]}
+              >
                 <Picker
                   selectedValue={item.rating}
-                  onValueChange={(itemValue) =>
+                  onValueChange={(itemValue) => {
+                    formik.setFieldTouched(`experiences[${index}].rating`, true);
                     formik.setFieldValue(
                       `experiences[${index}].rating`,
                       itemValue,
-                    )
-                  }
+                    );
+                  }}
                 >
                   <Picker.Item label="Select Rating" value="" />
                   <Picker.Item label="1" value="1" />
@@ -1565,6 +1842,12 @@ const WorkExperience = () => {
                   <Picker.Item label="5" value="5" />
                 </Picker>
               </View>
+              {formik.touched.experiences?.[index]?.rating &&
+                formik.errors.experiences?.[index]?.rating && (
+                  <Text style={styles.errorText}>
+                    {formik.errors.experiences[index].rating}
+                  </Text>
+                )}
             </View>
           </View>
         ))}
@@ -1575,10 +1858,16 @@ const WorkExperience = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.submitButton}
+          style={[
+            styles.submitButton,
+            formik.isSubmitting && styles.disabledButton,
+          ]}
           onPress={formik.handleSubmit}
+          disabled={formik.isSubmitting}
         >
-          <Text style={styles.submitButtonText}>SAVE</Text>
+          <Text style={styles.submitButtonText}>
+            {formik.isSubmitting ? "SAVING..." : "SAVE"}
+          </Text>
         </TouchableOpacity>
 
         {showDatePicker && (
@@ -1595,7 +1884,9 @@ const WorkExperience = () => {
   );
 };
 
+
 // ==================== Education Component ====================
+
 
 const Education = () => {
   const state = useSelector((state) => state.LoginReducer);
@@ -1605,24 +1896,20 @@ const Education = () => {
     educationLevel: "",
     institutionName: "",
     passingYear: "",
-    certificateFile: null,
+    certificateFile: "",
   };
 
   const validationSchema = Yup.object().shape({
     workerEducationList: Yup.array()
       .of(
         Yup.object().shape({
-          educationLevel: Yup.string().required("Education level is required"),
-          institutionName: Yup.string().required(
-            "Institution name is required",
-          ),
-          passingYear: Yup.string()
-            .required("Passing year is required")
-            .matches(/^\d{4}$/, "Enter valid year (YYYY)"),
-          // certificateFile: Yup.mixed().required("Certificate is required"),
+          educationLevel: Yup.string().required("Required"),
+          institutionName: Yup.string().required("Required"),
+          passingYear: Yup.string().required("Required"),
+          certificateFile: Yup.string().required("Required"),
         }),
       )
-      .min(1, "At least one education record is required"),
+      .min(1, "Required"),
   });
 
   const formik = useFormik({
@@ -1633,34 +1920,40 @@ const Education = () => {
     onSubmit: handleSubmit,
   });
 
-  async function handleSubmit(values) {
-    const payload = {
-      userType: state.roleName,
-      stageName: "EDUCATION",
-      workerEducationList: values.workerEducationList.map((item) => ({
-        educationLevel: item.educationLevel,
-        institutionName: item.institutionName,
-        passingYear: item.passingYear,
-        uploadCertificate: item.certificateFile || "",
-      })),
-    };
-
-    console.log("payload =>", payload);
-
-    const response = await commonAPICall(
-      BASICPROFILE,
-      payload,
-      "POST",
-      dispatch,
-    );
-
-    if (response?.status === 200) {
-      const updatedPayload = {
-        ...state,
-        isProfileUpdated: "Y",
+  async function handleSubmit(values, { resetForm, setSubmitting }) {
+    try {
+      const payload = {
+        userType: state.roleName,
+        stageName: "EDUCATION",
+        workerEducationList: values.workerEducationList.map((item) => ({
+          educationLevel: item.educationLevel,
+          institutionName: item.institutionName,
+          passingYear: item.passingYear,
+          uploadCertificate: item.certificateFile || "",
+        })),
       };
-      dispatch(login(updatedPayload));
-      formik.resetForm();
+
+      console.log("payload =>", payload);
+
+      const response = await commonAPICall(
+        BASICPROFILE,
+        payload,
+        "POST",
+        dispatch,
+      );
+
+      if (response?.status === 200) {
+        const updatedPayload = {
+          ...state,
+          isProfileUpdated: "Y",
+        };
+        dispatch(login(updatedPayload));
+        resetForm();
+      }
+    } catch (error) {
+      console.log("Submit Error =>", error);
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -1696,22 +1989,28 @@ const Education = () => {
                     </View>
 
                     <View style={styles.inputBlock}>
-                      <Text style={styles.label}>Education Level</Text>
-                      <View style={styles.selectBox}>
+                      <Text style={styles.label}>
+                        Education Level{" "}
+                        <Text style={styles.requiredStar}>*</Text>
+                      </Text>
+                      <View
+                        style={[
+                          styles.selectBox,
+                          getError(index, "educationLevel") && styles.inputError,
+                        ]}
+                      >
                         <Picker
                           selectedValue={item.educationLevel}
-                          onValueChange={(itemValue) =>
-                            formik.setFieldValue(
-                              `workerEducationList[${index}].educationLevel`,
-                              itemValue,
-                            )
-                          }
-                          onBlur={() =>
+                          onValueChange={(itemValue) => {
                             formik.setFieldTouched(
                               `workerEducationList[${index}].educationLevel`,
                               true,
-                            )
-                          }
+                            );
+                            formik.setFieldValue(
+                              `workerEducationList[${index}].educationLevel`,
+                              itemValue,
+                            );
+                          }}
                         >
                           <Picker.Item
                             label="Select Education Level"
@@ -1730,17 +2029,16 @@ const Education = () => {
                       </View>
                       {getError(index, "educationLevel") ? (
                         <Text style={styles.errorText}>
-                          {
-                            formik.errors.workerEducationList[index]
-                              .educationLevel
-                          }
+                          {formik.errors.workerEducationList[index]
+                            .educationLevel}
                         </Text>
                       ) : null}
                     </View>
 
                     <View style={styles.inputBlock}>
                       <Text style={styles.label}>
-                        Institute / School / College
+                        Institute / School / College{" "}
+                        <Text style={styles.requiredStar}>*</Text>
                       </Text>
                       <TextInput
                         style={[
@@ -1759,16 +2057,17 @@ const Education = () => {
                       />
                       {getError(index, "institutionName") ? (
                         <Text style={styles.errorText}>
-                          {
-                            formik.errors.workerEducationList[index]
-                              .institutionName
-                          }
+                          {formik.errors.workerEducationList[index]
+                            .institutionName}
                         </Text>
                       ) : null}
                     </View>
 
                     <View style={styles.inputBlock}>
-                      <Text style={styles.label}>Passing Year</Text>
+                      <Text style={styles.label}>
+                        Passing Year{" "}
+                        <Text style={styles.requiredStar}>*</Text>
+                      </Text>
                       <TextInput
                         style={[
                           styles.input,
@@ -1781,7 +2080,7 @@ const Education = () => {
                         onBlur={formik.handleBlur(
                           `workerEducationList[${index}].passingYear`,
                         )}
-                        placeholder="Enter Passing Year (YYYY)"
+                        placeholder="Enter Passing Year"
                         keyboardType="numeric"
                         maxLength={4}
                       />
@@ -1793,19 +2092,32 @@ const Education = () => {
                     </View>
 
                     <View style={styles.inputBlock}>
-                      <Text style={styles.label}>Upload Certificate</Text>
+                      <Text style={styles.label}>
+                        Upload Certificate{" "}
+                        <Text style={styles.requiredStar}>*</Text>
+                      </Text>
                       <TouchableOpacity
-                        style={styles.uploadButton}
+                        style={[
+                          styles.uploadButton,
+                          getError(index, "certificateFile") &&
+                            styles.inputError,
+                        ]}
                         onPress={async () => {
-                          // open document picker here
-                          // example:
-                          // const file = await pickDocument();
-                          // formik.setFieldValue(
-                          //   `workerEducationList[${index}].certificateFile`,
-                          //   file.base64
-                          // );
+                          formik.setFieldTouched(
+                            `workerEducationList[${index}].certificateFile`,
+                            true,
+                          );
 
-                          alert(`Upload certificate for row ${index + 1}`);
+                          // replace with actual picker
+                          Alert.alert(
+                            "Upload Certificate",
+                            `Upload certificate for row ${index + 1}`,
+                          );
+
+                          formik.setFieldValue(
+                            `workerEducationList[${index}].certificateFile`,
+                            "certificate-uploaded",
+                          );
                         }}
                       >
                         <Text style={styles.uploadButtonText}>
@@ -1818,13 +2130,22 @@ const Education = () => {
                           Certificate selected
                         </Text>
                       ) : null}
+
+                      {getError(index, "certificateFile") ? (
+                        <Text style={styles.errorText}>
+                          {
+                            formik.errors.workerEducationList[index]
+                              .certificateFile
+                          }
+                        </Text>
+                      ) : null}
                     </View>
                   </View>
                 ))}
 
                 <TouchableOpacity
                   style={styles.addButton}
-                  onPress={() => arrayHelpers.push(emptyEducation)}
+                  onPress={() => arrayHelpers.push({ ...emptyEducation })}
                 >
                   <Text style={styles.addButtonText}>+ Add Qualification</Text>
                 </TouchableOpacity>
@@ -1833,16 +2154,23 @@ const Education = () => {
           />
 
           <TouchableOpacity
-            style={styles.submitButton}
+            style={[
+              styles.submitButton,
+              formik.isSubmitting && styles.disabledButton,
+            ]}
             onPress={formik.handleSubmit}
+            disabled={formik.isSubmitting}
           >
-            <Text style={styles.submitButtonText}>SAVE</Text>
+            <Text style={styles.submitButtonText}>
+              {formik.isSubmitting ? "SAVING..." : "SAVE"}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
     </FormikProvider>
   );
 };
+
 
 // ==================== Change Password Component ====================
 const ChangePassword = () => {
