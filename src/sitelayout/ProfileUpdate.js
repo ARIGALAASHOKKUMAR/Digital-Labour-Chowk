@@ -22,6 +22,7 @@ import { login } from "../actions";
 import {
   BASICPROFILE,
   commonAPICall,
+  DIGITALLABOURCHOWKDETAILS,
   GETDISTSAPP,
   GETMANDALSAPP,
   GETSKILLS,
@@ -31,7 +32,8 @@ import { new_dist, profileMenu } from "../commonFunction";
 
 // ==================== Basic Details Component ====================
 
-const BasicDetails = () => {
+const BasicDetails = ({ userData }) => {
+
   const dispatch = useDispatch();
   const state = useSelector((state) => state.LoginReducer);
 
@@ -60,18 +62,30 @@ const BasicDetails = () => {
     }),
   });
 
-  // ✅ initialValues now matches EXACT backend payload structure
+  // Format date from API (DD-MM-YYYY) to YYYY-MM-DD for DateTimePicker
+  const formatDateForPicker = (dateStr) => {
+    if (!dateStr) return "";
+    const parts = dateStr.split("-");
+    if (parts.length === 3) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`; // Convert DD-MM-YYYY to YYYY-MM-DD
+    }
+    return dateStr;
+  };
+
+  // ✅ initialValues now populated from API data
+
+
   const formik = useFormik({
     initialValues: {
-      fullName: "",
-      dateOfBirth: "",
-      gender: "",
-      mobileNumber: "",
-      email: "",
-      profileImage: "base64imageorURL",
+      fullName: userData?.full_name || "",
+      dateOfBirth: userData?.date_of_birth || "",
+      gender: userData?.gender || "",
+      mobileNumber: userData?.mobile_number || "",
+      email: userData?.email || "",
+      profileImage: userData?.profile_image || "base64imageorURL",
       userType: state.roleName,
       stageName: "BASIC_INFO",
-      employerTypeId: "", // Will hold the ID (1,2,3,4)
+      employerTypeId: userData?.employer_type_id || "", // Will hold the ID (1,2,3,4)
     },
     validationSchema,
     onSubmit: handleSubmit,
@@ -89,6 +103,9 @@ const BasicDetails = () => {
         dispatch,
       );
 
+      console.log("reeee",response);
+      
+
       if (response?.status === 200) {
         resetForm();
       }
@@ -102,7 +119,7 @@ const BasicDetails = () => {
   // Check if employer type should be shown
   const showEmployerType = state.roleName === "DLC Empoyeer";
 
-  console.log("state.roleName", state.roleName);
+  console.log("ttttttesds", userData);
 
   return (
     <FormikProvider value={formik}>
@@ -162,7 +179,7 @@ const BasicDetails = () => {
               <DateTimePicker
                 value={
                   formik.values.dateOfBirth
-                    ? new Date(formik.values.dateOfBirth)
+                    ? new Date(formatDateForPicker(formik.values.dateOfBirth))
                     : new Date()
                 }
                 mode="date"
@@ -315,12 +332,12 @@ const BasicDetails = () => {
 };
 // ==================== Identity Verification Component ====================
 
-const IdentityVerification = () => {
+const IdentityVerification = ({ userData }) => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
 
   // Determine which field to show based on role
-  console.log("state.roleName", state.roleName);
+  console.log("userData",userData);
 
   const showLabourLicence = state.roleName === "DLC Empoyeer";
   const conditionalFieldName = showLabourLicence
@@ -338,16 +355,18 @@ const IdentityVerification = () => {
     [conditionalFieldName]: Yup.string().required("Required"),
   });
 
-  // ✅ initialValues now matches EXACT backend payload structure with conditional field
+  // ✅ initialValues now populated from API data
   const formik = useFormik({
     initialValues: {
       userType: state.roleName,
       stageName: "DOCUMENT_VERIFICATION",
-      documentType: "",
-      documentNumber: "",
-      uploadDocument: "test",
+      documentType: userData?.document_type || "",
+      documentNumber: userData?.document_number || "",
+      uploadDocument: userData?.upload_document || "test",
       // Conditional field based on role
-      [conditionalFieldName]: "",
+      [conditionalFieldName]: showLabourLicence 
+        ? userData?.labour_licence || "" 
+        : userData?.e_shram_card_number || "",
     },
     validationSchema,
     onSubmit: handleSubmit,
@@ -514,13 +533,14 @@ const IdentityVerification = () => {
 };
 // ==================== Location Information Component ====================
 
-const LocationInformation = () => {
+const LocationInformation = ({ userData }) => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
 
   const [dists, setDists] = useState([]);
   const [mandal, setMandal] = useState([]);
   const [village, setVillage] = useState([]);
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
 
   const getdists = async () => {
     const response = await commonAPICall(GETDISTSAPP, {}, "get", dispatch);
@@ -549,7 +569,7 @@ const LocationInformation = () => {
     }
   };
 
-  const getVilages = async (distcode, mandalcode) => {
+  const getVillages = async (distcode, mandalcode) => {
     try {
       const cleanMandalCode = String(mandalcode || "").replace(/,/g, "");
 
@@ -571,33 +591,53 @@ const LocationInformation = () => {
     }
   };
 
+  // Load initial mandals and villages based on user data
+  useEffect(() => {
+    const loadInitialData = async () => {
+      if (userData?.district && !initialDataLoaded) {
+        await getmandals(userData.district);
+        
+        if (userData?.mandal) {
+          await getVillages(userData.district, userData.mandal);
+        }
+        
+        setInitialDataLoaded(true);
+      }
+    };
+
+    if (dists.length > 0) {
+      loadInitialData();
+    }
+  }, [userData, dists, initialDataLoaded]);
+
   const validationSchema = Yup.object().shape({
     district: Yup.string().required("Required"),
     mandal: Yup.string().required("Required"),
     village: Yup.string().required("Required"),
-    plotOrHouseNumber: Yup.string().required("Required"), // ✅ Updated field name
+    plotOrHouseNumber: Yup.string().required("Required"),
     landmark: Yup.string().required("Required"),
-    pincode: Yup.string().required("Required"), // ✅ Updated field name
+    pincode: Yup.string().required("Required"),
     latitude: Yup.string().required("Required"),
     longitude: Yup.string().required("Required"),
   });
 
-  // ✅ initialValues now matches EXACT backend payload structure
+  // ✅ initialValues now populated from API data
   const formik = useFormik({
     initialValues: {
-      userType: state.roleName, // ✅ Added from Redux state
-      stageName: "LOCATION_ADDRESS", // ✅ Added
-      district: "",
-      mandal: "",
-      village: "",
-      plotOrHouseNumber: "", // ✅ Renamed from surveyOrHouseNo
-      landmark: "",
-      pincode: "", // ✅ Renamed from pinCode
-      latitude: "",
-      longitude: "",
+      userType: state.roleName,
+      stageName: "LOCATION_ADDRESS",
+      district: userData?.district?.toString() || "",
+      mandal: userData?.mandal?.toString() || "",
+      village: userData?.village?.toString() || "",
+      plotOrHouseNumber: userData?.plot_or_house_number || "",
+      landmark: userData?.landmark || "",
+      pincode: userData?.pincode?.toString() || "",
+      latitude: userData?.latitude?.toString() || "",
+      longitude: userData?.longitude?.toString() || "",
     },
     validationSchema,
     onSubmit: handleSubmit,
+    enableReinitialize: true, // This allows form to update when userData changes
   });
 
   async function handleSubmit(values, { setSubmitting, resetForm }) {
@@ -607,7 +647,7 @@ const LocationInformation = () => {
 
       const response = await commonAPICall(
         BASICPROFILE,
-        values, // Using values directly as payload
+        values,
         "POST",
         dispatch,
       );
@@ -637,14 +677,19 @@ const LocationInformation = () => {
         accuracy: Location.Accuracy.High,
       });
 
-      formik.setFieldValue(
-        "latitude",
-        String(location?.coords?.latitude || ""),
-      );
-      formik.setFieldValue(
-        "longitude",
-        String(location?.coords?.longitude || ""),
-      );
+      // Only set if fields are empty
+      if (!formik.values.latitude) {
+        formik.setFieldValue(
+          "latitude",
+          String(location?.coords?.latitude || ""),
+        );
+      }
+      if (!formik.values.longitude) {
+        formik.setFieldValue(
+          "longitude",
+          String(location?.coords?.longitude || ""),
+        );
+      }
     } catch (error) {
       console.log("Location error:", error);
       Alert.alert("Error", "Unable to fetch location");
@@ -724,7 +769,7 @@ const LocationInformation = () => {
                 setVillage([]);
 
                 if (itemValue && formik.values.district) {
-                  getVilages(formik.values.district, itemValue);
+                  getVillages(formik.values.district, itemValue);
                 }
               }}
               enabled={!!formik.values.district}
@@ -786,20 +831,20 @@ const LocationInformation = () => {
           <TextInput
             style={[
               styles.input,
-              formik.errors.plotOrHouseNumber && // ✅ Updated field name
-                formik.touched.plotOrHouseNumber && // ✅ Updated field name
+              formik.errors.plotOrHouseNumber &&
+                formik.touched.plotOrHouseNumber &&
                 styles.inputError,
             ]}
-            value={formik.values.plotOrHouseNumber} // ✅ Updated field name
-            onChangeText={formik.handleChange("plotOrHouseNumber")} // ✅ Updated field name
-            onBlur={formik.handleBlur("plotOrHouseNumber")} // ✅ Updated field name
+            value={formik.values.plotOrHouseNumber}
+            onChangeText={formik.handleChange("plotOrHouseNumber")}
+            onBlur={formik.handleBlur("plotOrHouseNumber")}
             placeholder="Enter Door No."
             maxLength={20}
           />
           {formik.errors.plotOrHouseNumber &&
-            formik.touched.plotOrHouseNumber && ( // ✅ Updated field name
+            formik.touched.plotOrHouseNumber && (
               <Text style={styles.errorText}>
-                {formik.errors.plotOrHouseNumber} // ✅ Updated field name
+                {formik.errors.plotOrHouseNumber}
               </Text>
             )}
         </View>
@@ -833,21 +878,20 @@ const LocationInformation = () => {
           <TextInput
             style={[
               styles.input,
-              formik.errors.pincode && // ✅ Updated field name
-                formik.touched.pincode && // ✅ Updated field name
+              formik.errors.pincode &&
+                formik.touched.pincode &&
                 styles.inputError,
             ]}
-            value={formik.values.pincode} // ✅ Updated field name
-            onChangeText={formik.handleChange("pincode")} // ✅ Updated field name
-            onBlur={formik.handleBlur("pincode")} // ✅ Updated field name
+            value={formik.values.pincode}
+            onChangeText={formik.handleChange("pincode")}
+            onBlur={formik.handleBlur("pincode")}
             placeholder="Enter Pin Code"
             keyboardType="numeric"
             maxLength={6}
           />
-          {formik.errors.pincode &&
-            formik.touched.pincode && ( // ✅ Updated field name
-              <Text style={styles.errorText}>{formik.errors.pincode}</Text>
-            )}
+          {formik.errors.pincode && formik.touched.pincode && (
+            <Text style={styles.errorText}>{formik.errors.pincode}</Text>
+          )}
         </View>
 
         <View style={styles.inputBlock}>
@@ -908,35 +952,51 @@ const LocationInformation = () => {
     </FormikProvider>
   );
 };
-
-const SkillDetails = () => {
+const SkillDetails = ({ userData }) => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
 
   const [skillsList, setSkillsList] = useState([]);
   const [showSkillsDropdown, setShowSkillsDropdown] = useState(false);
 
+  // Parse skills from API (stored as string "[1, 3, 5]")
+  const parseSkills = () => {
+
+    console.log("userData?.skills",userData?.skills);
+    
+    try {
+      if (userData?.skills) {
+        return JSON.parse(userData.skills);
+      }
+      return [];
+    } catch (e) {
+      console.log("Error parsing skills:", e);
+      return [];
+    }
+  };
+
   const validationSchema = Yup.object().shape({
     skillIds: Yup.array().min(1, "Required").required("Required"),
-    experienceYears: Yup.string().required("Required"), // ✅ Updated field name
+    experienceYears: Yup.string().required("Required"),
     preferredWorkType: Yup.string().required("Required"),
     dailyRate: Yup.string().required("Required"),
-    workAvailability: Yup.string().required("Required"), // ✅ Updated field name
+    workAvailability: Yup.string().required("Required"),
   });
 
-  // ✅ initialValues now matches EXACT backend payload structure
+  // ✅ initialValues now populated from API data
   const formik = useFormik({
     initialValues: {
-      userType: state.roleName, // ✅ Added from Redux state
-      stageName: "SKILL_INFO", // ✅ Added
-      skillIds: [],
-      experienceYears: "", // ✅ Renamed from experience
-      preferredWorkType: "",
-      dailyRate: "",
-      workAvailability: "", // ✅ Renamed from availabilityForWork
+      userType: state.roleName,
+      stageName: "SKILL_INFO",
+      skillIds: parseSkills(),
+      experienceYears: userData?.skill_experience_years?.toString() || "",
+      preferredWorkType: userData?.skill_preferred_work_type || "",
+      dailyRate: userData?.skill_daily_rate?.toString() || "",
+      workAvailability: userData?.work_availability || "",
     },
     validationSchema,
     onSubmit: handleSubmit,
+    enableReinitialize: true, // Allow form to update when userData changes
   });
 
   const getSkillsData = async () => {
@@ -958,9 +1018,8 @@ const SkillDetails = () => {
 
   async function handleSubmit(values, { resetForm, setSubmitting }) {
     try {
-      // ✅ USING VALUES DIRECTLY AS PAYLOAD - with type conversions
-
-      console.log("val", values);
+      // ✅ USING VALUES DIRECTLY AS PAYLOAD
+      console.log("Submitting skill details:", values);
 
       const response = await commonAPICall(
         BASICPROFILE,
@@ -1073,19 +1132,19 @@ const SkillDetails = () => {
           <TextInput
             style={[
               styles.input,
-              formik.errors.experienceYears && // ✅ Updated field name
-                formik.touched.experienceYears && // ✅ Updated field name
+              formik.errors.experienceYears &&
+                formik.touched.experienceYears &&
                 styles.inputError,
             ]}
-            value={formik.values.experienceYears} // ✅ Updated field name
-            onChangeText={formik.handleChange("experienceYears")} // ✅ Updated field name
-            onBlur={formik.handleBlur("experienceYears")} // ✅ Updated field name
+            value={formik.values.experienceYears}
+            onChangeText={formik.handleChange("experienceYears")}
+            onBlur={formik.handleBlur("experienceYears")}
             placeholder="Enter experience in years"
             keyboardType="numeric"
             maxLength={2}
           />
           {formik.errors.experienceYears &&
-            formik.touched.experienceYears && ( // ✅ Updated field name
+            formik.touched.experienceYears && (
               <Text style={styles.errorText}>
                 {formik.errors.experienceYears}
               </Text>
@@ -1174,16 +1233,16 @@ const SkillDetails = () => {
           <View
             style={[
               styles.selectBox,
-              formik.errors.workAvailability && // ✅ Updated field name
-                formik.touched.workAvailability && // ✅ Updated field name
+              formik.errors.workAvailability &&
+                formik.touched.workAvailability &&
                 styles.inputError,
             ]}
           >
             <Picker
-              selectedValue={formik.values.workAvailability} // ✅ Updated field name
+              selectedValue={formik.values.workAvailability}
               onValueChange={(itemValue) => {
-                formik.setFieldTouched("workAvailability", true); // ✅ Updated field name
-                formik.setFieldValue("workAvailability", itemValue); // ✅ Updated field name
+                formik.setFieldTouched("workAvailability", true);
+                formik.setFieldValue("workAvailability", itemValue);
               }}
             >
               <Picker.Item label="Select Availability" value="" />
@@ -1191,8 +1250,8 @@ const SkillDetails = () => {
               <Picker.Item label="No" value="no" />
             </Picker>
           </View>
-          {formik.errors.workAvailability && // ✅ Updated field name
-            formik.touched.workAvailability && ( // ✅ Updated field name
+          {formik.errors.workAvailability &&
+            formik.touched.workAvailability && (
               <Text style={styles.errorText}>
                 {formik.errors.workAvailability}
               </Text>
@@ -1216,7 +1275,7 @@ const SkillDetails = () => {
   );
 };
 
-const WorkExperience = () => {
+const WorkExperience = ({ userData }) => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
 
@@ -1228,12 +1287,52 @@ const WorkExperience = () => {
   const [currentIndex, setCurrentIndex] = useState(null);
   const [pickerDate, setPickerDate] = useState(new Date());
 
+  // Parse work history from API (stored as JSON string)
+  const parseWorkHistory = () => {
+    try {
+      if (userData?.work_history) {
+        const parsedData = JSON.parse(userData.work_history);
+        // Map API field names to form field names
+        return parsedData.map((item) => ({
+          employerName: item.employeeName || "",
+          projectName: item.projectName || "",
+          workPlace: item.workPlace || "",
+          workType: item.workType || "",
+          skillId: item.skillId ? [item.skillId] : [], // Convert single skillId to array
+          taskDesc: item.taskDescription || "",
+          startDate: item.startDate ? formatDateForDisplay(item.startDate) : "",
+          endDate: item.endDate ? formatDateForDisplay(item.endDate) : "",
+          daysWorked: item.daysWorked?.toString() || "",
+          dailyWage: item.dailyWage?.toString() || "",
+          totalAmount: item.totalAmount?.toString() || "",
+          paymentStatus: item.paymentStatus || "",
+          remarks: item.remarks || "",
+          rating: item.rating?.toString() || "",
+        }));
+      }
+      return [];
+    } catch (e) {
+      console.log("Error parsing work history:", e);
+      return [];
+    }
+  };
+
+  // Format date from API (YYYY-MM-DD) to display format (DD-MM-YYYY)
+  const formatDateForDisplay = (dateStr) => {
+    if (!dateStr) return "";
+    const parts = dateStr.split("-");
+    if (parts.length === 3) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`; // Convert YYYY-MM-DD to DD-MM-YYYY
+    }
+    return dateStr;
+  };
+
   const emptyExperience = {
     employerName: "",
     projectName: "",
     workPlace: "",
     workType: "",
-    skillIds: [], // Changed from skillId to skillIds array
+    skillIds: [],
     taskDesc: "",
     startDate: "",
     endDate: "",
@@ -1261,13 +1360,13 @@ const WorkExperience = () => {
   }, []);
 
   const validationSchema = Yup.object().shape({
-    experiences: Yup.array().of(
+    workerExperienceList: Yup.array().of(
       Yup.object().shape({
         employerName: Yup.string().required("Required"),
         projectName: Yup.string().required("Required"),
         workPlace: Yup.string().required("Required"),
         workType: Yup.string().required("Required"),
-        skillIds: Yup.array().min(1, "Required").required("Required"), // Changed to array validation
+        skillIds: Yup.array().min(1, "Required").required("Required"),
         taskDesc: Yup.string().required("Required"),
         startDate: Yup.string().required("Required"),
         endDate: Yup.string().required("Required"),
@@ -1281,14 +1380,18 @@ const WorkExperience = () => {
     ),
   });
 
+  // Initialize with parsed work history data
+  const initialExperiences = parseWorkHistory();
+  
   const formik = useFormik({
     initialValues: {
       userType: state.roleName || "",
       stageName: "WORK_HISTORY",
-      workerExperienceList: [{ ...emptyExperience }], // Changed from experiences to workerExperienceList
+      workerExperienceList: initialExperiences.length > 0 ? initialExperiences : [{ ...emptyExperience }],
     },
     validationSchema,
     onSubmit: handleSubmit,
+    enableReinitialize: true, // Allow form to update when userData changes
   });
 
   const formatDate = (date) => {
@@ -1362,7 +1465,8 @@ const WorkExperience = () => {
   // Toggle skill selection for multi-select
   const toggleSkill = (expIndex, skillId) => {
     formik.setFieldTouched(`workerExperienceList[${expIndex}].skillIds`, true);
-    const currentSkillIds = formik.values.workerExperienceList[expIndex]?.skillIds || [];
+    const currentSkillIds =
+      formik.values.workerExperienceList[expIndex]?.skillIds || [];
 
     let newSkillIds;
     if (currentSkillIds.includes(skillId)) {
@@ -1371,13 +1475,17 @@ const WorkExperience = () => {
       newSkillIds = [...currentSkillIds, skillId];
     }
 
-    formik.setFieldValue(`workerExperienceList[${expIndex}].skillIds`, newSkillIds);
+    formik.setFieldValue(
+      `workerExperienceList[${expIndex}].skillIds`,
+      newSkillIds,
+    );
     setCurrentSkillIndex(null);
   };
 
   // Get selected skill names for display
   const getSelectedSkillNames = (expIndex) => {
-    const skillIds = formik.values.workerExperienceList[expIndex]?.skillIds || [];
+    const skillIds =
+      formik.values.workerExperienceList[expIndex]?.skillIds || [];
     return skillsList
       .filter((item) => skillIds.includes(item.id))
       .map((item) => item.skill_name)
@@ -1439,7 +1547,10 @@ const WorkExperience = () => {
           const end = parseDisplayDateToDate(exp.endDate);
 
           if (end < start) {
-            formik.setFieldValue(`workerExperienceList[${currentIndex}].endDate`, "");
+            formik.setFieldValue(
+              `workerExperienceList[${currentIndex}].endDate`,
+              "",
+            );
           }
         }
       } else if (currentField === "endDate") {
@@ -1457,7 +1568,10 @@ const WorkExperience = () => {
           }
         }
 
-        formik.setFieldValue(`workerExperienceList[${currentIndex}].endDate`, formatted);
+        formik.setFieldValue(
+          `workerExperienceList[${currentIndex}].endDate`,
+          formatted,
+        );
       }
     }
   };
@@ -1498,7 +1612,9 @@ const WorkExperience = () => {
                 onChangeText={formik.handleChange(
                   `workerExperienceList[${index}].employerName`,
                 )}
-                onBlur={formik.handleBlur(`workerExperienceList[${index}].employerName`)}
+                onBlur={formik.handleBlur(
+                  `workerExperienceList[${index}].employerName`,
+                )}
                 placeholder="Enter Employer Name"
               />
               {formik.touched.workerExperienceList?.[index]?.employerName &&
@@ -1524,7 +1640,9 @@ const WorkExperience = () => {
                 onChangeText={formik.handleChange(
                   `workerExperienceList[${index}].projectName`,
                 )}
-                onBlur={formik.handleBlur(`workerExperienceList[${index}].projectName`)}
+                onBlur={formik.handleBlur(
+                  `workerExperienceList[${index}].projectName`,
+                )}
                 placeholder="Enter Project Name"
               />
               {formik.touched.workerExperienceList?.[index]?.projectName &&
@@ -1550,7 +1668,9 @@ const WorkExperience = () => {
                 onChangeText={formik.handleChange(
                   `workerExperienceList[${index}].workPlace`,
                 )}
-                onBlur={formik.handleBlur(`workerExperienceList[${index}].workPlace`)}
+                onBlur={formik.handleBlur(
+                  `workerExperienceList[${index}].workPlace`,
+                )}
                 placeholder="Enter Work Place"
               />
               {formik.touched.workerExperienceList?.[index]?.workPlace &&
@@ -1576,7 +1696,9 @@ const WorkExperience = () => {
                 onChangeText={formik.handleChange(
                   `workerExperienceList[${index}].workType`,
                 )}
-                onBlur={formik.handleBlur(`workerExperienceList[${index}].workType`)}
+                onBlur={formik.handleBlur(
+                  `workerExperienceList[${index}].workType`,
+                )}
                 placeholder="Enter Work Type"
               />
               {formik.touched.workerExperienceList?.[index]?.workType &&
@@ -1601,16 +1723,30 @@ const WorkExperience = () => {
                     styles.inputError,
                 ]}
                 onPress={() => {
-                  formik.setFieldTouched(`workerExperienceList[${index}].skillIds`, true);
-                  setCurrentSkillIndex(currentSkillIndex === index ? null : index);
+                  formik.setFieldTouched(
+                    `workerExperienceList[${index}].skillIds`,
+                    true,
+                  );
+                  setCurrentSkillIndex(
+                    currentSkillIndex === index ? null : index,
+                  );
                   setShowSkillsDropdown(!showSkillsDropdown);
                 }}
               >
-                <Text style={{ color: getSelectedSkillNames(index) ? "#000" : "#999", flex: 1 }}>
+                <Text
+                  style={{
+                    color: getSelectedSkillNames(index) ? "#000" : "#999",
+                    flex: 1,
+                  }}
+                >
                   {getSelectedSkillNames(index) || "Select Skills"}
                 </Text>
                 <Ionicons
-                  name={showSkillsDropdown && currentSkillIndex === index ? "chevron-up" : "chevron-down"}
+                  name={
+                    showSkillsDropdown && currentSkillIndex === index
+                      ? "chevron-up"
+                      : "chevron-down"
+                  }
                   size={20}
                   color="#333"
                 />
@@ -1619,7 +1755,9 @@ const WorkExperience = () => {
               {showSkillsDropdown && currentSkillIndex === index && (
                 <View style={styles.dropdownBox}>
                   {skillsList.map((skill) => {
-                    const selected = formik.values.workerExperienceList[index]?.skillIds?.includes(skill.id);
+                    const selected = formik.values.workerExperienceList[
+                      index
+                    ]?.skillIds?.includes(skill.id);
 
                     return (
                       <TouchableOpacity
@@ -1663,7 +1801,9 @@ const WorkExperience = () => {
                 onChangeText={formik.handleChange(
                   `workerExperienceList[${index}].taskDesc`,
                 )}
-                onBlur={formik.handleBlur(`workerExperienceList[${index}].taskDesc`)}
+                onBlur={formik.handleBlur(
+                  `workerExperienceList[${index}].taskDesc`,
+                )}
                 placeholder="Enter Task Description"
                 multiline
                 numberOfLines={4}
@@ -1746,7 +1886,9 @@ const WorkExperience = () => {
                   );
                   calculateTotalAmount(index, text, item.dailyWage);
                 }}
-                onBlur={formik.handleBlur(`workerExperienceList[${index}].daysWorked`)}
+                onBlur={formik.handleBlur(
+                  `workerExperienceList[${index}].daysWorked`,
+                )}
                 keyboardType="numeric"
                 placeholder="Enter Days Worked"
               />
@@ -1771,10 +1913,15 @@ const WorkExperience = () => {
                 ]}
                 value={item.dailyWage}
                 onChangeText={(text) => {
-                  formik.setFieldValue(`workerExperienceList[${index}].dailyWage`, text);
+                  formik.setFieldValue(
+                    `workerExperienceList[${index}].dailyWage`,
+                    text,
+                  );
                   calculateTotalAmount(index, item.daysWorked, text);
                 }}
-                onBlur={formik.handleBlur(`workerExperienceList[${index}].dailyWage`)}
+                onBlur={formik.handleBlur(
+                  `workerExperienceList[${index}].dailyWage`,
+                )}
                 keyboardType="numeric"
                 placeholder="Enter Daily Wage"
               />
@@ -1818,7 +1965,8 @@ const WorkExperience = () => {
                 style={[
                   styles.selectBox,
                   formik.touched.workerExperienceList?.[index]?.paymentStatus &&
-                    formik.errors.workerExperienceList?.[index]?.paymentStatus &&
+                    formik.errors.workerExperienceList?.[index]
+                      ?.paymentStatus &&
                     styles.inputError,
                 ]}
               >
@@ -1865,7 +2013,9 @@ const WorkExperience = () => {
                 onChangeText={formik.handleChange(
                   `workerExperienceList[${index}].remarks`,
                 )}
-                onBlur={formik.handleBlur(`workerExperienceList[${index}].remarks`)}
+                onBlur={formik.handleBlur(
+                  `workerExperienceList[${index}].remarks`,
+                )}
                 placeholder="Enter Remarks"
                 multiline
                 numberOfLines={3}
@@ -1954,7 +2104,7 @@ const WorkExperience = () => {
   );
 };
 
-const EmployerWorkDetails = () => {
+const EmployerWorkDetails = ({ userData }) => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
 
@@ -1969,21 +2119,35 @@ const EmployerWorkDetails = () => {
     { label: "100+", value: 101 },
   ];
 
+  // Parse categories from API (stored as string "[1, 2, 5]")
+  const parseCategories = () => {
+    try {
+      if (userData?.categories) {
+        return JSON.parse(userData.categories);
+      }
+      return [];
+    } catch (e) {
+      console.log("Error parsing categories:", e);
+      return [];
+    }
+  };
+
   const validationSchema = Yup.object().shape({
     workCategoryIds: Yup.array().min(1, "Required").required("Required"),
     averageWorkersHiredPerMonth: Yup.string().required("Required"),
   });
 
-  // ✅ initialValues matches EXACT backend payload structure
+  // ✅ initialValues populated from API data
   const formik = useFormik({
     initialValues: {
       userType: state.roleName,
       stageName: "EMPLOYER_WORK_DETAILS",
-      workCategoryIds: [],
-      averageWorkersHiredPerMonth: "",
+      workCategoryIds: parseCategories(),
+      averageWorkersHiredPerMonth: userData?.average_workers_hired_per_month?.toString() || "",
     },
     validationSchema,
     onSubmit: handleSubmit,
+    enableReinitialize: true, // Allow form to update when userData changes
   });
 
   const getSkillsData = async () => {
@@ -2173,9 +2337,28 @@ const EmployerWorkDetails = () => {
   );
 };
 
-const Education = () => {
+const Education = ({ userData }) => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
+
+  // Parse education from API (stored as JSON string)
+  const parseEducation = () => {
+    try {
+      if (userData?.education) {
+        const parsedData = JSON.parse(userData.education);
+        return parsedData.map((item) => ({
+          educationLevel: item.educationLevel || "",
+          institutionName: item.institutionName || "",
+          passingYear: item.passingYear?.toString() || "",
+          certificateFile: item.certificate || "",
+        }));
+      }
+      return [];
+    } catch (e) {
+      console.log("Error parsing education:", e);
+      return [];
+    }
+  };
 
   const emptyEducation = {
     educationLevel: "",
@@ -2197,32 +2380,28 @@ const Education = () => {
       .min(1, "Required"),
   });
 
+  // Initialize with parsed education data
+  const initialEducation = parseEducation();
+  
   const formik = useFormik({
     initialValues: {
-      workerEducationList: [emptyEducation],
+      userType: state.roleName,
+      stageName: "EDUCATION",
+      workerEducationList: initialEducation.length > 0 ? initialEducation : [emptyEducation],
     },
     validationSchema,
     onSubmit: handleSubmit,
+    enableReinitialize: true, // Allow form to update when userData changes
   });
 
   async function handleSubmit(values, { resetForm, setSubmitting }) {
     try {
-      const payload = {
-        userType: state.roleName,
-        stageName: "EDUCATION",
-        workerEducationList: values.workerEducationList.map((item) => ({
-          educationLevel: item.educationLevel,
-          institutionName: item.institutionName,
-          passingYear: item.passingYear,
-          uploadCertificate: item.certificateFile || "",
-        })),
-      };
-
-      console.log("payload =>", payload);
+      // ✅ USING VALUES DIRECTLY AS PAYLOAD
+      console.log("Education payload =>", values);
 
       const response = await commonAPICall(
         BASICPROFILE,
-        payload,
+        values,
         "POST",
         dispatch,
       );
@@ -2416,7 +2595,9 @@ const Education = () => {
 
                       {item.certificateFile ? (
                         <Text style={styles.fileNameText}>
-                          Certificate selected
+                          {item.certificateFile === "certificate-uploaded" 
+                            ? "Certificate selected" 
+                            : "Certificate available"}
                         </Text>
                       ) : null}
 
@@ -2600,26 +2781,47 @@ const ProfileUpdate = () => {
     }
   }, [isLoggedIn, navigation]);
 
+  const [overalldata, setOveralldata] = useState([]);
+
+  const overalldetails = async () => {
+    const res = await commonAPICall(
+      DIGITALLABOURCHOWKDETAILS,
+      {},
+      "get",
+      dispatch,
+    );
+
+    if (res.status === 200) {
+      setOveralldata(res.data.DigitalLabourChowkRegistration_Details);
+    }
+  };
+
+  useEffect(() => {
+    overalldetails();
+  }, []);
+
   const renderSelectedSection = () => {
+    const userData = overalldata[0] || {}; // Get first user data
+
     switch (selectedSection) {
       case "basic_details":
-        return <BasicDetails />;
+        return <BasicDetails userData={userData} />;
       case "identity_verification":
-        return <IdentityVerification />;
+        return <IdentityVerification userData={userData} />;
       case "location_information":
-        return <LocationInformation />;
+        return <LocationInformation userData={userData} />;
       case "skill_details":
-        return <SkillDetails />;
+        return <SkillDetails userData={userData} />;
       case "work_experience":
-        return <WorkExperience />;
+        return <WorkExperience userData={userData} />;
       case "education":
-        return <Education />;
+        return <Education userData={userData} />;
       case "change_password":
-        return <ChangePassword />;
+        return <ChangePassword userData={userData} />;
       case "work_details":
-        return <EmployerWorkDetails />;
+        return <EmployerWorkDetails userData={userData} />;
       case "help":
-        return <Help />;
+        return <Help userData={userData} />;
       default:
         return null;
     }

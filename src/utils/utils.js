@@ -158,3 +158,4 @@ export const GETSKILLS = "api/user/digital-labour-chowk/skillInfo";
 export const GETDISTSAPP = "/api/user/v1/districts";
 export const GETMANDALSAPP = "/api/user/v1/mandals?distCode=";
 export const GETVILLAGESAPP ="/api/user/v1/villages";
+export const DIGITALLABOURCHOWKDETAILS ="/api/user/digitalLabourChowkRegDetails";
