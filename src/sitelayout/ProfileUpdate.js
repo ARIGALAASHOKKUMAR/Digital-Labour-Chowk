@@ -37,17 +37,30 @@ const BasicDetails = () => {
 
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // ✅ SIMPLE REQUIRED VALIDATION
+  // ✅ EMPLOYER TYPES DROPDOWN DATA with IDs 1,2,3,4
+  const employerTypes = [
+    { id: 1, label: "Individual" },
+    { id: 2, label: "Contractor" },
+    { id: 3, label: "Company" },
+    { id: 4, label: "Agency" },
+  ];
+
+  // ✅ CONDITIONAL VALIDATION - Required only if roleName is "DLC Employer"
   const validationSchema = Yup.object().shape({
     fullName: Yup.string().required("Required"),
     mobileNumber: Yup.string().required("Required"),
     email: Yup.string().required("Required"),
     dateOfBirth: Yup.string().required("Required"),
     gender: Yup.string().required("Required"),
+    // Employer Type is required only if roleName is "DLC Employer"
+    employerTypeId: Yup.string().when([], {
+      is: () => state.roleName === "DLC Employeer",
+      then: (schema) => schema.required("Required"),
+      otherwise: (schema) => schema.notRequired(),
+    }),
   });
 
   // ✅ initialValues now matches EXACT backend payload structure
-  // including userType from Redux state
   const formik = useFormik({
     initialValues: {
       fullName: "",
@@ -56,8 +69,9 @@ const BasicDetails = () => {
       mobileNumber: "",
       email: "",
       profileImage: "base64imageorURL",
-      userType: state.roleName,  // ✅ Taking userType from Redux state
+      userType: state.roleName,
       stageName: "BASIC_INFO",
+      employerTypeId: "", // Will hold the ID (1,2,3,4)
     },
     validationSchema,
     onSubmit: handleSubmit,
@@ -70,7 +84,7 @@ const BasicDetails = () => {
 
       const response = await commonAPICall(
         BASICPROFILE,
-        values,  // Using values directly as payload
+        values,
         "POST",
         dispatch,
       );
@@ -84,6 +98,11 @@ const BasicDetails = () => {
       setSubmitting(false);
     }
   }
+
+  // Check if employer type should be shown
+  const showEmployerType = state.roleName === "DLC Empoyeer";
+
+  console.log("state.roleName", state.roleName);
 
   return (
     <FormikProvider value={formik}>
@@ -131,16 +150,12 @@ const BasicDetails = () => {
                 setShowDatePicker(true);
               }}
             >
-              <Text>
-                {formik.values.dateOfBirth || "Select Date of Birth"}
-              </Text>
+              <Text>{formik.values.dateOfBirth || "Select Date of Birth"}</Text>
               <Ionicons name="calendar-outline" size={20} />
             </TouchableOpacity>
 
             {formik.errors.dateOfBirth && formik.touched.dateOfBirth && (
-              <Text style={styles.errorText}>
-                {formik.errors.dateOfBirth}
-              </Text>
+              <Text style={styles.errorText}>{formik.errors.dateOfBirth}</Text>
             )}
 
             {showDatePicker && (
@@ -155,9 +170,7 @@ const BasicDetails = () => {
                 onChange={(event, selectedDate) => {
                   setShowDatePicker(false);
                   if (selectedDate) {
-                    const formatted = selectedDate
-                      .toISOString()
-                      .split("T")[0];
+                    const formatted = selectedDate.toISOString().split("T")[0];
                     formik.setFieldValue("dateOfBirth", formatted);
                   }
                 }}
@@ -219,9 +232,7 @@ const BasicDetails = () => {
               maxLength={10}
             />
             {formik.errors.mobileNumber && formik.touched.mobileNumber && (
-              <Text style={styles.errorText}>
-                {formik.errors.mobileNumber}
-              </Text>
+              <Text style={styles.errorText}>{formik.errors.mobileNumber}</Text>
             )}
           </View>
 
@@ -248,6 +259,46 @@ const BasicDetails = () => {
             )}
           </View>
 
+          {/* Employer Type Dropdown - Only shown for DLC Employer */}
+          {showEmployerType && (
+            <View style={styles.inputBlock}>
+              <Text style={styles.label}>
+                Employer Type <Text style={styles.requiredStar}>*</Text>
+              </Text>
+              <View
+                style={[
+                  styles.selectBox,
+                  formik.errors.employerTypeId &&
+                    formik.touched.employerTypeId &&
+                    styles.inputError,
+                ]}
+              >
+                <Picker
+                  selectedValue={formik.values.employerTypeId}
+                  onValueChange={(itemValue) => {
+                    formik.setFieldTouched("employerTypeId", true);
+                    formik.setFieldValue("employerTypeId", itemValue);
+                  }}
+                >
+                  <Picker.Item label="Select Employer Type" value="" />
+                  {employerTypes.map((type) => (
+                    <Picker.Item
+                      key={type.id}
+                      label={type.label}
+                      value={type.id} // Sending ID (1,2,3,4)
+                    />
+                  ))}
+                </Picker>
+              </View>
+              {formik.errors.employerTypeId &&
+                formik.touched.employerTypeId && (
+                  <Text style={styles.errorText}>
+                    {formik.errors.employerTypeId}
+                  </Text>
+                )}
+            </View>
+          )}
+
           {/* Submit */}
           <TouchableOpacity
             style={styles.submitButton}
@@ -262,30 +313,41 @@ const BasicDetails = () => {
     </FormikProvider>
   );
 };
-
-
 // ==================== Identity Verification Component ====================
 
 const IdentityVerification = () => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
 
+  // Determine which field to show based on role
+  console.log("state.roleName", state.roleName);
+
+  const showLabourLicence = state.roleName === "DLC Empoyeer";
+  const conditionalFieldName = showLabourLicence
+    ? "labourLicence"
+    : "eShramCardNumber";
+  const conditionalFieldLabel = showLabourLicence
+    ? "Labour Licence Number"
+    : "e-Shram Card Number";
+
   const validationSchema = Yup.object().shape({
     documentType: Yup.string().required("Required"),
     documentNumber: Yup.string().required("Required"),
-    // uploadDocument: Yup.string().required("Required"), // Updated field name
-    eShramCardNumber: Yup.string().required("Required"),
+    uploadDocument: Yup.string().required("Required"),
+    // Conditional field based on role
+    [conditionalFieldName]: Yup.string().required("Required"),
   });
 
-  // ✅ initialValues now matches EXACT backend payload structure
+  // ✅ initialValues now matches EXACT backend payload structure with conditional field
   const formik = useFormik({
     initialValues: {
-      userType: state.roleName,  // ✅ Added from Redux state
-      stageName: "DOCUMENT_VERIFICATION",  // ✅ Added
+      userType: state.roleName,
+      stageName: "DOCUMENT_VERIFICATION",
       documentType: "",
       documentNumber: "",
-      uploadDocument: "test",  // ✅ Renamed from documentFile to match payload
-      eShramCardNumber: "",
+      uploadDocument: "test",
+      // Conditional field based on role
+      [conditionalFieldName]: "",
     },
     validationSchema,
     onSubmit: handleSubmit,
@@ -298,7 +360,7 @@ const IdentityVerification = () => {
 
       const response = await commonAPICall(
         BASICPROFILE,
-        values,  // Using values directly as payload
+        values,
         "POST",
         dispatch,
       );
@@ -382,52 +444,54 @@ const IdentityVerification = () => {
           <TouchableOpacity
             style={[
               styles.uploadButton,
-              formik.errors.uploadDocument &&  // ✅ Updated field name
-                formik.touched.uploadDocument &&  // ✅ Updated field name
+              formik.errors.uploadDocument &&
+                formik.touched.uploadDocument &&
                 styles.inputError,
             ]}
             onPress={() => {
-              formik.setFieldTouched("uploadDocument", true);  // ✅ Updated field name
-
+              formik.setFieldTouched("uploadDocument", true);
               // replace this with actual picker
               Alert.alert("Upload", "Open Document Picker");
-              formik.setFieldValue("uploadDocument", "test-document.pdf");  // ✅ Updated field name
+              formik.setFieldValue("uploadDocument", "test-document.pdf");
             }}
             disabled={formik.isSubmitting}
           >
             <Text style={styles.uploadButtonText}>Upload Document</Text>
           </TouchableOpacity>
 
-          {formik.values.uploadDocument ? (  // ✅ Updated field name
-            <Text style={styles.fileNameText}>{formik.values.uploadDocument}</Text>  // ✅ Updated field name
+          {formik.values.uploadDocument ? (
+            <Text style={styles.fileNameText}>
+              {formik.values.uploadDocument}
+            </Text>
           ) : null}
 
-          {formik.errors.uploadDocument && formik.touched.uploadDocument && (  // ✅ Updated field name
+          {formik.errors.uploadDocument && formik.touched.uploadDocument && (
             <Text style={styles.errorText}>{formik.errors.uploadDocument}</Text>
           )}
         </View>
 
+        {/* Conditional Field - Labour Licence or e-Shram Card Number */}
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
-            e-Shram Card Number <Text style={styles.requiredStar}>*</Text>
+            {conditionalFieldLabel} <Text style={styles.requiredStar}>*</Text>
           </Text>
           <TextInput
             style={[
               styles.input,
-              formik.errors.eShramCardNumber &&
-                formik.touched.eShramCardNumber &&
+              formik.errors[conditionalFieldName] &&
+                formik.touched[conditionalFieldName] &&
                 styles.inputError,
             ]}
-            value={formik.values.eShramCardNumber}
-            onChangeText={formik.handleChange("eShramCardNumber")}
-            onBlur={formik.handleBlur("eShramCardNumber")}
-            placeholder="Enter e-Shram Card Number"
+            value={formik.values[conditionalFieldName]}
+            onChangeText={formik.handleChange(conditionalFieldName)}
+            onBlur={formik.handleBlur(conditionalFieldName)}
+            placeholder={`Enter ${conditionalFieldLabel}`}
             editable={!formik.isSubmitting}
           />
-          {formik.errors.eShramCardNumber &&
-            formik.touched.eShramCardNumber && (
+          {formik.errors[conditionalFieldName] &&
+            formik.touched[conditionalFieldName] && (
               <Text style={styles.errorText}>
-                {formik.errors.eShramCardNumber}
+                {formik.errors[conditionalFieldName]}
               </Text>
             )}
         </View>
@@ -448,7 +512,6 @@ const IdentityVerification = () => {
     </FormikProvider>
   );
 };
-
 // ==================== Location Information Component ====================
 
 const LocationInformation = () => {
@@ -522,14 +585,14 @@ const LocationInformation = () => {
   // ✅ initialValues now matches EXACT backend payload structure
   const formik = useFormik({
     initialValues: {
-      userType: state.roleName,  // ✅ Added from Redux state
-      stageName: "LOCATION_ADDRESS",  // ✅ Added
+      userType: state.roleName, // ✅ Added from Redux state
+      stageName: "LOCATION_ADDRESS", // ✅ Added
       district: "",
       mandal: "",
       village: "",
-      plotOrHouseNumber: "",  // ✅ Renamed from surveyOrHouseNo
+      plotOrHouseNumber: "", // ✅ Renamed from surveyOrHouseNo
       landmark: "",
-      pincode: "",  // ✅ Renamed from pinCode
+      pincode: "", // ✅ Renamed from pinCode
       latitude: "",
       longitude: "",
     },
@@ -544,7 +607,7 @@ const LocationInformation = () => {
 
       const response = await commonAPICall(
         BASICPROFILE,
-        values,  // Using values directly as payload
+        values, // Using values directly as payload
         "POST",
         dispatch,
       );
@@ -723,21 +786,22 @@ const LocationInformation = () => {
           <TextInput
             style={[
               styles.input,
-              formik.errors.plotOrHouseNumber &&  // ✅ Updated field name
-                formik.touched.plotOrHouseNumber &&  // ✅ Updated field name
+              formik.errors.plotOrHouseNumber && // ✅ Updated field name
+                formik.touched.plotOrHouseNumber && // ✅ Updated field name
                 styles.inputError,
             ]}
-            value={formik.values.plotOrHouseNumber}  // ✅ Updated field name
-            onChangeText={formik.handleChange("plotOrHouseNumber")}  // ✅ Updated field name
-            onBlur={formik.handleBlur("plotOrHouseNumber")}  // ✅ Updated field name
+            value={formik.values.plotOrHouseNumber} // ✅ Updated field name
+            onChangeText={formik.handleChange("plotOrHouseNumber")} // ✅ Updated field name
+            onBlur={formik.handleBlur("plotOrHouseNumber")} // ✅ Updated field name
             placeholder="Enter Door No."
             maxLength={20}
           />
-          {formik.errors.plotOrHouseNumber && formik.touched.plotOrHouseNumber && (  // ✅ Updated field name
-            <Text style={styles.errorText}>
-              {formik.errors.plotOrHouseNumber}  // ✅ Updated field name
-            </Text>
-          )}
+          {formik.errors.plotOrHouseNumber &&
+            formik.touched.plotOrHouseNumber && ( // ✅ Updated field name
+              <Text style={styles.errorText}>
+                {formik.errors.plotOrHouseNumber} // ✅ Updated field name
+              </Text>
+            )}
         </View>
 
         <View style={styles.inputBlock}>
@@ -769,20 +833,21 @@ const LocationInformation = () => {
           <TextInput
             style={[
               styles.input,
-              formik.errors.pincode &&  // ✅ Updated field name
-                formik.touched.pincode &&  // ✅ Updated field name
+              formik.errors.pincode && // ✅ Updated field name
+                formik.touched.pincode && // ✅ Updated field name
                 styles.inputError,
             ]}
-            value={formik.values.pincode}  // ✅ Updated field name
-            onChangeText={formik.handleChange("pincode")}  // ✅ Updated field name
-            onBlur={formik.handleBlur("pincode")}  // ✅ Updated field name
+            value={formik.values.pincode} // ✅ Updated field name
+            onChangeText={formik.handleChange("pincode")} // ✅ Updated field name
+            onBlur={formik.handleBlur("pincode")} // ✅ Updated field name
             placeholder="Enter Pin Code"
             keyboardType="numeric"
             maxLength={6}
           />
-          {formik.errors.pincode && formik.touched.pincode && (  // ✅ Updated field name
-            <Text style={styles.errorText}>{formik.errors.pincode}</Text>
-          )}
+          {formik.errors.pincode &&
+            formik.touched.pincode && ( // ✅ Updated field name
+              <Text style={styles.errorText}>{formik.errors.pincode}</Text>
+            )}
         </View>
 
         <View style={styles.inputBlock}>
@@ -844,7 +909,6 @@ const LocationInformation = () => {
   );
 };
 
-
 const SkillDetails = () => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
@@ -854,22 +918,22 @@ const SkillDetails = () => {
 
   const validationSchema = Yup.object().shape({
     skillIds: Yup.array().min(1, "Required").required("Required"),
-    experienceYears: Yup.string().required("Required"),  // ✅ Updated field name
+    experienceYears: Yup.string().required("Required"), // ✅ Updated field name
     preferredWorkType: Yup.string().required("Required"),
     dailyRate: Yup.string().required("Required"),
-    workAvailability: Yup.string().required("Required"),  // ✅ Updated field name
+    workAvailability: Yup.string().required("Required"), // ✅ Updated field name
   });
 
   // ✅ initialValues now matches EXACT backend payload structure
   const formik = useFormik({
     initialValues: {
-      userType: state.roleName,  // ✅ Added from Redux state
-      stageName: "SKILL_INFO",  // ✅ Added
+      userType: state.roleName, // ✅ Added from Redux state
+      stageName: "SKILL_INFO", // ✅ Added
       skillIds: [],
-      experienceYears: "",  // ✅ Renamed from experience
+      experienceYears: "", // ✅ Renamed from experience
       preferredWorkType: "",
       dailyRate: "",
-      workAvailability: "",  // ✅ Renamed from availabilityForWork
+      workAvailability: "", // ✅ Renamed from availabilityForWork
     },
     validationSchema,
     onSubmit: handleSubmit,
@@ -895,10 +959,8 @@ const SkillDetails = () => {
   async function handleSubmit(values, { resetForm, setSubmitting }) {
     try {
       // ✅ USING VALUES DIRECTLY AS PAYLOAD - with type conversions
-      
 
-      console.log("val",values);
-      
+      console.log("val", values);
 
       const response = await commonAPICall(
         BASICPROFILE,
@@ -964,7 +1026,9 @@ const SkillDetails = () => {
               setShowSkillsDropdown(!showSkillsDropdown);
             }}
           >
-            <Text style={{ color: selectedSkillNames ? "#000" : "#999", flex: 1 }}>
+            <Text
+              style={{ color: selectedSkillNames ? "#000" : "#999", flex: 1 }}
+            >
               {selectedSkillNames || "Select Skills"}
             </Text>
             <Ionicons
@@ -1009,20 +1073,23 @@ const SkillDetails = () => {
           <TextInput
             style={[
               styles.input,
-              formik.errors.experienceYears &&  // ✅ Updated field name
-                formik.touched.experienceYears &&  // ✅ Updated field name
+              formik.errors.experienceYears && // ✅ Updated field name
+                formik.touched.experienceYears && // ✅ Updated field name
                 styles.inputError,
             ]}
-            value={formik.values.experienceYears}  // ✅ Updated field name
-            onChangeText={formik.handleChange("experienceYears")}  // ✅ Updated field name
-            onBlur={formik.handleBlur("experienceYears")}  // ✅ Updated field name
+            value={formik.values.experienceYears} // ✅ Updated field name
+            onChangeText={formik.handleChange("experienceYears")} // ✅ Updated field name
+            onBlur={formik.handleBlur("experienceYears")} // ✅ Updated field name
             placeholder="Enter experience in years"
             keyboardType="numeric"
             maxLength={2}
           />
-          {formik.errors.experienceYears && formik.touched.experienceYears && (  // ✅ Updated field name
-            <Text style={styles.errorText}>{formik.errors.experienceYears}</Text>
-          )}
+          {formik.errors.experienceYears &&
+            formik.touched.experienceYears && ( // ✅ Updated field name
+              <Text style={styles.errorText}>
+                {formik.errors.experienceYears}
+              </Text>
+            )}
         </View>
 
         <View style={styles.inputBlock}>
@@ -1107,16 +1174,16 @@ const SkillDetails = () => {
           <View
             style={[
               styles.selectBox,
-              formik.errors.workAvailability &&  // ✅ Updated field name
-                formik.touched.workAvailability &&  // ✅ Updated field name
+              formik.errors.workAvailability && // ✅ Updated field name
+                formik.touched.workAvailability && // ✅ Updated field name
                 styles.inputError,
             ]}
           >
             <Picker
-              selectedValue={formik.values.workAvailability}  // ✅ Updated field name
+              selectedValue={formik.values.workAvailability} // ✅ Updated field name
               onValueChange={(itemValue) => {
-                formik.setFieldTouched("workAvailability", true);  // ✅ Updated field name
-                formik.setFieldValue("workAvailability", itemValue);  // ✅ Updated field name
+                formik.setFieldTouched("workAvailability", true); // ✅ Updated field name
+                formik.setFieldValue("workAvailability", itemValue); // ✅ Updated field name
               }}
             >
               <Picker.Item label="Select Availability" value="" />
@@ -1124,8 +1191,8 @@ const SkillDetails = () => {
               <Picker.Item label="No" value="no" />
             </Picker>
           </View>
-          {formik.errors.workAvailability &&  // ✅ Updated field name
-            formik.touched.workAvailability && (  // ✅ Updated field name
+          {formik.errors.workAvailability && // ✅ Updated field name
+            formik.touched.workAvailability && ( // ✅ Updated field name
               <Text style={styles.errorText}>
                 {formik.errors.workAvailability}
               </Text>
@@ -1148,7 +1215,6 @@ const SkillDetails = () => {
     </FormikProvider>
   );
 };
-
 
 const WorkExperience = () => {
   const state = useSelector((state) => state.LoginReducer);
@@ -1527,7 +1593,10 @@ const WorkExperience = () => {
                 <Picker
                   selectedValue={item.skillId}
                   onValueChange={(itemValue) => {
-                    formik.setFieldTouched(`experiences[${index}].skillId`, true);
+                    formik.setFieldTouched(
+                      `experiences[${index}].skillId`,
+                      true,
+                    );
                     formik.setFieldValue(
                       `experiences[${index}].skillId`,
                       itemValue,
@@ -1799,7 +1868,10 @@ const WorkExperience = () => {
                 <Picker
                   selectedValue={item.rating}
                   onValueChange={(itemValue) => {
-                    formik.setFieldTouched(`experiences[${index}].rating`, true);
+                    formik.setFieldTouched(
+                      `experiences[${index}].rating`,
+                      true,
+                    );
                     formik.setFieldValue(
                       `experiences[${index}].rating`,
                       itemValue,
@@ -1856,7 +1928,224 @@ const WorkExperience = () => {
   );
 };
 
+const EmployerWorkDetails = () => {
+  const state = useSelector((state) => state.LoginReducer);
+  const dispatch = useDispatch();
 
+  const [skillsList, setSkillsList] = useState([]);
+  const [showSkillsDropdown, setShowSkillsDropdown] = useState(false);
+
+  // Average workers hired per month options
+  const averageWorkersOptions = [
+    { label: "1-10", value: 10 },
+    { label: "11-50", value: 50 },
+    { label: "51-100", value: 100 },
+    { label: "100+", value: 101 },
+  ];
+
+  const validationSchema = Yup.object().shape({
+    workCategoryIds: Yup.array().min(1, "Required").required("Required"),
+    averageWorkersHiredPerMonth: Yup.string().required("Required"),
+  });
+
+  // ✅ initialValues matches EXACT backend payload structure
+  const formik = useFormik({
+    initialValues: {
+      userType: state.roleName,
+      stageName: "EMPLOYER_WORK_DETAILS",
+      workCategoryIds: [],
+      averageWorkersHiredPerMonth: "",
+    },
+    validationSchema,
+    onSubmit: handleSubmit,
+  });
+
+  const getSkillsData = async () => {
+    try {
+      const response = await commonAPICall(GETSKILLS, {}, "get", dispatch);
+
+      if (response?.status === 200) {
+        const skillData = response?.data?.Skill_Info_Details || [];
+        setSkillsList(skillData);
+      }
+    } catch (error) {
+      console.log("Error fetching skills:", error);
+    }
+  };
+
+  useEffect(() => {
+    getSkillsData();
+  }, []);
+
+  async function handleSubmit(values, { resetForm, setSubmitting }) {
+    try {
+      // ✅ USING VALUES DIRECTLY AS PAYLOAD
+      console.log("Submitting employer work details:", values);
+
+      const response = await commonAPICall(
+        BASICPROFILE,
+        values,
+        "POST",
+        dispatch,
+      );
+
+      if (response?.status === 200) {
+        const updatedPayload = {
+          ...state,
+          isProfileUpdated: "Y",
+        };
+        dispatch(login(updatedPayload));
+        resetForm();
+        setShowSkillsDropdown(false);
+      }
+    } catch (error) {
+      console.log("Error:", error);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const toggleSkill = (skillId) => {
+    formik.setFieldTouched("workCategoryIds", true);
+    const selectedIds = formik.values.workCategoryIds || [];
+
+    if (selectedIds.includes(skillId)) {
+      formik.setFieldValue(
+        "workCategoryIds",
+        selectedIds.filter((id) => id !== skillId),
+      );
+    } else {
+      formik.setFieldValue("workCategoryIds", [...selectedIds, skillId]);
+    }
+  };
+
+  const selectedSkillNames = skillsList
+    .filter((item) => formik.values.workCategoryIds.includes(item.id))
+    .map((item) => item.skill_name)
+    .join(", ");
+
+  return (
+    <FormikProvider value={formik}>
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Employer Work Details</Text>
+
+        {/* Work Categories Multi-select using Skills API */}
+        <View style={styles.inputBlock}>
+          <Text style={styles.label}>
+            Work Categories <Text style={styles.requiredStar}>*</Text>
+          </Text>
+
+          <TouchableOpacity
+            style={[
+              styles.selectBox,
+              formik.touched.workCategoryIds &&
+                formik.errors.workCategoryIds &&
+                styles.inputError,
+            ]}
+            onPress={() => {
+              formik.setFieldTouched("workCategoryIds", true);
+              setShowSkillsDropdown(!showSkillsDropdown);
+            }}
+          >
+            <Text
+              style={{ color: selectedSkillNames ? "#000" : "#999", flex: 1 }}
+            >
+              {selectedSkillNames || "Select Work Categories"}
+            </Text>
+            <Ionicons
+              name={showSkillsDropdown ? "chevron-up" : "chevron-down"}
+              size={20}
+              color="#333"
+            />
+          </TouchableOpacity>
+
+          {showSkillsDropdown && (
+            <View style={styles.dropdownBox}>
+              {skillsList.map((item) => {
+                const selected = formik.values.workCategoryIds.includes(
+                  item.id,
+                );
+
+                return (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={styles.skillItem}
+                    onPress={() => toggleSkill(item.id)}
+                  >
+                    <Text style={styles.skillText}>{item.skill_name}</Text>
+                    <Ionicons
+                      name={selected ? "checkbox" : "square-outline"}
+                      size={22}
+                      color={selected ? "#1e3a5f" : "#999"}
+                    />
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+
+          {formik.touched.workCategoryIds && formik.errors.workCategoryIds ? (
+            <Text style={styles.errorText}>
+              {formik.errors.workCategoryIds}
+            </Text>
+          ) : null}
+        </View>
+
+        {/* Average Workers Hired Per Month Dropdown */}
+        <View style={styles.inputBlock}>
+          <Text style={styles.label}>
+            Average Workers Hired Per Month{" "}
+            <Text style={styles.requiredStar}>*</Text>
+          </Text>
+          <View
+            style={[
+              styles.selectBox,
+              formik.errors.averageWorkersHiredPerMonth &&
+                formik.touched.averageWorkersHiredPerMonth &&
+                styles.inputError,
+            ]}
+          >
+            <Picker
+              selectedValue={formik.values.averageWorkersHiredPerMonth}
+              onValueChange={(itemValue) => {
+                formik.setFieldTouched("averageWorkersHiredPerMonth", true);
+                formik.setFieldValue("averageWorkersHiredPerMonth", itemValue);
+              }}
+            >
+              <Picker.Item label="Select Range" value="" />
+              {averageWorkersOptions.map((option) => (
+                <Picker.Item
+                  key={option.value}
+                  label={option.label}
+                  value={option.value}
+                />
+              ))}
+            </Picker>
+          </View>
+          {formik.errors.averageWorkersHiredPerMonth &&
+            formik.touched.averageWorkersHiredPerMonth && (
+              <Text style={styles.errorText}>
+                {formik.errors.averageWorkersHiredPerMonth}
+              </Text>
+            )}
+        </View>
+
+        <TouchableOpacity
+          style={[
+            styles.submitButton,
+            formik.isSubmitting && styles.disabledButton,
+          ]}
+          onPress={formik.handleSubmit}
+          disabled={formik.isSubmitting}
+        >
+          <Text style={styles.submitButtonText}>
+            {formik.isSubmitting ? "SAVING..." : "SAVE"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </FormikProvider>
+  );
+};
 
 const Education = () => {
   const state = useSelector((state) => state.LoginReducer);
@@ -1966,7 +2255,8 @@ const Education = () => {
                       <View
                         style={[
                           styles.selectBox,
-                          getError(index, "educationLevel") && styles.inputError,
+                          getError(index, "educationLevel") &&
+                            styles.inputError,
                         ]}
                       >
                         <Picker
@@ -1999,8 +2289,10 @@ const Education = () => {
                       </View>
                       {getError(index, "educationLevel") ? (
                         <Text style={styles.errorText}>
-                          {formik.errors.workerEducationList[index]
-                            .educationLevel}
+                          {
+                            formik.errors.workerEducationList[index]
+                              .educationLevel
+                          }
                         </Text>
                       ) : null}
                     </View>
@@ -2027,16 +2319,17 @@ const Education = () => {
                       />
                       {getError(index, "institutionName") ? (
                         <Text style={styles.errorText}>
-                          {formik.errors.workerEducationList[index]
-                            .institutionName}
+                          {
+                            formik.errors.workerEducationList[index]
+                              .institutionName
+                          }
                         </Text>
                       ) : null}
                     </View>
 
                     <View style={styles.inputBlock}>
                       <Text style={styles.label}>
-                        Passing Year{" "}
-                        <Text style={styles.requiredStar}>*</Text>
+                        Passing Year <Text style={styles.requiredStar}>*</Text>
                       </Text>
                       <TextInput
                         style={[
@@ -2140,7 +2433,6 @@ const Education = () => {
     </FormikProvider>
   );
 };
-
 
 // ==================== Change Password Component ====================
 const ChangePassword = () => {
@@ -2298,6 +2590,8 @@ const ProfileUpdate = () => {
         return <Education />;
       case "change_password":
         return <ChangePassword />;
+      case "work details":
+        return <EmployerWorkDetails />;
       case "help":
         return <Help />;
       default:
@@ -2317,26 +2611,46 @@ const ProfileUpdate = () => {
         <View style={styles.panel}>
           {!selectedSection ? (
             <View>
-              {profileMenu.map((item) => (
-                <TouchableOpacity
-                  key={item.id}
-                  style={styles.menuItem}
-                  onPress={() => setSelectedSection(item.value)}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.menuLeft}>
+              {profileMenu
+                .filter((item) => {
+                  // Hide skill_details, education, work_experience for employers
+                  if (state.roleName === "DLC Empoyeer") {
+                    return ![
+                      "skill_details",
+                      "education",
+                      "work_experience",
+                    ].includes(item.value);
+                  }
+                  // Hide work_details for workers
+                  else if (state.roleName === "DLC Worker") {
+                    return item.value !== "work_details";
+                  }
+                  return true;
+                })
+                .map((item) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={styles.menuItem}
+                    onPress={() => setSelectedSection(item.value)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.menuLeft}>
+                      <Ionicons
+                        name={item.icon}
+                        size={22}
+                        color="#1e3a5f"
+                        style={styles.menuIcon}
+                      />
+                      <Text style={styles.menuTitle}>{item.title}</Text>
+                    </View>
+
                     <Ionicons
-                      name={item.icon}
+                      name="chevron-forward"
                       size={22}
                       color="#1e3a5f"
-                      style={styles.menuIcon}
                     />
-                    <Text style={styles.menuTitle}>{item.title}</Text>
-                  </View>
-
-                  <Ionicons name="chevron-forward" size={22} color="#1e3a5f" />
-                </TouchableOpacity>
-              ))}
+                  </TouchableOpacity>
+                ))}
             </View>
           ) : (
             <View>

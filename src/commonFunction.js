@@ -109,6 +109,12 @@ export const profileMenu = [
       value: "work_experience",
     },
     {
+      id: 99,
+      title: "Work Details",
+      icon: "briefcase-outline",
+      value: "work_details",
+    },
+    {
       id: 6,
       title: "Education",
       icon: "school-outline",

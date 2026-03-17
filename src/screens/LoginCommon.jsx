@@ -662,57 +662,18 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
   const otpInputs = useRef([]);
   const dispatch = useDispatch();
 
-  // Validation schema using Yup
-  const validationSchema = Yup.object({
-    fullName: Yup.string()
-      .required("Full name is required")
-      .min(3, "Full name must be at least 3 characters")
-      .max(50, "Full name cannot exceed 50 characters")
-      .matches(/^[a-zA-Z\s]+$/, "Full name can only contain letters and spaces")
-      .trim(),
-
-    email: Yup.string()
-      .required("Email is required")
-      .email("Enter a valid email")
-      .trim()
-      .lowercase(),
-
-    mobileNumber: Yup.string()
-      .required("Phone number is required")
-      .matches(
-        /^[6-9]\d{9}$/,
-        "Enter a valid 10 digit phone number starting with 6-9",
-      )
-      .trim(),
-
-    password: Yup.string()
-      .required("Password is required")
-      .min(6, "Password must be at least 6 characters")
-      .matches(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        "Password must contain at least one uppercase letter, one lowercase letter, and one number"
-      )
-      .trim(),
-
-    confirmPassword: Yup.string()
-      .required("Please confirm your password")
-      .oneOf([Yup.ref("password")], "Passwords must match")
-      .trim(),
-
-    otp: Yup.array()
-      .of(Yup.string().matches(/^\d$/, "Must be a number"))
-      .length(6, "Please enter complete OTP")
-      .test("is-complete", "Please enter complete OTP", (value) => {
-        return value && value.every((digit) => digit && digit.length === 1);
-      }),
-
-    termsAccepted: Yup.boolean().oneOf(
-      [true],
-      "You must accept the terms and conditions to register",
-    ),
+  // ✅ SIMPLE REQUIRED VALIDATION like previous components
+  const validationSchema = Yup.object().shape({
+    fullName: Yup.string().required("Required"),
+    email: Yup.string().required("Required"),
+    mobileNumber: Yup.string().required("Required"),
+    password: Yup.string().required("Required"),
+    confirmPassword: Yup.string().required("Required"),
+    otp: Yup.string().required("Required"),
+    agreeTerms: Yup.boolean().required("Required").oneOf([true], "Required"),
   });
 
-  // Formik hook
+  // ✅ initialValues now matches EXACT backend payload structure
   const formik = useFormik({
     initialValues: {
       fullName: "",
@@ -720,73 +681,47 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
       mobileNumber: "",
       password: "",
       confirmPassword: "",
-      otp: ["", "", "", "", "", ""],
-      termsAccepted: false,
+      otp: "",
+      userType: type.toUpperCase(),
+      agreeTerms: false,
+      registrationId: "", // Will be generated in handleSubmit
     },
     validationSchema,
-    validateOnChange: true,
-    validateOnBlur: true,
-    onSubmit: async (values) => {
-      setLoading(true);
-
-      try {
-        // Validate OTP field before submission
-        await formik.validateField('otp');
-        
-        if (formik.errors.otp) {
-          showErrorToast(formik.errors.otp);
-          setLoading(false);
-          return;
-        }
-
-        // Combine OTP digits into a single string
-        const otpString = values.otp.join("");
-
-        const payload = {
-          fullName: values.fullName.trim(),
-          email: values.email.trim().toLowerCase(),
-          mobileNumber: values.mobileNumber.trim(),
-          password: values.password.trim(),
-          confirmPassword: values.confirmPassword.trim(),
-          otp: otpString,
-          registrationId: `DL-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000)}`,
-          // userType: type,
-          userType: type.toUpperCase(),
-          agreeTerms: values.termsAccepted,
-          // timestamp: new Date().toISOString(),
-        };
-
-        console.log(`${type} registration payload =>`, payload);
-
-        // Fix: Make sure the API endpoint is correct and payload structure matches backend expectations
-        const res = await commonAPICall(EMPLOYEEREG, payload, "post", dispatch);
-        console.log("Registration response:", res);
-
-        if (res?.status === 200 || res?.status === 201) {
-          setShowOtpModal(false);
-          showSuccessToast(
-            `${isWorker ? "Worker" : "Employer"} registered successfully`
-          );
-          navigation.goBack();
-        } else {
-          throw new Error(res?.message || "Registration failed");
-        }
-      } catch (error) {
-        console.error("Registration error:", error);
-        showErrorToast(error?.message || "Registration failed");
-      } finally {
-        setLoading(false);
-      }
-    },
+    onSubmit: handleSubmit,
   });
 
-  // Helper function to get field error
-  const getFieldError = (fieldName) => {
-    return (formik.touched[fieldName] || formik.submitCount > 0) &&
-      formik.errors[fieldName]
-      ? formik.errors[fieldName]
-      : "";
-  };
+  async function handleSubmit(values, { setSubmitting, resetForm }) {
+    setLoading(true);
+    try {
+      // ✅ USING VALUES DIRECTLY AS PAYLOAD with additional computed field
+      const payload = {
+        ...values,
+        registrationId: `DL-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000)}`,
+      };
+
+      console.log(`${type} registration payload =>`, payload);
+
+      const res = await commonAPICall(EMPLOYEEREG, payload, "post", dispatch);
+      console.log("Registration response:", res);
+
+      if (res?.status === 200 || res?.status === 201) {
+        setShowOtpModal(false);
+        showSuccessToast(
+          `${isWorker ? "Worker" : "Employer"} registered successfully`
+        );
+        navigation.goBack();
+        resetForm();
+      } else {
+        throw new Error(res?.message || "Registration failed");
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      showErrorToast(error?.message || "Registration failed");
+    } finally {
+      setLoading(false);
+      setSubmitting(false);
+    }
+  }
 
   // Handle phone number input
   const handlePhoneChange = (text) => {
@@ -796,8 +731,12 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
 
   // Handle OTP input change
   const handleOtpChange = (text, index) => {
-    const newOtp = [...formik.values.otp];
-
+    const currentOtp = formik.values.otp;
+    let newOtp = currentOtp.split('');
+    
+    // Ensure we have 6 positions
+    while (newOtp.length < 6) newOtp.push('');
+    
     // Allow only single digit
     if (text.length > 1) {
       text = text.charAt(text.length - 1);
@@ -809,7 +748,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
     }
 
     newOtp[index] = text;
-    formik.setFieldValue("otp", newOtp);
+    formik.setFieldValue("otp", newOtp.join(''));
 
     // Clear OTP error when user starts typing
     if (formik.errors.otp) {
@@ -824,9 +763,12 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
 
   // Handle OTP key press (backspace)
   const handleOtpKeyPress = (e, index) => {
+    const currentOtp = formik.values.otp;
+    const otpArray = currentOtp.split('');
+    
     if (
       e.nativeEvent.key === "Backspace" &&
-      !formik.values.otp[index] &&
+      !otpArray[index] &&
       index > 0
     ) {
       otpInputs.current[index - 1]?.focus();
@@ -835,10 +777,8 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
 
   // Handle OTP paste
   const handleOtpPaste = (text) => {
-    const digits = text.replace(/\D/g, "").split("");
-    if (digits.length === 6) {
-      formik.setFieldValue("otp", digits);
-    }
+    const digits = text.replace(/\D/g, "").substring(0, 6);
+    formik.setFieldValue("otp", digits);
   };
 
   // Validate all fields before sending OTP
@@ -849,7 +789,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
       "mobileNumber",
       "password",
       "confirmPassword",
-      "termsAccepted",
+      "agreeTerms",
     ];
 
     // Set all fields as touched
@@ -859,18 +799,15 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
     });
     
     await formik.setTouched(touchedFields);
-
-    // Trigger validation for all fields
-    const errors = await formik.validateForm();
+    await formik.validateForm();
     
-    // Check if there are any errors in the required fields
-    const hasErrors = fieldsToValidate.some((field) => errors[field]);
+    // Check if there are any errors
+    const hasErrors = fieldsToValidate.some((field) => formik.errors[field]);
 
     if (hasErrors) {
-      // Show first error message
-      const firstErrorField = fieldsToValidate.find(field => errors[field]);
+      const firstErrorField = fieldsToValidate.find(field => formik.errors[field]);
       if (firstErrorField) {
-        showErrorToast(errors[firstErrorField]);
+        showErrorToast(formik.errors[firstErrorField]);
       }
     }
 
@@ -879,10 +816,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
 
   // Send OTP - only enabled when terms are accepted
   const handleSendOtp = async () => {
-    // First validate all fields
     const isValid = await validateAllFields();
 
-    if (isValid && formik.values.termsAccepted) {
+    if (isValid && formik.values.agreeTerms) {
       try {
         setOtpLoading(true);
         const mobileNumber = formik.values.mobileNumber;
@@ -890,42 +826,24 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
 
         console.log("Sending OTP to:", { phone: mobileNumber, email });
 
-        // Fix: Make sure the API endpoint is correct
-        // Option 1: If the API expects query parameters
-
+        const url = `${EMPLOYEEREGOTP}${mobileNumber}&userType=${type.toUpperCase()}`;
+        console.log("uuuuuuuuuu", url);
         
-      const url = `${EMPLOYEEREGOTP}${mobileNumber}&userType=${type.toUpperCase()}`
-      console.log("uuuuuuuuuu",url)
         const getotp = await commonAPICall(
-       url,
-          {}, // Empty body for GET request
-          "post", // or "get" depending on your API
+          url,
+          {},
+          "post",
           dispatch,
         );
-
-
-
-        // Option 2: If the API expects a POST request with body
-        // const getotp = await commonAPICall(
-        //   EMPLOYEEREGOTP,
-        //   {
-        //     mobileNumber: mobileNumber,
-        //     userType: type,
-        //     email: email // Include if needed
-        //   },
-        //   "post",
-        //   dispatch,
-        // );
 
         console.log("OTP response:", getotp?.data);
 
         if (getotp?.status === 200 || getotp?.status === 201) {
           setOtpSent(true);
-          setOtpTimer(60); // 60 seconds timer
-          setShowOtpModal(true); // Show OTP modal
+          setOtpTimer(60);
+          setShowOtpModal(true);
           showSuccessToast("OTP sent successfully");
 
-          // Start timer countdown
           const timer = setInterval(() => {
             setOtpTimer((prev) => {
               if (prev <= 1) {
@@ -944,7 +862,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
       } finally {
         setOtpLoading(false);
       }
-    } else if (!formik.values.termsAccepted) {
+    } else if (!formik.values.agreeTerms) {
       showErrorToast("Please accept terms and conditions to continue");
     }
   };
@@ -952,7 +870,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
   // Reset OTP fields when modal closes
   const handleCloseModal = () => {
     setShowOtpModal(false);
-    formik.setFieldValue("otp", ["", "", "", "", "", ""]);
+    formik.setFieldValue("otp", "");
     formik.setFieldTouched("otp", false);
     formik.setFieldError("otp", undefined);
     setOtpTimer(0);
@@ -965,32 +883,18 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
     try {
       setOtpLoading(true);
       const mobileNumber = formik.values.mobileNumber;
-      const email = formik.values.email;
 
       console.log("Resending OTP to:", mobileNumber);
       
-      // Fix: Make sure the API endpoint is correct for resend
-      // Option 1: Query parameters
-
-      const url = `${EMPLOYEEREGOTP}${mobileNumber}&userType=${type}`
-      console.log("url",url)
+      const url = `${EMPLOYEEREGOTP}${mobileNumber}&userType=${type.toUpperCase()}`;
+      console.log("url", url);
+      
       const getotp = await commonAPICall(
         url,
         {},
         "post",
         dispatch,
       );
-
-      // Option 2: POST with body
-      // const getotp = await commonAPICall(
-      //   EMPLOYEEREGOTP,
-      //   {
-      //     mobileNumber: mobileNumber,
-      //     userType: type
-      //   },
-      //   "post",
-      //   dispatch,
-      // );
 
       if (getotp?.status === 200 || getotp?.status === 201) {
         setOtpTimer(60);
@@ -1014,7 +918,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
   };
 
   // Check if terms are accepted
-  const isTermsAccepted = formik.values.termsAccepted;
+  const isTermsAccepted = formik.values.agreeTerms;
 
   return (
     <View style={styles.screen}>
@@ -1082,7 +986,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
               <View
                 style={[
                   styles.inputWrapper,
-                  getFieldError("fullName") ? styles.inputWrapperError : null,
+                  formik.touched.fullName &&
+                    formik.errors.fullName &&
+                    styles.inputWrapperError,
                 ]}
               >
                 <Ionicons
@@ -1106,11 +1012,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   onBlur={() => formik.setFieldTouched("fullName", true)}
                 />
               </View>
-              {getFieldError("fullName") ? (
-                <Text style={styles.errorText}>
-                  {getFieldError("fullName")}
-                </Text>
-              ) : null}
+              {formik.touched.fullName && formik.errors.fullName && (
+                <Text style={styles.errorText}>{formik.errors.fullName}</Text>
+              )}
             </View>
 
             {/* Email Field */}
@@ -1118,7 +1022,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
               <View
                 style={[
                   styles.inputWrapper,
-                  getFieldError("email") ? styles.inputWrapperError : null,
+                  formik.touched.email &&
+                    formik.errors.email &&
+                    styles.inputWrapperError,
                 ]}
               >
                 <Ionicons
@@ -1140,9 +1046,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   keyboardType="email-address"
                 />
               </View>
-              {getFieldError("email") ? (
-                <Text style={styles.errorText}>{getFieldError("email")}</Text>
-              ) : null}
+              {formik.touched.email && formik.errors.email && (
+                <Text style={styles.errorText}>{formik.errors.email}</Text>
+              )}
             </View>
 
             {/* Phone Number Field */}
@@ -1150,9 +1056,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
               <View
                 style={[
                   styles.inputWrapper,
-                  getFieldError("mobileNumber")
-                    ? styles.inputWrapperError
-                    : null,
+                  formik.touched.mobileNumber &&
+                    formik.errors.mobileNumber &&
+                    styles.inputWrapperError,
                 ]}
               >
                 <Ionicons
@@ -1176,11 +1082,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   maxLength={10}
                 />
               </View>
-              {getFieldError("mobileNumber") ? (
-                <Text style={styles.errorText}>
-                  {getFieldError("mobileNumber")}
-                </Text>
-              ) : null}
+              {formik.touched.mobileNumber && formik.errors.mobileNumber && (
+                <Text style={styles.errorText}>{formik.errors.mobileNumber}</Text>
+              )}
             </View>
 
             {/* Password Field */}
@@ -1188,7 +1092,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
               <View
                 style={[
                   styles.inputWrapper,
-                  getFieldError("password") ? styles.inputWrapperError : null,
+                  formik.touched.password &&
+                    formik.errors.password &&
+                    styles.inputWrapperError,
                 ]}
               >
                 <Ionicons
@@ -1219,11 +1125,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   />
                 </TouchableOpacity>
               </View>
-              {getFieldError("password") ? (
-                <Text style={styles.errorText}>
-                  {getFieldError("password")}
-                </Text>
-              ) : null}
+              {formik.touched.password && formik.errors.password && (
+                <Text style={styles.errorText}>{formik.errors.password}</Text>
+              )}
             </View>
 
             {/* Confirm Password Field */}
@@ -1231,9 +1135,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
               <View
                 style={[
                   styles.inputWrapper,
-                  getFieldError("confirmPassword")
-                    ? styles.inputWrapperError
-                    : null,
+                  formik.touched.confirmPassword &&
+                    formik.errors.confirmPassword &&
+                    styles.inputWrapperError,
                 ]}
               >
                 <Ionicons
@@ -1266,11 +1170,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   />
                 </TouchableOpacity>
               </View>
-              {getFieldError("confirmPassword") ? (
-                <Text style={styles.errorText}>
-                  {getFieldError("confirmPassword")}
-                </Text>
-              ) : null}
+              {formik.touched.confirmPassword && formik.errors.confirmPassword && (
+                <Text style={styles.errorText}>{formik.errors.confirmPassword}</Text>
+              )}
             </View>
 
             {/* Terms and Conditions Checkbox */}
@@ -1279,8 +1181,8 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                 style={styles.checkboxWrapper}
                 onPress={() =>
                   formik.setFieldValue(
-                    "termsAccepted",
-                    !formik.values.termsAccepted,
+                    "agreeTerms",
+                    !formik.values.agreeTerms,
                   )
                 }
                 activeOpacity={0.8}
@@ -1288,10 +1190,10 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                 <View
                   style={[
                     styles.checkbox,
-                    formik.values.termsAccepted && styles.checkboxChecked,
+                    formik.values.agreeTerms && styles.checkboxChecked,
                   ]}
                 >
-                  {formik.values.termsAccepted && (
+                  {formik.values.agreeTerms && (
                     <Ionicons name="checkmark" size={16} color="#fff" />
                   )}
                 </View>
@@ -1300,7 +1202,6 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   <Text
                     style={styles.termsLink}
                     onPress={() => {
-                      // Navigate to Terms and Conditions screen
                       navigation.navigate("TermsAndConditions");
                     }}
                   >
@@ -1310,7 +1211,6 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   <Text
                     style={styles.termsLink}
                     onPress={() => {
-                      // Navigate to Privacy Policy screen
                       navigation.navigate("PrivacyPolicy");
                     }}
                   >
@@ -1318,11 +1218,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   </Text>
                 </Text>
               </TouchableOpacity>
-              {getFieldError("termsAccepted") ? (
-                <Text style={styles.errorText}>
-                  {getFieldError("termsAccepted")}
-                </Text>
-              ) : null}
+              {formik.touched.agreeTerms && formik.errors.agreeTerms && (
+                <Text style={styles.errorText}>{formik.errors.agreeTerms}</Text>
+              )}
             </View>
 
             {/* Send OTP Button */}
@@ -1377,30 +1275,33 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
             {/* OTP Input Fields */}
             <View style={styles.modalOtpContainer}>
               <View style={styles.otpInputsContainer}>
-                {formik.values.otp.map((digit, index) => (
-                  <TextInput
-                    key={index}
-                    ref={(ref) => (otpInputs.current[index] = ref)}
-                    style={[
-                      styles.otpInput,
-                      getFieldError("otp") ? styles.otpInputError : null,
-                    ]}
-                    value={digit}
-                    onChangeText={(text) => handleOtpChange(text, index)}
-                    onKeyPress={(e) => handleOtpKeyPress(e, index)}
-                    onPaste={(e) => handleOtpPaste(e.nativeEvent.text)}
-                    keyboardType="number-pad"
-                    maxLength={1}
-                    onBlur={() => formik.setFieldTouched("otp", true)}
-                    autoFocus={index === 0}
-                    editable={!loading}
-                  />
-                ))}
+                {Array(6).fill(0).map((_, index) => {
+                  const otpValue = formik.values.otp[index] || '';
+                  return (
+                    <TextInput
+                      key={index}
+                      ref={(ref) => (otpInputs.current[index] = ref)}
+                      style={[
+                        styles.otpInput,
+                        formik.touched.otp && formik.errors.otp && styles.otpInputError,
+                      ]}
+                      value={otpValue}
+                      onChangeText={(text) => handleOtpChange(text, index)}
+                      onKeyPress={(e) => handleOtpKeyPress(e, index)}
+                      onPaste={(e) => handleOtpPaste(e.nativeEvent.text)}
+                      keyboardType="number-pad"
+                      maxLength={1}
+                      onBlur={() => formik.setFieldTouched("otp", true)}
+                      autoFocus={index === 0}
+                      editable={!loading}
+                    />
+                  );
+                })}
               </View>
 
-              {getFieldError("otp") ? (
-                <Text style={styles.errorText}>{getFieldError("otp")}</Text>
-              ) : null}
+              {formik.touched.otp && formik.errors.otp && (
+                <Text style={styles.errorText}>{formik.errors.otp}</Text>
+              )}
 
               {/* Resend OTP */}
               <View style={styles.resendOtpContainer}>
