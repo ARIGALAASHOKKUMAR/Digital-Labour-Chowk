@@ -282,7 +282,7 @@ const IdentityVerification = () => {
   const validationSchema = Yup.object().shape({
     documentType: Yup.string().required("Required"),
     documentNumber: Yup.string().required("Required"),
-    documentFile: Yup.string().required("Required"),
+    // documentFile: Yup.string().required("Required"),
     eShramCardNumber: Yup.string().required("Required"),
   });
 
@@ -290,7 +290,7 @@ const IdentityVerification = () => {
     initialValues: {
       documentType: "",
       documentNumber: "",
-      documentFile: "",
+      documentFile: "test",
       eShramCardNumber: "",
     },
     validationSchema,
@@ -1146,10 +1146,8 @@ const SkillDetails = () => {
               }}
             >
               <Picker.Item label="Select Availability" value="" />
-              <Picker.Item label="Available Immediately" value="immediate" />
-              <Picker.Item label="Available in 1-3 Days" value="1_3_days" />
-              <Picker.Item label="Available in 1 Week" value="1_week" />
-              <Picker.Item label="Not Available Now" value="not_available" />
+              <Picker.Item label="Yes" value="yes" />
+              <Picker.Item label="No" value="no" />
             </Picker>
           </View>
           {formik.errors.availabilityForWork &&
@@ -1885,8 +1883,6 @@ const WorkExperience = () => {
 };
 
 
-// ==================== Education Component ====================
-
 
 const Education = () => {
   const state = useSelector((state) => state.LoginReducer);
@@ -1906,7 +1902,7 @@ const Education = () => {
           educationLevel: Yup.string().required("Required"),
           institutionName: Yup.string().required("Required"),
           passingYear: Yup.string().required("Required"),
-          certificateFile: Yup.string().required("Required"),
+          // certificateFile: Yup.string().required("Required"),
         }),
       )
       .min(1, "Required"),
