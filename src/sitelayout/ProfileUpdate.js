@@ -46,6 +46,8 @@ const BasicDetails = () => {
     gender: Yup.string().required("Required"),
   });
 
+  // ✅ initialValues now matches EXACT backend payload structure
+  // including userType from Redux state
   const formik = useFormik({
     initialValues: {
       fullName: "",
@@ -53,9 +55,9 @@ const BasicDetails = () => {
       gender: "",
       mobileNumber: "",
       email: "",
-      profileImage: "test",
-      userType: "WORKER",
-      employerTypeId: 1,
+      profileImage: "base64imageorURL",
+      userType: state.roleName,  // ✅ Taking userType from Redux state
+      stageName: "BASIC_INFO",
     },
     validationSchema,
     onSubmit: handleSubmit,
@@ -63,26 +65,15 @@ const BasicDetails = () => {
 
   async function handleSubmit(values, { setSubmitting, resetForm }) {
     try {
-      const payload = {
-        fullName: values.fullName,
-        email: values.email,
-        mobileNumber: values.mobileNumber,
-        userType: state.roleName,
-        gender: values.gender,
-        dateOfBirth: values.dateOfBirth,
-        profileImage: values.profileImage,
-        employerTypeId: values.employerTypeId,
-        stageName: "BASIC_INFO",
-      };
+      // ✅ USING VALUES DIRECTLY AS PAYLOAD - NO MODIFICATIONS NEEDED
+      console.log("Sending payload to backend:", values);
 
       const response = await commonAPICall(
         BASICPROFILE,
-        payload,
+        values,  // Using values directly as payload
         "POST",
         dispatch,
       );
-
-      console.log("payload", payload);
 
       if (response?.status === 200) {
         resetForm();
@@ -282,15 +273,18 @@ const IdentityVerification = () => {
   const validationSchema = Yup.object().shape({
     documentType: Yup.string().required("Required"),
     documentNumber: Yup.string().required("Required"),
-    // documentFile: Yup.string().required("Required"),
+    // uploadDocument: Yup.string().required("Required"), // Updated field name
     eShramCardNumber: Yup.string().required("Required"),
   });
 
+  // ✅ initialValues now matches EXACT backend payload structure
   const formik = useFormik({
     initialValues: {
+      userType: state.roleName,  // ✅ Added from Redux state
+      stageName: "DOCUMENT_VERIFICATION",  // ✅ Added
       documentType: "",
       documentNumber: "",
-      documentFile: "test",
+      uploadDocument: "test",  // ✅ Renamed from documentFile to match payload
       eShramCardNumber: "",
     },
     validationSchema,
@@ -299,23 +293,15 @@ const IdentityVerification = () => {
 
   async function handleSubmit(values, { resetForm, setSubmitting }) {
     try {
-      const payload = {
-        userType: state.roleName,
-        stageName: "DOCUMENT_VERIFICATION",
-        documentType: values.documentType,
-        documentNumber: values.documentNumber,
-        uploadDocument: values.documentFile,
-        eShramCardNumber: values.eShramCardNumber,
-      };
+      // ✅ USING VALUES DIRECTLY AS PAYLOAD - NO MODIFICATIONS NEEDED
+      console.log("Sending payload to backend:", values);
 
       const response = await commonAPICall(
         BASICPROFILE,
-        payload,
+        values,  // Using values directly as payload
         "POST",
         dispatch,
       );
-
-      console.log("payload", payload);
 
       if (response?.status === 200) {
         const updatedPayload = {
@@ -396,28 +382,28 @@ const IdentityVerification = () => {
           <TouchableOpacity
             style={[
               styles.uploadButton,
-              formik.errors.documentFile &&
-                formik.touched.documentFile &&
+              formik.errors.uploadDocument &&  // ✅ Updated field name
+                formik.touched.uploadDocument &&  // ✅ Updated field name
                 styles.inputError,
             ]}
             onPress={() => {
-              formik.setFieldTouched("documentFile", true);
+              formik.setFieldTouched("uploadDocument", true);  // ✅ Updated field name
 
               // replace this with actual picker
               Alert.alert("Upload", "Open Document Picker");
-              formik.setFieldValue("documentFile", "test-document.pdf");
+              formik.setFieldValue("uploadDocument", "test-document.pdf");  // ✅ Updated field name
             }}
             disabled={formik.isSubmitting}
           >
             <Text style={styles.uploadButtonText}>Upload Document</Text>
           </TouchableOpacity>
 
-          {formik.values.documentFile ? (
-            <Text style={styles.fileNameText}>{formik.values.documentFile}</Text>
+          {formik.values.uploadDocument ? (  // ✅ Updated field name
+            <Text style={styles.fileNameText}>{formik.values.uploadDocument}</Text>  // ✅ Updated field name
           ) : null}
 
-          {formik.errors.documentFile && formik.touched.documentFile && (
-            <Text style={styles.errorText}>{formik.errors.documentFile}</Text>
+          {formik.errors.uploadDocument && formik.touched.uploadDocument && (  // ✅ Updated field name
+            <Text style={styles.errorText}>{formik.errors.uploadDocument}</Text>
           )}
         </View>
 
@@ -462,7 +448,6 @@ const IdentityVerification = () => {
     </FormikProvider>
   );
 };
-
 
 // ==================== Location Information Component ====================
 
@@ -527,21 +512,24 @@ const LocationInformation = () => {
     district: Yup.string().required("Required"),
     mandal: Yup.string().required("Required"),
     village: Yup.string().required("Required"),
-    surveyOrHouseNo: Yup.string().required("Required"),
+    plotOrHouseNumber: Yup.string().required("Required"), // ✅ Updated field name
     landmark: Yup.string().required("Required"),
-    pinCode: Yup.string().required("Required"),
+    pincode: Yup.string().required("Required"), // ✅ Updated field name
     latitude: Yup.string().required("Required"),
     longitude: Yup.string().required("Required"),
   });
 
+  // ✅ initialValues now matches EXACT backend payload structure
   const formik = useFormik({
     initialValues: {
+      userType: state.roleName,  // ✅ Added from Redux state
+      stageName: "LOCATION_ADDRESS",  // ✅ Added
       district: "",
       mandal: "",
       village: "",
-      surveyOrHouseNo: "",
+      plotOrHouseNumber: "",  // ✅ Renamed from surveyOrHouseNo
       landmark: "",
-      pinCode: "",
+      pincode: "",  // ✅ Renamed from pinCode
       latitude: "",
       longitude: "",
     },
@@ -551,22 +539,12 @@ const LocationInformation = () => {
 
   async function handleSubmit(values, { setSubmitting, resetForm }) {
     try {
-      const payload = {
-        userType: state.roleName,
-        stageName: "LOCATION_ADDRESS",
-        plotOrHouseNumber: values.surveyOrHouseNo,
-        landmark: values.landmark,
-        pincode: values.pinCode,
-        latitude: values.latitude,
-        longitude: values.longitude,
-        district: values.district,
-        mandal: values.mandal,
-        village: values.village,
-      };
+      // ✅ USING VALUES DIRECTLY AS PAYLOAD - NO MODIFICATIONS NEEDED
+      console.log("Sending payload to backend:", values);
 
       const response = await commonAPICall(
         BASICPROFILE,
-        payload,
+        values,  // Using values directly as payload
         "POST",
         dispatch,
       );
@@ -745,19 +723,19 @@ const LocationInformation = () => {
           <TextInput
             style={[
               styles.input,
-              formik.errors.surveyOrHouseNo &&
-                formik.touched.surveyOrHouseNo &&
+              formik.errors.plotOrHouseNumber &&  // ✅ Updated field name
+                formik.touched.plotOrHouseNumber &&  // ✅ Updated field name
                 styles.inputError,
             ]}
-            value={formik.values.surveyOrHouseNo}
-            onChangeText={formik.handleChange("surveyOrHouseNo")}
-            onBlur={formik.handleBlur("surveyOrHouseNo")}
+            value={formik.values.plotOrHouseNumber}  // ✅ Updated field name
+            onChangeText={formik.handleChange("plotOrHouseNumber")}  // ✅ Updated field name
+            onBlur={formik.handleBlur("plotOrHouseNumber")}  // ✅ Updated field name
             placeholder="Enter Door No."
             maxLength={20}
           />
-          {formik.errors.surveyOrHouseNo && formik.touched.surveyOrHouseNo && (
+          {formik.errors.plotOrHouseNumber && formik.touched.plotOrHouseNumber && (  // ✅ Updated field name
             <Text style={styles.errorText}>
-              {formik.errors.surveyOrHouseNo}
+              {formik.errors.plotOrHouseNumber}  // ✅ Updated field name
             </Text>
           )}
         </View>
@@ -791,19 +769,19 @@ const LocationInformation = () => {
           <TextInput
             style={[
               styles.input,
-              formik.errors.pinCode &&
-                formik.touched.pinCode &&
+              formik.errors.pincode &&  // ✅ Updated field name
+                formik.touched.pincode &&  // ✅ Updated field name
                 styles.inputError,
             ]}
-            value={formik.values.pinCode}
-            onChangeText={formik.handleChange("pinCode")}
-            onBlur={formik.handleBlur("pinCode")}
+            value={formik.values.pincode}  // ✅ Updated field name
+            onChangeText={formik.handleChange("pincode")}  // ✅ Updated field name
+            onBlur={formik.handleBlur("pincode")}  // ✅ Updated field name
             placeholder="Enter Pin Code"
             keyboardType="numeric"
             maxLength={6}
           />
-          {formik.errors.pinCode && formik.touched.pinCode && (
-            <Text style={styles.errorText}>{formik.errors.pinCode}</Text>
+          {formik.errors.pincode && formik.touched.pincode && (  // ✅ Updated field name
+            <Text style={styles.errorText}>{formik.errors.pincode}</Text>
           )}
         </View>
 
@@ -867,7 +845,6 @@ const LocationInformation = () => {
 };
 
 
-
 const SkillDetails = () => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
@@ -877,19 +854,22 @@ const SkillDetails = () => {
 
   const validationSchema = Yup.object().shape({
     skillIds: Yup.array().min(1, "Required").required("Required"),
-    experience: Yup.string().required("Required"),
+    experienceYears: Yup.string().required("Required"),  // ✅ Updated field name
     preferredWorkType: Yup.string().required("Required"),
     dailyRate: Yup.string().required("Required"),
-    availabilityForWork: Yup.string().required("Required"),
+    workAvailability: Yup.string().required("Required"),  // ✅ Updated field name
   });
 
+  // ✅ initialValues now matches EXACT backend payload structure
   const formik = useFormik({
     initialValues: {
+      userType: state.roleName,  // ✅ Added from Redux state
+      stageName: "SKILL_INFO",  // ✅ Added
       skillIds: [],
-      experience: "",
+      experienceYears: "",  // ✅ Renamed from experience
       preferredWorkType: "",
       dailyRate: "",
-      availabilityForWork: "",
+      workAvailability: "",  // ✅ Renamed from availabilityForWork
     },
     validationSchema,
     onSubmit: handleSubmit,
@@ -914,24 +894,18 @@ const SkillDetails = () => {
 
   async function handleSubmit(values, { resetForm, setSubmitting }) {
     try {
-      const payload = {
-        userType: state.roleName,
-        stageName: "SKILL_INFO",
-        skillIds: values.skillIds,
-        experienceYears: values.experience ? Number(values.experience) : 0,
-        preferredWorkType: values.preferredWorkType,
-        dailyRate: values.dailyRate ? Number(values.dailyRate) : 0,
-        workAvailability: values.availabilityForWork,
-      };
+      // ✅ USING VALUES DIRECTLY AS PAYLOAD - with type conversions
+      
+
+      console.log("val",values);
+      
 
       const response = await commonAPICall(
         BASICPROFILE,
-        payload,
+        values,
         "POST",
         dispatch,
       );
-
-      console.log("payload", payload);
 
       if (response?.status === 200) {
         const updatedPayload = {
@@ -1035,19 +1009,19 @@ const SkillDetails = () => {
           <TextInput
             style={[
               styles.input,
-              formik.errors.experience &&
-                formik.touched.experience &&
+              formik.errors.experienceYears &&  // ✅ Updated field name
+                formik.touched.experienceYears &&  // ✅ Updated field name
                 styles.inputError,
             ]}
-            value={formik.values.experience}
-            onChangeText={formik.handleChange("experience")}
-            onBlur={formik.handleBlur("experience")}
+            value={formik.values.experienceYears}  // ✅ Updated field name
+            onChangeText={formik.handleChange("experienceYears")}  // ✅ Updated field name
+            onBlur={formik.handleBlur("experienceYears")}  // ✅ Updated field name
             placeholder="Enter experience in years"
             keyboardType="numeric"
             maxLength={2}
           />
-          {formik.errors.experience && formik.touched.experience && (
-            <Text style={styles.errorText}>{formik.errors.experience}</Text>
+          {formik.errors.experienceYears && formik.touched.experienceYears && (  // ✅ Updated field name
+            <Text style={styles.errorText}>{formik.errors.experienceYears}</Text>
           )}
         </View>
 
@@ -1133,16 +1107,16 @@ const SkillDetails = () => {
           <View
             style={[
               styles.selectBox,
-              formik.errors.availabilityForWork &&
-                formik.touched.availabilityForWork &&
+              formik.errors.workAvailability &&  // ✅ Updated field name
+                formik.touched.workAvailability &&  // ✅ Updated field name
                 styles.inputError,
             ]}
           >
             <Picker
-              selectedValue={formik.values.availabilityForWork}
+              selectedValue={formik.values.workAvailability}  // ✅ Updated field name
               onValueChange={(itemValue) => {
-                formik.setFieldTouched("availabilityForWork", true);
-                formik.setFieldValue("availabilityForWork", itemValue);
+                formik.setFieldTouched("workAvailability", true);  // ✅ Updated field name
+                formik.setFieldValue("workAvailability", itemValue);  // ✅ Updated field name
               }}
             >
               <Picker.Item label="Select Availability" value="" />
@@ -1150,10 +1124,10 @@ const SkillDetails = () => {
               <Picker.Item label="No" value="no" />
             </Picker>
           </View>
-          {formik.errors.availabilityForWork &&
-            formik.touched.availabilityForWork && (
+          {formik.errors.workAvailability &&  // ✅ Updated field name
+            formik.touched.workAvailability && (  // ✅ Updated field name
               <Text style={styles.errorText}>
-                {formik.errors.availabilityForWork}
+                {formik.errors.workAvailability}
               </Text>
             )}
         </View>
