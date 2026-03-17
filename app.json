@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "LABOUR DEPT",
-    "slug": "LABOUR DEPT",
+    "name": "Digital Labour Chowk",
+    "slug": "digital-labour-chowk",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/labour_log.png",
@@ -13,7 +13,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ashokarigala.MyEcommerceAppp",
+      "bundleIdentifier": "com.ashokarigala.digitallabourchowk",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -23,7 +23,7 @@
         "foregroundImage": "./assets/labour_log.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.ashokarigala.MyEcommerceAppp"
+      "package": "com.ashokarigala.digitallabourchowk"
     },
     "web": {
       "favicon": "./assets/favicon.png"
