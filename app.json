@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "LABOUR DEPT",
+    "slug": "LABOUR DEPT",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/labour_log.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ashokarigala.MyEcommerceAppp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/labour_log.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.ashokarigala.MyEcommerceAppp"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "037d0ffb-1ab3-45ee-ab0e-1bfc13c7749b"
+      }
+    },
+    "plugins": [
+      "@react-native-community/datetimepicker",
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "buildArchs": ["arm64-v8a"]
+          }
+        }
+      ]
+    ]
+  }
+}
