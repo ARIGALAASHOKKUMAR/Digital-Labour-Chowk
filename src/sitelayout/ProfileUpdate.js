@@ -1221,6 +1221,8 @@ const WorkExperience = () => {
   const dispatch = useDispatch();
 
   const [skillsList, setSkillsList] = useState([]);
+  const [showSkillsDropdown, setShowSkillsDropdown] = useState(false);
+  const [currentSkillIndex, setCurrentSkillIndex] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [currentField, setCurrentField] = useState("");
   const [currentIndex, setCurrentIndex] = useState(null);
@@ -1231,7 +1233,7 @@ const WorkExperience = () => {
     projectName: "",
     workPlace: "",
     workType: "",
-    skillId: "",
+    skillIds: [], // Changed from skillId to skillIds array
     taskDesc: "",
     startDate: "",
     endDate: "",
@@ -1265,7 +1267,7 @@ const WorkExperience = () => {
         projectName: Yup.string().required("Required"),
         workPlace: Yup.string().required("Required"),
         workType: Yup.string().required("Required"),
-        skillId: Yup.string().required("Required"),
+        skillIds: Yup.array().min(1, "Required").required("Required"), // Changed to array validation
         taskDesc: Yup.string().required("Required"),
         startDate: Yup.string().required("Required"),
         endDate: Yup.string().required("Required"),
@@ -1281,7 +1283,9 @@ const WorkExperience = () => {
 
   const formik = useFormik({
     initialValues: {
-      experiences: [emptyExperience],
+      userType: state.roleName || "",
+      stageName: "WORK_HISTORY",
+      workerExperienceList: [{ ...emptyExperience }], // Changed from experiences to workerExperienceList
     },
     validationSchema,
     onSubmit: handleSubmit,
@@ -1313,33 +1317,13 @@ const WorkExperience = () => {
   };
 
   async function handleSubmit(values, { resetForm, setSubmitting }) {
-    const payload = {
-      userType: state.roleName || "",
-      stageName: "WORK_HISTORY",
-      workerExperienceList: values.experiences.map((exp) => ({
-        employerName: exp.employerName?.trim() || "",
-        projectName: exp.projectName?.trim() || "",
-        workPlace: exp.workPlace?.trim() || "",
-        workType: exp.workType?.trim() || "",
-        skillId: exp.skillId ? Number(exp.skillId) : null,
-        taskDescription: exp.taskDesc?.trim() || "",
-        startDate: formatDateToApi(exp.startDate),
-        endDate: formatDateToApi(exp.endDate),
-        daysWorked: exp.daysWorked ? Number(exp.daysWorked) : 0,
-        dailyWage: exp.dailyWage ? Number(exp.dailyWage) : 0,
-        totalAmount: exp.totalAmount ? Number(exp.totalAmount) : 0,
-        paymentStatus: exp.paymentStatus || "",
-        remarks: exp.remarks?.trim() || "",
-        rating: exp.rating ? Number(exp.rating) : 0,
-      })),
-    };
-
-    console.log("Work Experience Payload =>", JSON.stringify(payload, null, 2));
-
     try {
+      // ✅ USING VALUES DIRECTLY AS PAYLOAD
+      console.log("Work Experience Payload =>", JSON.stringify(values, null, 2));
+
       const response = await commonAPICall(
         BASICPROFILE,
-        payload,
+        values,
         "POST",
         dispatch,
       );
@@ -1362,17 +1346,42 @@ const WorkExperience = () => {
   }
 
   const addExperience = () => {
-    formik.setFieldValue("experiences", [
-      ...formik.values.experiences,
+    formik.setFieldValue("workerExperienceList", [
+      ...formik.values.workerExperienceList,
       { ...emptyExperience },
     ]);
   };
 
   const removeExperience = (index) => {
-    const newExperiences = formik.values.experiences.filter(
+    const newExperiences = formik.values.workerExperienceList.filter(
       (_, i) => i !== index,
     );
-    formik.setFieldValue("experiences", newExperiences);
+    formik.setFieldValue("workerExperienceList", newExperiences);
+  };
+
+  // Toggle skill selection for multi-select
+  const toggleSkill = (expIndex, skillId) => {
+    formik.setFieldTouched(`workerExperienceList[${expIndex}].skillIds`, true);
+    const currentSkillIds = formik.values.workerExperienceList[expIndex]?.skillIds || [];
+
+    let newSkillIds;
+    if (currentSkillIds.includes(skillId)) {
+      newSkillIds = currentSkillIds.filter((id) => id !== skillId);
+    } else {
+      newSkillIds = [...currentSkillIds, skillId];
+    }
+
+    formik.setFieldValue(`workerExperienceList[${expIndex}].skillIds`, newSkillIds);
+    setCurrentSkillIndex(null);
+  };
+
+  // Get selected skill names for display
+  const getSelectedSkillNames = (expIndex) => {
+    const skillIds = formik.values.workerExperienceList[expIndex]?.skillIds || [];
+    return skillsList
+      .filter((item) => skillIds.includes(item.id))
+      .map((item) => item.skill_name)
+      .join(", ");
   };
 
   const calculateTotalAmount = (index, days, wage) => {
@@ -1381,17 +1390,17 @@ const WorkExperience = () => {
 
     if (daysNum > 0 && wageNum > 0) {
       formik.setFieldValue(
-        `experiences[${index}].totalAmount`,
+        `workerExperienceList[${index}].totalAmount`,
         String(daysNum * wageNum),
       );
     } else {
-      formik.setFieldValue(`experiences[${index}].totalAmount`, "");
+      formik.setFieldValue(`workerExperienceList[${index}].totalAmount`, "");
     }
   };
 
   const openDatePicker = (field, index) => {
-    const currentValue = formik.values.experiences[index]?.[field];
-    formik.setFieldTouched(`experiences[${index}].${field}`, true);
+    const currentValue = formik.values.workerExperienceList[index]?.[field];
+    formik.setFieldTouched(`workerExperienceList[${index}].${field}`, true);
     setCurrentField(field);
     setCurrentIndex(index);
     setPickerDate(parseDisplayDateToDate(currentValue));
@@ -1413,11 +1422,11 @@ const WorkExperience = () => {
 
     if (currentIndex !== null && currentField) {
       const formatted = formatDate(chosenDate);
-      const exp = formik.values.experiences[currentIndex];
+      const exp = formik.values.workerExperienceList[currentIndex];
 
       if (currentField === "startDate") {
         formik.setFieldValue(
-          `experiences[${currentIndex}].startDate`,
+          `workerExperienceList[${currentIndex}].startDate`,
           formatted,
         );
 
@@ -1430,7 +1439,7 @@ const WorkExperience = () => {
           const end = parseDisplayDateToDate(exp.endDate);
 
           if (end < start) {
-            formik.setFieldValue(`experiences[${currentIndex}].endDate`, "");
+            formik.setFieldValue(`workerExperienceList[${currentIndex}].endDate`, "");
           }
         }
       } else if (currentField === "endDate") {
@@ -1448,7 +1457,7 @@ const WorkExperience = () => {
           }
         }
 
-        formik.setFieldValue(`experiences[${currentIndex}].endDate`, formatted);
+        formik.setFieldValue(`workerExperienceList[${currentIndex}].endDate`, formatted);
       }
     }
   };
@@ -1458,12 +1467,12 @@ const WorkExperience = () => {
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Experience / Work Experience</Text>
 
-        {formik.values.experiences.map((item, index) => (
+        {formik.values.workerExperienceList.map((item, index) => (
           <View key={index} style={styles.experienceCard}>
             <View style={styles.expHeader}>
               <Text style={styles.expTitle}>Experience {index + 1}</Text>
 
-              {formik.values.experiences.length > 1 && (
+              {formik.values.workerExperienceList.length > 1 && (
                 <TouchableOpacity
                   style={styles.deleteBtn}
                   onPress={() => removeExperience(index)}
@@ -1481,21 +1490,21 @@ const WorkExperience = () => {
               <TextInput
                 style={[
                   styles.input,
-                  formik.touched.experiences?.[index]?.employerName &&
-                    formik.errors.experiences?.[index]?.employerName &&
+                  formik.touched.workerExperienceList?.[index]?.employerName &&
+                    formik.errors.workerExperienceList?.[index]?.employerName &&
                     styles.inputError,
                 ]}
                 value={item.employerName}
                 onChangeText={formik.handleChange(
-                  `experiences[${index}].employerName`,
+                  `workerExperienceList[${index}].employerName`,
                 )}
-                onBlur={formik.handleBlur(`experiences[${index}].employerName`)}
+                onBlur={formik.handleBlur(`workerExperienceList[${index}].employerName`)}
                 placeholder="Enter Employer Name"
               />
-              {formik.touched.experiences?.[index]?.employerName &&
-                formik.errors.experiences?.[index]?.employerName && (
+              {formik.touched.workerExperienceList?.[index]?.employerName &&
+                formik.errors.workerExperienceList?.[index]?.employerName && (
                   <Text style={styles.errorText}>
-                    {formik.errors.experiences[index].employerName}
+                    {formik.errors.workerExperienceList[index].employerName}
                   </Text>
                 )}
             </View>
@@ -1507,21 +1516,21 @@ const WorkExperience = () => {
               <TextInput
                 style={[
                   styles.input,
-                  formik.touched.experiences?.[index]?.projectName &&
-                    formik.errors.experiences?.[index]?.projectName &&
+                  formik.touched.workerExperienceList?.[index]?.projectName &&
+                    formik.errors.workerExperienceList?.[index]?.projectName &&
                     styles.inputError,
                 ]}
                 value={item.projectName}
                 onChangeText={formik.handleChange(
-                  `experiences[${index}].projectName`,
+                  `workerExperienceList[${index}].projectName`,
                 )}
-                onBlur={formik.handleBlur(`experiences[${index}].projectName`)}
+                onBlur={formik.handleBlur(`workerExperienceList[${index}].projectName`)}
                 placeholder="Enter Project Name"
               />
-              {formik.touched.experiences?.[index]?.projectName &&
-                formik.errors.experiences?.[index]?.projectName && (
+              {formik.touched.workerExperienceList?.[index]?.projectName &&
+                formik.errors.workerExperienceList?.[index]?.projectName && (
                   <Text style={styles.errorText}>
-                    {formik.errors.experiences[index].projectName}
+                    {formik.errors.workerExperienceList[index].projectName}
                   </Text>
                 )}
             </View>
@@ -1533,21 +1542,21 @@ const WorkExperience = () => {
               <TextInput
                 style={[
                   styles.input,
-                  formik.touched.experiences?.[index]?.workPlace &&
-                    formik.errors.experiences?.[index]?.workPlace &&
+                  formik.touched.workerExperienceList?.[index]?.workPlace &&
+                    formik.errors.workerExperienceList?.[index]?.workPlace &&
                     styles.inputError,
                 ]}
                 value={item.workPlace}
                 onChangeText={formik.handleChange(
-                  `experiences[${index}].workPlace`,
+                  `workerExperienceList[${index}].workPlace`,
                 )}
-                onBlur={formik.handleBlur(`experiences[${index}].workPlace`)}
+                onBlur={formik.handleBlur(`workerExperienceList[${index}].workPlace`)}
                 placeholder="Enter Work Place"
               />
-              {formik.touched.experiences?.[index]?.workPlace &&
-                formik.errors.experiences?.[index]?.workPlace && (
+              {formik.touched.workerExperienceList?.[index]?.workPlace &&
+                formik.errors.workerExperienceList?.[index]?.workPlace && (
                   <Text style={styles.errorText}>
-                    {formik.errors.experiences[index].workPlace}
+                    {formik.errors.workerExperienceList[index].workPlace}
                   </Text>
                 )}
             </View>
@@ -1559,64 +1568,81 @@ const WorkExperience = () => {
               <TextInput
                 style={[
                   styles.input,
-                  formik.touched.experiences?.[index]?.workType &&
-                    formik.errors.experiences?.[index]?.workType &&
+                  formik.touched.workerExperienceList?.[index]?.workType &&
+                    formik.errors.workerExperienceList?.[index]?.workType &&
                     styles.inputError,
                 ]}
                 value={item.workType}
                 onChangeText={formik.handleChange(
-                  `experiences[${index}].workType`,
+                  `workerExperienceList[${index}].workType`,
                 )}
-                onBlur={formik.handleBlur(`experiences[${index}].workType`)}
+                onBlur={formik.handleBlur(`workerExperienceList[${index}].workType`)}
                 placeholder="Enter Work Type"
               />
-              {formik.touched.experiences?.[index]?.workType &&
-                formik.errors.experiences?.[index]?.workType && (
+              {formik.touched.workerExperienceList?.[index]?.workType &&
+                formik.errors.workerExperienceList?.[index]?.workType && (
                   <Text style={styles.errorText}>
-                    {formik.errors.experiences[index].workType}
+                    {formik.errors.workerExperienceList[index].workType}
                   </Text>
                 )}
             </View>
 
+            {/* Skills Multi-select */}
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
-                Skill <Text style={styles.requiredStar}>*</Text>
+                Skills <Text style={styles.requiredStar}>*</Text>
               </Text>
-              <View
+
+              <TouchableOpacity
                 style={[
                   styles.selectBox,
-                  formik.touched.experiences?.[index]?.skillId &&
-                    formik.errors.experiences?.[index]?.skillId &&
+                  formik.touched.workerExperienceList?.[index]?.skillIds &&
+                    formik.errors.workerExperienceList?.[index]?.skillIds &&
                     styles.inputError,
                 ]}
+                onPress={() => {
+                  formik.setFieldTouched(`workerExperienceList[${index}].skillIds`, true);
+                  setCurrentSkillIndex(currentSkillIndex === index ? null : index);
+                  setShowSkillsDropdown(!showSkillsDropdown);
+                }}
               >
-                <Picker
-                  selectedValue={item.skillId}
-                  onValueChange={(itemValue) => {
-                    formik.setFieldTouched(
-                      `experiences[${index}].skillId`,
-                      true,
+                <Text style={{ color: getSelectedSkillNames(index) ? "#000" : "#999", flex: 1 }}>
+                  {getSelectedSkillNames(index) || "Select Skills"}
+                </Text>
+                <Ionicons
+                  name={showSkillsDropdown && currentSkillIndex === index ? "chevron-up" : "chevron-down"}
+                  size={20}
+                  color="#333"
+                />
+              </TouchableOpacity>
+
+              {showSkillsDropdown && currentSkillIndex === index && (
+                <View style={styles.dropdownBox}>
+                  {skillsList.map((skill) => {
+                    const selected = formik.values.workerExperienceList[index]?.skillIds?.includes(skill.id);
+
+                    return (
+                      <TouchableOpacity
+                        key={skill.id}
+                        style={styles.skillItem}
+                        onPress={() => toggleSkill(index, skill.id)}
+                      >
+                        <Text style={styles.skillText}>{skill.skill_name}</Text>
+                        <Ionicons
+                          name={selected ? "checkbox" : "square-outline"}
+                          size={22}
+                          color={selected ? "#1e3a5f" : "#999"}
+                        />
+                      </TouchableOpacity>
                     );
-                    formik.setFieldValue(
-                      `experiences[${index}].skillId`,
-                      itemValue,
-                    );
-                  }}
-                >
-                  <Picker.Item label="Select Skill" value="" />
-                  {skillsList.map((skill) => (
-                    <Picker.Item
-                      key={skill.id}
-                      label={skill.skill_name}
-                      value={String(skill.id)}
-                    />
-                  ))}
-                </Picker>
-              </View>
-              {formik.touched.experiences?.[index]?.skillId &&
-                formik.errors.experiences?.[index]?.skillId && (
+                  })}
+                </View>
+              )}
+
+              {formik.touched.workerExperienceList?.[index]?.skillIds &&
+                formik.errors.workerExperienceList?.[index]?.skillIds && (
                   <Text style={styles.errorText}>
-                    {formik.errors.experiences[index].skillId}
+                    {formik.errors.workerExperienceList[index].skillIds}
                   </Text>
                 )}
             </View>
@@ -1629,24 +1655,24 @@ const WorkExperience = () => {
                 style={[
                   styles.input,
                   styles.textArea,
-                  formik.touched.experiences?.[index]?.taskDesc &&
-                    formik.errors.experiences?.[index]?.taskDesc &&
+                  formik.touched.workerExperienceList?.[index]?.taskDesc &&
+                    formik.errors.workerExperienceList?.[index]?.taskDesc &&
                     styles.inputError,
                 ]}
                 value={item.taskDesc}
                 onChangeText={formik.handleChange(
-                  `experiences[${index}].taskDesc`,
+                  `workerExperienceList[${index}].taskDesc`,
                 )}
-                onBlur={formik.handleBlur(`experiences[${index}].taskDesc`)}
+                onBlur={formik.handleBlur(`workerExperienceList[${index}].taskDesc`)}
                 placeholder="Enter Task Description"
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
               />
-              {formik.touched.experiences?.[index]?.taskDesc &&
-                formik.errors.experiences?.[index]?.taskDesc && (
+              {formik.touched.workerExperienceList?.[index]?.taskDesc &&
+                formik.errors.workerExperienceList?.[index]?.taskDesc && (
                   <Text style={styles.errorText}>
-                    {formik.errors.experiences[index].taskDesc}
+                    {formik.errors.workerExperienceList[index].taskDesc}
                   </Text>
                 )}
             </View>
@@ -1658,8 +1684,8 @@ const WorkExperience = () => {
               <TouchableOpacity
                 style={[
                   styles.input,
-                  formik.touched.experiences?.[index]?.startDate &&
-                    formik.errors.experiences?.[index]?.startDate &&
+                  formik.touched.workerExperienceList?.[index]?.startDate &&
+                    formik.errors.workerExperienceList?.[index]?.startDate &&
                     styles.inputError,
                 ]}
                 onPress={() => openDatePicker("startDate", index)}
@@ -1668,10 +1694,10 @@ const WorkExperience = () => {
                   {item.startDate || "Select Start Date"}
                 </Text>
               </TouchableOpacity>
-              {formik.touched.experiences?.[index]?.startDate &&
-                formik.errors.experiences?.[index]?.startDate && (
+              {formik.touched.workerExperienceList?.[index]?.startDate &&
+                formik.errors.workerExperienceList?.[index]?.startDate && (
                   <Text style={styles.errorText}>
-                    {formik.errors.experiences[index].startDate}
+                    {formik.errors.workerExperienceList[index].startDate}
                   </Text>
                 )}
             </View>
@@ -1683,8 +1709,8 @@ const WorkExperience = () => {
               <TouchableOpacity
                 style={[
                   styles.input,
-                  formik.touched.experiences?.[index]?.endDate &&
-                    formik.errors.experiences?.[index]?.endDate &&
+                  formik.touched.workerExperienceList?.[index]?.endDate &&
+                    formik.errors.workerExperienceList?.[index]?.endDate &&
                     styles.inputError,
                 ]}
                 onPress={() => openDatePicker("endDate", index)}
@@ -1693,10 +1719,10 @@ const WorkExperience = () => {
                   {item.endDate || "Select End Date"}
                 </Text>
               </TouchableOpacity>
-              {formik.touched.experiences?.[index]?.endDate &&
-                formik.errors.experiences?.[index]?.endDate && (
+              {formik.touched.workerExperienceList?.[index]?.endDate &&
+                formik.errors.workerExperienceList?.[index]?.endDate && (
                   <Text style={styles.errorText}>
-                    {formik.errors.experiences[index].endDate}
+                    {formik.errors.workerExperienceList[index].endDate}
                   </Text>
                 )}
             </View>
@@ -1708,26 +1734,26 @@ const WorkExperience = () => {
               <TextInput
                 style={[
                   styles.input,
-                  formik.touched.experiences?.[index]?.daysWorked &&
-                    formik.errors.experiences?.[index]?.daysWorked &&
+                  formik.touched.workerExperienceList?.[index]?.daysWorked &&
+                    formik.errors.workerExperienceList?.[index]?.daysWorked &&
                     styles.inputError,
                 ]}
                 value={item.daysWorked}
                 onChangeText={(text) => {
                   formik.setFieldValue(
-                    `experiences[${index}].daysWorked`,
+                    `workerExperienceList[${index}].daysWorked`,
                     text,
                   );
                   calculateTotalAmount(index, text, item.dailyWage);
                 }}
-                onBlur={formik.handleBlur(`experiences[${index}].daysWorked`)}
+                onBlur={formik.handleBlur(`workerExperienceList[${index}].daysWorked`)}
                 keyboardType="numeric"
                 placeholder="Enter Days Worked"
               />
-              {formik.touched.experiences?.[index]?.daysWorked &&
-                formik.errors.experiences?.[index]?.daysWorked && (
+              {formik.touched.workerExperienceList?.[index]?.daysWorked &&
+                formik.errors.workerExperienceList?.[index]?.daysWorked && (
                   <Text style={styles.errorText}>
-                    {formik.errors.experiences[index].daysWorked}
+                    {formik.errors.workerExperienceList[index].daysWorked}
                   </Text>
                 )}
             </View>
@@ -1739,23 +1765,23 @@ const WorkExperience = () => {
               <TextInput
                 style={[
                   styles.input,
-                  formik.touched.experiences?.[index]?.dailyWage &&
-                    formik.errors.experiences?.[index]?.dailyWage &&
+                  formik.touched.workerExperienceList?.[index]?.dailyWage &&
+                    formik.errors.workerExperienceList?.[index]?.dailyWage &&
                     styles.inputError,
                 ]}
                 value={item.dailyWage}
                 onChangeText={(text) => {
-                  formik.setFieldValue(`experiences[${index}].dailyWage`, text);
+                  formik.setFieldValue(`workerExperienceList[${index}].dailyWage`, text);
                   calculateTotalAmount(index, item.daysWorked, text);
                 }}
-                onBlur={formik.handleBlur(`experiences[${index}].dailyWage`)}
+                onBlur={formik.handleBlur(`workerExperienceList[${index}].dailyWage`)}
                 keyboardType="numeric"
                 placeholder="Enter Daily Wage"
               />
-              {formik.touched.experiences?.[index]?.dailyWage &&
-                formik.errors.experiences?.[index]?.dailyWage && (
+              {formik.touched.workerExperienceList?.[index]?.dailyWage &&
+                formik.errors.workerExperienceList?.[index]?.dailyWage && (
                   <Text style={styles.errorText}>
-                    {formik.errors.experiences[index].dailyWage}
+                    {formik.errors.workerExperienceList[index].dailyWage}
                   </Text>
                 )}
             </View>
@@ -1768,18 +1794,18 @@ const WorkExperience = () => {
                 style={[
                   styles.input,
                   styles.readOnlyInput,
-                  formik.touched.experiences?.[index]?.totalAmount &&
-                    formik.errors.experiences?.[index]?.totalAmount &&
+                  formik.touched.workerExperienceList?.[index]?.totalAmount &&
+                    formik.errors.workerExperienceList?.[index]?.totalAmount &&
                     styles.inputError,
                 ]}
                 value={item.totalAmount}
                 editable={false}
                 placeholder="Total Amount"
               />
-              {formik.touched.experiences?.[index]?.totalAmount &&
-                formik.errors.experiences?.[index]?.totalAmount && (
+              {formik.touched.workerExperienceList?.[index]?.totalAmount &&
+                formik.errors.workerExperienceList?.[index]?.totalAmount && (
                   <Text style={styles.errorText}>
-                    {formik.errors.experiences[index].totalAmount}
+                    {formik.errors.workerExperienceList[index].totalAmount}
                   </Text>
                 )}
             </View>
@@ -1791,8 +1817,8 @@ const WorkExperience = () => {
               <View
                 style={[
                   styles.selectBox,
-                  formik.touched.experiences?.[index]?.paymentStatus &&
-                    formik.errors.experiences?.[index]?.paymentStatus &&
+                  formik.touched.workerExperienceList?.[index]?.paymentStatus &&
+                    formik.errors.workerExperienceList?.[index]?.paymentStatus &&
                     styles.inputError,
                 ]}
               >
@@ -1800,11 +1826,11 @@ const WorkExperience = () => {
                   selectedValue={item.paymentStatus}
                   onValueChange={(itemValue) => {
                     formik.setFieldTouched(
-                      `experiences[${index}].paymentStatus`,
+                      `workerExperienceList[${index}].paymentStatus`,
                       true,
                     );
                     formik.setFieldValue(
-                      `experiences[${index}].paymentStatus`,
+                      `workerExperienceList[${index}].paymentStatus`,
                       itemValue,
                     );
                   }}
@@ -1815,10 +1841,10 @@ const WorkExperience = () => {
                   <Picker.Item label="Partial" value="partial" />
                 </Picker>
               </View>
-              {formik.touched.experiences?.[index]?.paymentStatus &&
-                formik.errors.experiences?.[index]?.paymentStatus && (
+              {formik.touched.workerExperienceList?.[index]?.paymentStatus &&
+                formik.errors.workerExperienceList?.[index]?.paymentStatus && (
                   <Text style={styles.errorText}>
-                    {formik.errors.experiences[index].paymentStatus}
+                    {formik.errors.workerExperienceList[index].paymentStatus}
                   </Text>
                 )}
             </View>
@@ -1831,24 +1857,24 @@ const WorkExperience = () => {
                 style={[
                   styles.input,
                   styles.textArea,
-                  formik.touched.experiences?.[index]?.remarks &&
-                    formik.errors.experiences?.[index]?.remarks &&
+                  formik.touched.workerExperienceList?.[index]?.remarks &&
+                    formik.errors.workerExperienceList?.[index]?.remarks &&
                     styles.inputError,
                 ]}
                 value={item.remarks}
                 onChangeText={formik.handleChange(
-                  `experiences[${index}].remarks`,
+                  `workerExperienceList[${index}].remarks`,
                 )}
-                onBlur={formik.handleBlur(`experiences[${index}].remarks`)}
+                onBlur={formik.handleBlur(`workerExperienceList[${index}].remarks`)}
                 placeholder="Enter Remarks"
                 multiline
                 numberOfLines={3}
                 textAlignVertical="top"
               />
-              {formik.touched.experiences?.[index]?.remarks &&
-                formik.errors.experiences?.[index]?.remarks && (
+              {formik.touched.workerExperienceList?.[index]?.remarks &&
+                formik.errors.workerExperienceList?.[index]?.remarks && (
                   <Text style={styles.errorText}>
-                    {formik.errors.experiences[index].remarks}
+                    {formik.errors.workerExperienceList[index].remarks}
                   </Text>
                 )}
             </View>
@@ -1860,8 +1886,8 @@ const WorkExperience = () => {
               <View
                 style={[
                   styles.selectBox,
-                  formik.touched.experiences?.[index]?.rating &&
-                    formik.errors.experiences?.[index]?.rating &&
+                  formik.touched.workerExperienceList?.[index]?.rating &&
+                    formik.errors.workerExperienceList?.[index]?.rating &&
                     styles.inputError,
                 ]}
               >
@@ -1869,11 +1895,11 @@ const WorkExperience = () => {
                   selectedValue={item.rating}
                   onValueChange={(itemValue) => {
                     formik.setFieldTouched(
-                      `experiences[${index}].rating`,
+                      `workerExperienceList[${index}].rating`,
                       true,
                     );
                     formik.setFieldValue(
-                      `experiences[${index}].rating`,
+                      `workerExperienceList[${index}].rating`,
                       itemValue,
                     );
                   }}
@@ -1886,10 +1912,10 @@ const WorkExperience = () => {
                   <Picker.Item label="5" value="5" />
                 </Picker>
               </View>
-              {formik.touched.experiences?.[index]?.rating &&
-                formik.errors.experiences?.[index]?.rating && (
+              {formik.touched.workerExperienceList?.[index]?.rating &&
+                formik.errors.workerExperienceList?.[index]?.rating && (
                   <Text style={styles.errorText}>
-                    {formik.errors.experiences[index].rating}
+                    {formik.errors.workerExperienceList[index].rating}
                   </Text>
                 )}
             </View>
@@ -2590,7 +2616,7 @@ const ProfileUpdate = () => {
         return <Education />;
       case "change_password":
         return <ChangePassword />;
-      case "work details":
+      case "work_details":
         return <EmployerWorkDetails />;
       case "help":
         return <Help />;
