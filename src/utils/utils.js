@@ -137,8 +137,8 @@ const showNativeMessage = (msg, type) => {
   }
 };
 
-export const CONTEXT_NAME = "LABOUR DEPARTMENT";
-export const CONTEXT_HEADING = "LABOUR DEPARTMENT";
+export const CONTEXT_NAME = "Digital Labour Chowk";
+export const CONTEXT_HEADING = "Digital Labour Chowk";
 export const BASE_SERVER_URL = "https://forests.ap.gov.in/uploads/";
 export const ACC_YEAR = new Date().getFullYear().toString();
 export const LOGIN_END_POINT = "/api/open/login";
@@ -157,5 +157,6 @@ export const BASICPROFILE = "/api/user/digital-labour-chowk/updateBasicInfo";
 export const GETSKILLS = "api/user/digital-labour-chowk/skillInfo";
 export const GETDISTSAPP = "/api/user/v1/districts";
 export const GETMANDALSAPP = "/api/user/v1/mandals?distCode=";
-export const GETVILLAGESAPP ="/api/user/v1/villages";
-export const DIGITALLABOURCHOWKDETAILS ="/api/user/digitalLabourChowkRegDetails";
+export const GETVILLAGESAPP = "/api/user/v1/villages";
+export const DIGITALLABOURCHOWKDETAILS =
+  "/api/user/digitalLabourChowkRegDetails";

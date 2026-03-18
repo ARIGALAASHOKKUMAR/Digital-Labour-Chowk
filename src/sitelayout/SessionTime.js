@@ -67,7 +67,7 @@ const SessionTime = ({ remainingTime = 0, randomTrigger = 0, navigation }) => {
           padding: 3,
         }}
       >
-        <Icon name="access-time" size={15} color="black" />
+        <Icon name="access-time" size={15} color="white" />
         <Text style={styles.text}>
           {"  "}
           {hh}:{mm}:{ss}
@@ -82,7 +82,7 @@ export default SessionTime;
 const styles = StyleSheet.create({
   text: {
     fontSize: 11,
-    color: "black",
+    color: "white",
     fontWeight: "700",
   },
 });

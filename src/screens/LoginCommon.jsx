@@ -13,6 +13,7 @@ import {
   Dimensions,
   Button,
   Modal,
+  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -314,23 +315,30 @@ const LoginCommon = ({ navigation }) => {
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={styles.optionCard}
-        onPress={() => setSelectedUserType("employer")}
+        style={[
+          styles.optionCard,
+          {
+            backgroundColor: "#fff",
+            borderRadius: 10,
+            display: "flex",
+            justifyContent: "flex-start",
+            alignItems: "center",
+          },
+        ]}
+        onPress={() => Linking.openURL("https://eshram.gov.in/")}
         activeOpacity={0.85}
       >
         <View style={styles.optionIconWrap}>
           <Ionicons name="business-outline" size={26} color="#1e3a5f" />
         </View>
         <View style={styles.optionTextWrap}>
-          <Text style={styles.optionTitle}>
-            Quick Access {"\n"} త్వరిత ప్రవేశం
-          </Text>
-          <TouchableOpacity style={styles.eshramButton} onPress={() => {}}>
+          <Text style={styles.optionTitle}>Quick Access/త్వరిత ప్రవేశం</Text>
+          <TouchableOpacity style={styles.eshramButton}   onPress={() => Linking.openURL("https://eshram.gov.in/")}>
             <Ionicons name="document-text-outline" size={20} color="#fff" />
-            <Text style={styles.eshramText}>e-Shram Registration</Text>
+            <Text style={styles.eshramText}>e-Shram Registration</Text>{" "}
           </TouchableOpacity>
         </View>
-        <Ionicons name="chevron-forward" size={22} color="#1e3a5f" />
+        {/* <Ionicons name="chevron-forward" size={22} color="#1e3a5f" /> */}
       </TouchableOpacity>
     </View>
   );
@@ -707,7 +715,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
       if (res?.status === 200 || res?.status === 201) {
         setShowOtpModal(false);
         showSuccessToast(
-          `${isWorker ? "Worker" : "Employer"} registered successfully`
+          `${isWorker ? "Worker" : "Employer"} registered successfully`,
         );
         navigation.goBack();
         resetForm();
@@ -732,11 +740,11 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
   // Handle OTP input change
   const handleOtpChange = (text, index) => {
     const currentOtp = formik.values.otp;
-    let newOtp = currentOtp.split('');
-    
+    let newOtp = currentOtp.split("");
+
     // Ensure we have 6 positions
-    while (newOtp.length < 6) newOtp.push('');
-    
+    while (newOtp.length < 6) newOtp.push("");
+
     // Allow only single digit
     if (text.length > 1) {
       text = text.charAt(text.length - 1);
@@ -748,7 +756,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
     }
 
     newOtp[index] = text;
-    formik.setFieldValue("otp", newOtp.join(''));
+    formik.setFieldValue("otp", newOtp.join(""));
 
     // Clear OTP error when user starts typing
     if (formik.errors.otp) {
@@ -764,13 +772,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
   // Handle OTP key press (backspace)
   const handleOtpKeyPress = (e, index) => {
     const currentOtp = formik.values.otp;
-    const otpArray = currentOtp.split('');
-    
-    if (
-      e.nativeEvent.key === "Backspace" &&
-      !otpArray[index] &&
-      index > 0
-    ) {
+    const otpArray = currentOtp.split("");
+
+    if (e.nativeEvent.key === "Backspace" && !otpArray[index] && index > 0) {
       otpInputs.current[index - 1]?.focus();
     }
   };
@@ -797,15 +801,17 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
     fieldsToValidate.forEach((field) => {
       touchedFields[field] = true;
     });
-    
+
     await formik.setTouched(touchedFields);
     await formik.validateForm();
-    
+
     // Check if there are any errors
     const hasErrors = fieldsToValidate.some((field) => formik.errors[field]);
 
     if (hasErrors) {
-      const firstErrorField = fieldsToValidate.find(field => formik.errors[field]);
+      const firstErrorField = fieldsToValidate.find(
+        (field) => formik.errors[field],
+      );
       if (firstErrorField) {
         showErrorToast(formik.errors[firstErrorField]);
       }
@@ -828,13 +834,8 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
 
         const url = `${EMPLOYEEREGOTP}${mobileNumber}&userType=${type.toUpperCase()}`;
         console.log("uuuuuuuuuu", url);
-        
-        const getotp = await commonAPICall(
-          url,
-          {},
-          "post",
-          dispatch,
-        );
+
+        const getotp = await commonAPICall(url, {}, "post", dispatch);
 
         console.log("OTP response:", getotp?.data);
 
@@ -879,27 +880,22 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
   // Handle resend OTP
   const handleResendOtp = async () => {
     if (otpTimer > 0) return;
-    
+
     try {
       setOtpLoading(true);
       const mobileNumber = formik.values.mobileNumber;
 
       console.log("Resending OTP to:", mobileNumber);
-      
+
       const url = `${EMPLOYEEREGOTP}${mobileNumber}&userType=${type.toUpperCase()}`;
       console.log("url", url);
-      
-      const getotp = await commonAPICall(
-        url,
-        {},
-        "post",
-        dispatch,
-      );
+
+      const getotp = await commonAPICall(url, {}, "post", dispatch);
 
       if (getotp?.status === 200 || getotp?.status === 201) {
         setOtpTimer(60);
         showSuccessToast("OTP resent successfully");
-        
+
         const timer = setInterval(() => {
           setOtpTimer((prev) => {
             if (prev <= 1) {
@@ -1083,7 +1079,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                 />
               </View>
               {formik.touched.mobileNumber && formik.errors.mobileNumber && (
-                <Text style={styles.errorText}>{formik.errors.mobileNumber}</Text>
+                <Text style={styles.errorText}>
+                  {formik.errors.mobileNumber}
+                </Text>
               )}
             </View>
 
@@ -1170,9 +1168,12 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   />
                 </TouchableOpacity>
               </View>
-              {formik.touched.confirmPassword && formik.errors.confirmPassword && (
-                <Text style={styles.errorText}>{formik.errors.confirmPassword}</Text>
-              )}
+              {formik.touched.confirmPassword &&
+                formik.errors.confirmPassword && (
+                  <Text style={styles.errorText}>
+                    {formik.errors.confirmPassword}
+                  </Text>
+                )}
             </View>
 
             {/* Terms and Conditions Checkbox */}
@@ -1180,10 +1181,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
               <TouchableOpacity
                 style={styles.checkboxWrapper}
                 onPress={() =>
-                  formik.setFieldValue(
-                    "agreeTerms",
-                    !formik.values.agreeTerms,
-                  )
+                  formik.setFieldValue("agreeTerms", !formik.values.agreeTerms)
                 }
                 activeOpacity={0.8}
               >
@@ -1227,7 +1225,8 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
             <TouchableOpacity
               style={[
                 styles.sendOtpButton,
-                (!isTermsAccepted || otpLoading) && styles.sendOtpButtonDisabled,
+                (!isTermsAccepted || otpLoading) &&
+                  styles.sendOtpButtonDisabled,
               ]}
               onPress={handleSendOtp}
               disabled={!isTermsAccepted || otpLoading}
@@ -1275,28 +1274,32 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
             {/* OTP Input Fields */}
             <View style={styles.modalOtpContainer}>
               <View style={styles.otpInputsContainer}>
-                {Array(6).fill(0).map((_, index) => {
-                  const otpValue = formik.values.otp[index] || '';
-                  return (
-                    <TextInput
-                      key={index}
-                      ref={(ref) => (otpInputs.current[index] = ref)}
-                      style={[
-                        styles.otpInput,
-                        formik.touched.otp && formik.errors.otp && styles.otpInputError,
-                      ]}
-                      value={otpValue}
-                      onChangeText={(text) => handleOtpChange(text, index)}
-                      onKeyPress={(e) => handleOtpKeyPress(e, index)}
-                      onPaste={(e) => handleOtpPaste(e.nativeEvent.text)}
-                      keyboardType="number-pad"
-                      maxLength={1}
-                      onBlur={() => formik.setFieldTouched("otp", true)}
-                      autoFocus={index === 0}
-                      editable={!loading}
-                    />
-                  );
-                })}
+                {Array(6)
+                  .fill(0)
+                  .map((_, index) => {
+                    const otpValue = formik.values.otp[index] || "";
+                    return (
+                      <TextInput
+                        key={index}
+                        ref={(ref) => (otpInputs.current[index] = ref)}
+                        style={[
+                          styles.otpInput,
+                          formik.touched.otp &&
+                            formik.errors.otp &&
+                            styles.otpInputError,
+                        ]}
+                        value={otpValue}
+                        onChangeText={(text) => handleOtpChange(text, index)}
+                        onKeyPress={(e) => handleOtpKeyPress(e, index)}
+                        onPaste={(e) => handleOtpPaste(e.nativeEvent.text)}
+                        keyboardType="number-pad"
+                        maxLength={1}
+                        onBlur={() => formik.setFieldTouched("otp", true)}
+                        autoFocus={index === 0}
+                        editable={!loading}
+                      />
+                    );
+                  })}
               </View>
 
               {formik.touched.otp && formik.errors.otp && (
@@ -1837,18 +1840,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#1e3a5f",
     paddingVertical: 5,
     borderRadius: 12,
     marginTop: 1,
   },
 
   eshramText: {
-    color: "#fff",
     fontSize: 16,
     fontWeight: "700",
-    marginLeft: 8,
+    color: "blue",
+    textAlign: "center",
+    textDecorationLine: "underline",
   },
+
 
   termsContainer: {
     marginBottom: 20,

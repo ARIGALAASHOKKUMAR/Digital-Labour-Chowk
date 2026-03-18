@@ -239,15 +239,7 @@ const ChangePassword = () => {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.imageWrapper}>
-            <Image
-              source={{
-                uri: "https://api.apfd.apcfss.in/socialwelfaredms/user-defined-path/file-download/APFD/UPLOADS/1724065824648_profileupdate.png",
-              }}
-              style={styles.image}
-              resizeMode="contain"
-            />
-          </View>
+          
 
           <View style={styles.rulesContainer}>
             <Text style={styles.rulesTitle}>Your password must contain:</Text>

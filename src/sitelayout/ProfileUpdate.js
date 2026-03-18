@@ -1337,7 +1337,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
           projectName: item.projectName || "",
           workPlace: item.workPlace || "",
           workType: item.workType || "",
-          skillIds: item.skillId ? [item.skillId] : [],
+          skillIds: item.skillId ? item.skillId : [],
           taskDescription: item.taskDescription || "",
           startDate: item.startDate ? formatDateForDisplay(item.startDate) : "",
           endDate: item.endDate ? formatDateForDisplay(item.endDate) : "",
@@ -2494,13 +2494,10 @@ const Education = ({ userData, onUpdateSuccess }) => {
                       <Text style={styles.subTitle}>
                         Qualification {index + 1}
                       </Text>
-
-                      
-
                       {formik.values.workerEducationList.length > 1 && (
                         <TouchableOpacity
                           style={styles.deleteBtn}
-                           onPress={() => arrayHelpers.remove(index)}
+                          onPress={() => arrayHelpers.remove(index)}
                         >
                           <Ionicons
                             name="trash-outline"
@@ -2940,8 +2937,9 @@ const ProfileUpdate = () => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.header}>My Profile</Text>
-
+        <Text style={styles.header}>
+          {selectedSection ? (selectedSection.replace(/_/g, " ")).toUpperCase() : "My Profile"}
+        </Text>
         <View style={styles.panel}>
           {!selectedSection ? (
             <View>
@@ -3017,12 +3015,13 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   header: {
-    fontSize: 22,
+    fontSize: 15,
     fontWeight: "bold",
-    textAlign: "center",
-    backgroundColor: "#e9ecef",
+    textAlign: "left",
+    backgroundColor: "#0d6efd",
     paddingVertical: 14,
-    color: "#222",
+    color: "white",
+    padding: "14",
   },
   panel: {
     padding: 16,
@@ -3391,5 +3390,10 @@ const styles = StyleSheet.create({
 
   skillsDropdownLastItemNew: {
     borderBottomWidth: 0,
+  },
+  rowBetween: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
 });

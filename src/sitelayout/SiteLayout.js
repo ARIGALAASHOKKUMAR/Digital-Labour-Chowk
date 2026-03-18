@@ -73,7 +73,7 @@ const SiteLayout = ({
     loginLocation,
     activeUsers,
     token,
-    uuid
+    uuid,
   } = state;
 
   const userName = username || "User";
@@ -309,8 +309,6 @@ const SiteLayout = ({
       `${LOGOUT_END_POINT}?uuid=${uuid}&roleName=${roleName}&type=USER`,
       { headers: { Authorization: `Bearer ${token}` } },
     );
-   
-    
 
     dispatch(logOut());
     setLogoutVisible(false);
@@ -452,7 +450,8 @@ const SiteLayout = ({
   }, []);
 
   return (
-    <SafeAreaView edges={["top", "bottom"]} style={styles.safeArea}>
+    <>
+    <SafeAreaView edges={["top", "bottom"]} style={styles.safeArea}/>
       <StatusBar backgroundColor="#1e7e34" />
       <Pressable
         style={styles.flex1}
@@ -472,8 +471,10 @@ const SiteLayout = ({
               />
               {/* TEXTS */}
               <View style={styles.textContainer}>
-                <Text style={styles.teluguText}>ఆంధ్రప్రదేశ్ ప్రభుత్వం</Text>
-                <Text style={styles.headerTitle}>Govt. of A.P</Text>
+                <Text style={styles.teluguText}>Digital Labour Chowk</Text>
+                <Text style={styles.headerTitle}>
+                  Labour Dept,Govt of A.P
+                </Text>
               </View>
             </View>
           </View>
@@ -486,7 +487,7 @@ const SiteLayout = ({
               <MaterialCommunityIcons
                 name="incognito"
                 size={24}
-                color="#374151"
+                color="white"
                 style={[blink && styles.blinkIcon]}
               />
               <View style={styles.badge}>
@@ -905,7 +906,7 @@ const SiteLayout = ({
           </View>
         </Modal>
       </Pressable>
-    </SafeAreaView>
+      </>
   );
 };
 
@@ -916,10 +917,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   safeArea: {
-    flex: 1,
+    backgroundColor:"#0d6efd",
+    height:10
   },
   header: {
-    backgroundColor: "white",
+    backgroundColor: "#0d6efd",
     paddingHorizontal: 16,
     paddingVertical: 12,
     flexDirection: "row",
@@ -965,7 +967,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   headerTitle: {
-    color: "green",
+    color: "white",
     fontSize: 15,
     fontWeight: "bold",
     letterSpacing: 0.5,
@@ -974,6 +976,11 @@ const styles = StyleSheet.create({
     textShadowRadius: 3,
     marginBottom: 4,
   },
+  teluguText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+
   headerTitle2: {
     color: "green",
     fontSize: 16,
