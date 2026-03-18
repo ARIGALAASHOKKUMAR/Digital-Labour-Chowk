@@ -150,10 +150,16 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
 
             <TouchableOpacity
               style={[
-                styles.datePickerButton,
+                styles.datePickerButton, // existing style
+                {
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                },
                 formik.errors.dateOfBirth &&
-                  formik.touched.dateOfBirth &&
-                  styles.inputError,
+                  formik.touched.dateOfBirth && {
+                    borderColor: "red",
+                  },
               ]}
               onPress={() => {
                 formik.setFieldTouched("dateOfBirth", true);
@@ -1070,6 +1076,8 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
           <TouchableOpacity
             style={[
               styles.selectBox,
+              styles.skillsSelectBoxNew,
+              showSkillsDropdown && styles.skillsSelectBoxOpenNew,
               formik.touched.skillIds &&
                 formik.errors.skillIds &&
                 styles.inputError,
@@ -1078,12 +1086,18 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
               formik.setFieldTouched("skillIds", true);
               setShowSkillsDropdown(!showSkillsDropdown);
             }}
+            activeOpacity={0.8}
           >
             <Text
-              style={{ color: selectedSkillNames ? "#000" : "#999", flex: 1 }}
+              numberOfLines={2}
+              style={[
+                styles.skillsSelectedTextNew,
+                { color: selectedSkillNames ? "#000" : "#999" },
+              ]}
             >
               {selectedSkillNames || "Select Skills"}
             </Text>
+
             <Ionicons
               name={showSkillsDropdown ? "chevron-up" : "chevron-down"}
               size={20}
@@ -1092,17 +1106,33 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
           </TouchableOpacity>
 
           {showSkillsDropdown && (
-            <View style={styles.dropdownBox}>
-              {skillsList.map((item) => {
+            <View style={[styles.dropdownBox, styles.skillsDropdownBoxNew]}>
+              {skillsList.map((item, index) => {
                 const selected = formik.values.skillIds.includes(item.id);
 
                 return (
                   <TouchableOpacity
                     key={item.id}
-                    style={styles.skillItem}
+                    style={[
+                      styles.skillItem,
+                      styles.skillsDropdownItemNew,
+                      selected && styles.skillsDropdownItemSelectedNew,
+                      index === skillsList.length - 1 &&
+                        styles.skillsDropdownLastItemNew,
+                    ]}
                     onPress={() => toggleSkill(item.id)}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.skillText}>{item.skill_name}</Text>
+                    <Text
+                      style={[
+                        styles.skillText,
+                        styles.skillsDropdownTextNew,
+                        selected && styles.skillsDropdownTextSelectedNew,
+                      ]}
+                    >
+                      {item.skill_name}
+                    </Text>
+
                     <Ionicons
                       name={selected ? "checkbox" : "square-outline"}
                       size={22}
@@ -1265,7 +1295,7 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
   );
 };
 
-const WorkExperience = ({ userData,onUpdateSuccess }) => {
+const WorkExperience = ({ userData, onUpdateSuccess }) => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
 
@@ -1451,7 +1481,7 @@ const WorkExperience = ({ userData,onUpdateSuccess }) => {
         };
         dispatch(login(updatedPayload));
         resetForm();
-        onUpdateSuccess()
+        onUpdateSuccess();
       } else {
         console.log("API failed =>", response);
       }
@@ -2121,7 +2151,7 @@ const WorkExperience = ({ userData,onUpdateSuccess }) => {
   );
 };
 
-const EmployerWorkDetails = ({ userData,onUpdateSuccess }) => {
+const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
 
@@ -2204,7 +2234,7 @@ const EmployerWorkDetails = ({ userData,onUpdateSuccess }) => {
         };
         dispatch(login(updatedPayload));
         resetForm();
-        onUpdateSuccess()
+        onUpdateSuccess();
         setShowSkillsDropdown(false);
       }
     } catch (error) {
@@ -2356,7 +2386,7 @@ const EmployerWorkDetails = ({ userData,onUpdateSuccess }) => {
   );
 };
 
-const Education = ({ userData,onUpdateSuccess }) => {
+const Education = ({ userData, onUpdateSuccess }) => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
 
@@ -2435,7 +2465,7 @@ const Education = ({ userData,onUpdateSuccess }) => {
         };
         dispatch(login(updatedPayload));
         resetForm();
-        onUpdateSuccess()
+        onUpdateSuccess();
       }
     } catch (error) {
       console.log("Submit Error =>", error);
@@ -2465,12 +2495,19 @@ const Education = ({ userData,onUpdateSuccess }) => {
                         Qualification {index + 1}
                       </Text>
 
+                      
+
                       {formik.values.workerEducationList.length > 1 && (
                         <TouchableOpacity
-                          onPress={() => arrayHelpers.remove(index)}
-                          style={styles.deleteButton}
+                          style={styles.deleteBtn}
+                           onPress={() => arrayHelpers.remove(index)}
                         >
-                          <Text style={styles.deleteButtonText}>Delete</Text>
+                          <Ionicons
+                            name="trash-outline"
+                            size={18}
+                            color="#fff"
+                          />
+                          <Text style={styles.deleteBtnText}>Delete</Text>
                         </TouchableOpacity>
                       )}
                     </View>
@@ -3106,6 +3143,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginTop: 5,
+    flexWrap: "wrap",
   },
   radioColumn: {
     marginTop: 5,
@@ -3292,5 +3330,66 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
+  },
+  skillsSelectBoxNew: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    minHeight: 50,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: "#fff",
+  },
+
+  skillsSelectBoxOpenNew: {
+    borderColor: "#1e3a5f",
+  },
+
+  skillsSelectedTextNew: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+    marginRight: 10,
+  },
+
+  skillsDropdownBoxNew: {
+    marginTop: 6,
+    borderRadius: 10,
+    overflow: "hidden",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+  },
+
+  skillsDropdownItemNew: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f5f9",
+    backgroundColor: "#fff",
+  },
+
+  skillsDropdownItemSelectedNew: {
+    backgroundColor: "#f4f8ff",
+  },
+
+  skillsDropdownTextNew: {
+    flex: 1,
+    fontSize: 14,
+    color: "#333",
+    marginRight: 10,
+  },
+
+  skillsDropdownTextSelectedNew: {
+    color: "#1e3a5f",
+    fontWeight: "600",
+  },
+
+  skillsDropdownLastItemNew: {
+    borderBottomWidth: 0,
   },
 });
