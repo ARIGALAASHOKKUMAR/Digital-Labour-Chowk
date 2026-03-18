@@ -958,18 +958,19 @@ const SkillDetails = ({ userData }) => {
 
   // Parse skills from API (stored as string "[1, 3, 5]")
   const parseSkills = () => {
-    console.log("userData?.skills", userData.eshramCardNumber);
+  try {
+    if (userData?.skills) {
+      const parsedSkills = JSON.parse(userData.skills);
+      console.log("userData?.skills", parsedSkills);
 
-    try {
-      if (userData?.skills) {
-        return JSON.parse(userData.skills);
-      }
-      return [];
-    } catch (e) {
-      console.log("Error parsing skills:", e);
-      return [];
+      return parsedSkills.map((item) => item.skillId);
     }
-  };
+    return [];
+  } catch (e) {
+    console.log("Error parsing skills:", e);
+    return [];
+  }
+};
 
   const validationSchema = Yup.object().shape({
     skillIds: Yup.array().min(1, "Required").required("Required"),
@@ -2365,6 +2366,8 @@ const Education = ({ userData }) => {
     try {
       if (userData?.education) {
         const parsedData = JSON.parse(userData.education);
+        console.log("parsedData",parsedData);
+        
         return parsedData.map((item) => ({
           educationLevel: item.educationLevel || "",
           institutionName: item.institutionName || "",
