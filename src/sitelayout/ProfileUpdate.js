@@ -32,13 +32,12 @@ import { new_dist, profileMenu } from "../commonFunction";
 
 // ==================== Basic Details Component ====================
 
-const BasicDetails = ({ userData }) => {
+const BasicDetails = ({ userData, onUpdateSuccess }) => {
   const dispatch = useDispatch();
   const state = useSelector((state) => state.LoginReducer);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // ✅ EMPLOYER TYPES DROPDOWN DATA with IDs 1,2,3,4
   const employerTypes = [
     { id: 1, label: "Individual" },
     { id: 2, label: "Contractor" },
@@ -46,34 +45,30 @@ const BasicDetails = ({ userData }) => {
     { id: 4, label: "Agency" },
   ];
 
-  // ✅ CONDITIONAL VALIDATION - Required only if roleName is "DLC Employer"
   const validationSchema = Yup.object().shape({
     fullName: Yup.string().required("Required"),
     mobileNumber: Yup.string().required("Required"),
     email: Yup.string().required("Required"),
     dateOfBirth: Yup.string().required("Required"),
     gender: Yup.string().required("Required"),
-    // Employer Type is required only if roleName is "DLC Employer"
     employerTypeId: Yup.string().when([], {
-      is: () => state.roleName === "DLC Employeer",
+      is: () => state.roleName === "DLC Employer",
       then: (schema) => schema.required("Required"),
       otherwise: (schema) => schema.notRequired(),
     }),
   });
 
-  // Format date from API (DD-MM-YYYY) to YYYY-MM-DD for DateTimePicker
   const formatDateForPicker = (dateStr) => {
     if (!dateStr) return "";
     const parts = dateStr.split("-");
     if (parts.length === 3) {
-      return `${parts[2]}-${parts[1]}-${parts[0]}`; // Convert DD-MM-YYYY to YYYY-MM-DD
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
     }
     return dateStr;
   };
 
-  // ✅ initialValues now populated from API data
-
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
       fullName: userData?.full_name || "",
       dateOfBirth: userData?.date_of_birth || "",
@@ -83,28 +78,34 @@ const BasicDetails = ({ userData }) => {
       profileImage: userData?.profile_image || "base64imageorURL",
       userType: state.roleName,
       stageName: "BASIC_INFO",
-      employerTypeId: userData?.employer_type_id || "", // Will hold the ID (1,2,3,4)
+      employerTypeId: userData?.employer_type_id
+        ? String(userData.employer_type_id)
+        : "",
     },
     validationSchema,
     onSubmit: handleSubmit,
   });
 
-  async function handleSubmit(values, { setSubmitting, resetForm }) {
+  async function handleSubmit(values, { setSubmitting }) {
     try {
-      // ✅ USING VALUES DIRECTLY AS PAYLOAD - NO MODIFICATIONS NEEDED
-      console.log("Sending payload to backend:", values);
+      const payload = {
+        ...values,
+        employerTypeId: values.employerTypeId
+          ? Number(values.employerTypeId)
+          : "",
+      };
+
+      console.log("Sending payload to backend:", payload);
 
       const response = await commonAPICall(
         BASICPROFILE,
-        values,
+        payload,
         "POST",
         dispatch,
       );
 
-      console.log("reeee", response);
-
       if (response?.status === 200) {
-        resetForm();
+        onUpdateSuccess?.(); // refresh parent data
       }
     } catch (error) {
       console.log("Error:", error);
@@ -113,10 +114,7 @@ const BasicDetails = ({ userData }) => {
     }
   }
 
-  // Check if employer type should be shown
   const showEmployerType = state.roleName === "DLC Employer";
-
-  console.log("ttttttesds", userData);
 
   return (
     <FormikProvider value={formik}>
@@ -124,7 +122,6 @@ const BasicDetails = ({ userData }) => {
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Basic Details</Text>
 
-          {/* Full Name */}
           <View style={styles.inputBlock}>
             <Text style={styles.label}>
               Full Name <Text style={styles.requiredStar}>*</Text>
@@ -146,7 +143,6 @@ const BasicDetails = ({ userData }) => {
             )}
           </View>
 
-          {/* Date of Birth */}
           <View style={styles.inputBlock}>
             <Text style={styles.label}>
               Date of Birth <Text style={styles.requiredStar}>*</Text>
@@ -184,7 +180,13 @@ const BasicDetails = ({ userData }) => {
                 onChange={(event, selectedDate) => {
                   setShowDatePicker(false);
                   if (selectedDate) {
-                    const formatted = selectedDate.toISOString().split("T")[0];
+                    const day = String(selectedDate.getDate()).padStart(2, "0");
+                    const month = String(selectedDate.getMonth() + 1).padStart(
+                      2,
+                      "0",
+                    );
+                    const year = selectedDate.getFullYear();
+                    const formatted = `${day}-${month}-${year}`;
                     formik.setFieldValue("dateOfBirth", formatted);
                   }
                 }}
@@ -192,7 +194,6 @@ const BasicDetails = ({ userData }) => {
             )}
           </View>
 
-          {/* Gender */}
           <View style={styles.inputBlock}>
             <Text style={styles.label}>
               Gender <Text style={styles.requiredStar}>*</Text>
@@ -226,7 +227,6 @@ const BasicDetails = ({ userData }) => {
             )}
           </View>
 
-          {/* Mobile */}
           <View style={styles.inputBlock}>
             <Text style={styles.label}>
               Mobile Number <Text style={styles.requiredStar}>*</Text>
@@ -250,7 +250,6 @@ const BasicDetails = ({ userData }) => {
             )}
           </View>
 
-          {/* Email */}
           <View style={styles.inputBlock}>
             <Text style={styles.label}>
               Email <Text style={styles.requiredStar}>*</Text>
@@ -273,7 +272,6 @@ const BasicDetails = ({ userData }) => {
             )}
           </View>
 
-          {/* Employer Type Dropdown - Only shown for DLC Employer */}
           {showEmployerType && (
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
@@ -291,7 +289,7 @@ const BasicDetails = ({ userData }) => {
                   selectedValue={formik.values.employerTypeId}
                   onValueChange={(itemValue) => {
                     formik.setFieldTouched("employerTypeId", true);
-                    formik.setFieldValue("employerTypeId", itemValue);
+                    formik.setFieldValue("employerTypeId", String(itemValue));
                   }}
                 >
                   <Picker.Item label="Select Employer Type" value="" />
@@ -299,7 +297,7 @@ const BasicDetails = ({ userData }) => {
                     <Picker.Item
                       key={type.id}
                       label={type.label}
-                      value={type.id} // Sending ID (1,2,3,4)
+                      value={String(type.id)}
                     />
                   ))}
                 </Picker>
@@ -313,10 +311,10 @@ const BasicDetails = ({ userData }) => {
             </View>
           )}
 
-          {/* Submit */}
           <TouchableOpacity
             style={styles.submitButton}
             onPress={formik.handleSubmit}
+            disabled={formik.isSubmitting}
           >
             <Text style={styles.submitButtonText}>
               {formik.isSubmitting ? "UPDATING..." : "UPDATE PROFILE"}
@@ -329,11 +327,10 @@ const BasicDetails = ({ userData }) => {
 };
 // ==================== Identity Verification Component ====================
 
-const IdentityVerification = ({ userData }) => {
+const IdentityVerification = ({ userData, onUpdateSuccess }) => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
 
-  // Determine which field to show based on role
   console.log("userData", userData);
 
   const showLabourLicence = state.roleName === "DLC Employer";
@@ -348,19 +345,17 @@ const IdentityVerification = ({ userData }) => {
     documentType: Yup.string().required("Required"),
     documentNumber: Yup.string().required("Required"),
     uploadDocument: Yup.string().required("Required"),
-    // Conditional field based on role
     [conditionalFieldName]: Yup.string().required("Required"),
   });
 
-  // ✅ initialValues now populated from API data
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
       userType: state.roleName,
       stageName: "DOCUMENT_VERIFICATION",
       documentType: userData?.document_type || "",
       documentNumber: userData?.document_number || "",
       uploadDocument: userData?.upload_document || "test",
-      // Conditional field based on role
       [conditionalFieldName]: showLabourLicence
         ? userData?.labour_licence || ""
         : userData?.e_shram_card_number || "",
@@ -369,9 +364,8 @@ const IdentityVerification = ({ userData }) => {
     onSubmit: handleSubmit,
   });
 
-  async function handleSubmit(values, { resetForm, setSubmitting }) {
+  async function handleSubmit(values, { setSubmitting }) {
     try {
-      // ✅ USING VALUES DIRECTLY AS PAYLOAD - NO MODIFICATIONS NEEDED
       console.log("Sending payload to backend:", values);
 
       const response = await commonAPICall(
@@ -387,7 +381,8 @@ const IdentityVerification = ({ userData }) => {
           isProfileUpdated: "Y",
         };
         dispatch(login(updatedPayload));
-        resetForm();
+
+        onUpdateSuccess?.(); // refresh latest profile data from parent
       }
     } catch (error) {
       console.log("Error:", error);
@@ -419,6 +414,7 @@ const IdentityVerification = ({ userData }) => {
                 formik.setFieldTouched("documentType", true);
                 formik.setFieldValue("documentType", itemValue);
               }}
+              enabled={!formik.isSubmitting}
             >
               <Picker.Item label="Select Document Type" value="" />
               <Picker.Item label="PAN" value="PAN" />
@@ -466,7 +462,6 @@ const IdentityVerification = ({ userData }) => {
             ]}
             onPress={() => {
               formik.setFieldTouched("uploadDocument", true);
-              // replace this with actual picker
               Alert.alert("Upload", "Open Document Picker");
               formik.setFieldValue("uploadDocument", "test-document.pdf");
             }}
@@ -486,7 +481,6 @@ const IdentityVerification = ({ userData }) => {
           )}
         </View>
 
-        {/* Conditional Field - Labour Licence or e-Shram Card Number */}
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
             {conditionalFieldLabel} <Text style={styles.requiredStar}>*</Text>
@@ -530,7 +524,7 @@ const IdentityVerification = ({ userData }) => {
 };
 // ==================== Location Information Component ====================
 
-const LocationInformation = ({ userData }) => {
+const LocationInformation = ({ userData, onUpdateSuccess }) => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
 
@@ -651,6 +645,8 @@ const LocationInformation = ({ userData }) => {
 
       if (response?.status === 200) {
         resetForm();
+        onUpdateSuccess?.(); // refresh parent data
+
         setMandal([]);
         setVillage([]);
       }
@@ -949,7 +945,7 @@ const LocationInformation = ({ userData }) => {
     </FormikProvider>
   );
 };
-const SkillDetails = ({ userData }) => {
+const SkillDetails = ({ userData, onUpdateSuccess }) => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
 
@@ -958,19 +954,19 @@ const SkillDetails = ({ userData }) => {
 
   // Parse skills from API (stored as string "[1, 3, 5]")
   const parseSkills = () => {
-  try {
-    if (userData?.skills) {
-      const parsedSkills = JSON.parse(userData.skills);
-      console.log("userData?.skills", parsedSkills);
+    try {
+      if (userData?.skills) {
+        const parsedSkills = JSON.parse(userData.skills);
+        console.log("userData?.skills", parsedSkills);
 
-      return parsedSkills.map((item) => item.skillId);
+        return parsedSkills.map((item) => item.skillId);
+      }
+      return [];
+    } catch (e) {
+      console.log("Error parsing skills:", e);
+      return [];
     }
-    return [];
-  } catch (e) {
-    console.log("Error parsing skills:", e);
-    return [];
-  }
-};
+  };
 
   const validationSchema = Yup.object().shape({
     skillIds: Yup.array().min(1, "Required").required("Required"),
@@ -1032,6 +1028,7 @@ const SkillDetails = ({ userData }) => {
         };
         dispatch(login(updatedPayload));
         resetForm();
+        onUpdateSuccess();
         setShowSkillsDropdown(false);
       }
     } catch (error) {
@@ -1268,7 +1265,7 @@ const SkillDetails = ({ userData }) => {
   );
 };
 
-const WorkExperience = ({ userData }) => {
+const WorkExperience = ({ userData,onUpdateSuccess }) => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
 
@@ -1454,6 +1451,7 @@ const WorkExperience = ({ userData }) => {
         };
         dispatch(login(updatedPayload));
         resetForm();
+        onUpdateSuccess()
       } else {
         console.log("API failed =>", response);
       }
@@ -2123,7 +2121,7 @@ const WorkExperience = ({ userData }) => {
   );
 };
 
-const EmployerWorkDetails = ({ userData }) => {
+const EmployerWorkDetails = ({ userData,onUpdateSuccess }) => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
 
@@ -2206,6 +2204,7 @@ const EmployerWorkDetails = ({ userData }) => {
         };
         dispatch(login(updatedPayload));
         resetForm();
+        onUpdateSuccess()
         setShowSkillsDropdown(false);
       }
     } catch (error) {
@@ -2357,7 +2356,7 @@ const EmployerWorkDetails = ({ userData }) => {
   );
 };
 
-const Education = ({ userData }) => {
+const Education = ({ userData,onUpdateSuccess }) => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
 
@@ -2366,8 +2365,8 @@ const Education = ({ userData }) => {
     try {
       if (userData?.education) {
         const parsedData = JSON.parse(userData.education);
-        console.log("parsedData",parsedData);
-        
+        console.log("parsedData", parsedData);
+
         return parsedData.map((item) => ({
           educationLevel: item.educationLevel || "",
           institutionName: item.institutionName || "",
@@ -2436,6 +2435,7 @@ const Education = ({ userData }) => {
         };
         dispatch(login(updatedPayload));
         resetForm();
+        onUpdateSuccess()
       }
     } catch (error) {
       console.log("Submit Error =>", error);
@@ -2797,6 +2797,8 @@ const ProfileUpdate = () => {
   const { isLoggedIn } = state;
 
   const [selectedSection, setSelectedSection] = useState(null);
+  const [overalldata, setOveralldata] = useState([]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -2804,45 +2806,91 @@ const ProfileUpdate = () => {
     }
   }, [isLoggedIn, navigation]);
 
-  const [overalldata, setOveralldata] = useState([]);
-
   const overalldetails = async () => {
-    const res = await commonAPICall(
-      DIGITALLABOURCHOWKDETAILS,
-      {},
-      "get",
-      dispatch,
-    );
+    try {
+      const res = await commonAPICall(
+        DIGITALLABOURCHOWKDETAILS,
+        {},
+        "get",
+        dispatch,
+      );
 
-    if (res.status === 200) {
-      setOveralldata(res.data.DigitalLabourChowkRegistration_Details);
+      if (res?.status === 200) {
+        setOveralldata(res?.data?.DigitalLabourChowkRegistration_Details || []);
+      }
+    } catch (error) {
+      console.log("Error fetching profile details:", error);
     }
   };
 
   useEffect(() => {
     overalldetails();
-  }, []);
+  }, [refreshKey]); // only mount + manual refresh
+
+  const handleRefreshProfile = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
 
   const renderSelectedSection = () => {
-    const userData = overalldata[0] || {}; // Get first user data
+    const userData = overalldata[0] || {};
 
     switch (selectedSection) {
       case "basic_details":
-        return <BasicDetails userData={userData} />;
+        return (
+          <BasicDetails
+            userData={userData}
+            onUpdateSuccess={handleRefreshProfile}
+          />
+        );
       case "identity_verification":
-        return <IdentityVerification userData={userData} />;
+        return (
+          <IdentityVerification
+            userData={userData}
+            onUpdateSuccess={handleRefreshProfile}
+          />
+        );
       case "location_information":
-        return <LocationInformation userData={userData} />;
+        return (
+          <LocationInformation
+            userData={userData}
+            onUpdateSuccess={handleRefreshProfile}
+          />
+        );
       case "skill_details":
-        return <SkillDetails userData={userData} />;
+        return (
+          <SkillDetails
+            userData={userData}
+            onUpdateSuccess={handleRefreshProfile}
+          />
+        );
       case "work_experience":
-        return <WorkExperience userData={userData} />;
+        return (
+          <WorkExperience
+            userData={userData}
+            onUpdateSuccess={handleRefreshProfile}
+          />
+        );
       case "education":
-        return <Education userData={userData} />;
+        return (
+          <Education
+            userData={userData}
+            onUpdateSuccess={handleRefreshProfile}
+          />
+        );
       case "change_password":
-        return <ChangePassword userData={userData} />;
+        return (
+          <ChangePassword
+            userData={userData}
+            onUpdateSuccess={handleRefreshProfile}
+          />
+        );
       case "work_details":
-        return <EmployerWorkDetails userData={userData} />;
+        return (
+          <EmployerWorkDetails
+            userData={userData}
+            onUpdateSuccess={handleRefreshProfile}
+          />
+        );
       case "help":
         return <Help userData={userData} />;
       default:
@@ -2850,9 +2898,7 @@ const ProfileUpdate = () => {
     }
   };
 
-  if (!isLoggedIn) {
-    return null;
-  }
+  if (!isLoggedIn) return null;
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -2864,16 +2910,13 @@ const ProfileUpdate = () => {
             <View>
               {profileMenu
                 .filter((item) => {
-                  // Hide skill_details, education, work_experience for employers
                   if (state.roleName === "DLC Employer") {
                     return ![
                       "skill_details",
                       "education",
                       "work_experience",
                     ].includes(item.value);
-                  }
-                  // Hide work_details for workers
-                  else if (state.roleName === "DLC Worker") {
+                  } else if (state.roleName === "DLC Worker") {
                     return item.value !== "work_details";
                   }
                   return true;

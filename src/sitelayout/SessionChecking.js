@@ -55,7 +55,7 @@ const SessionChecking = ({ navigation, children }) => {
       typeof isProfileUpdated === "string" &&
       isProfileUpdated.toUpperCase() === "N"
     ) {
-      Alert.alert("Profile Update Required", "Please Update Officer Name & Mobile Number", [
+      Alert.alert("Profile Update Required", "Please Update Profile", [
         {
           text: "OK",
           onPress: () => {
@@ -76,8 +76,13 @@ const SessionChecking = ({ navigation, children }) => {
     navigation,
   ]);
 
-  console.log("passwordSinceUpdated",isLoggedIn, isDefaultPassword, isProfileUpdated, passwordSinceUpdated);
-  
+  console.log(
+    "passwordSinceUpdated",
+    isLoggedIn,
+    isDefaultPassword,
+    isProfileUpdated,
+    passwordSinceUpdated,
+  );
 
   if (!isLoggedIn) {
     return (
