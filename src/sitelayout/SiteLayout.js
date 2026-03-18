@@ -31,6 +31,7 @@ import {
 import {
   LOGOUT_ALL_END_POINT,
   LOGOUT_ALL_EXCEPT_THIS_END_POINT,
+  LOGOUT_END_POINT,
   SERVICE_AUTH_END_POINT,
   commonAPICall,
   myAxios,
@@ -42,7 +43,7 @@ import UserMessage from "./UserMessage";
 import { showErrorToast, showSuccessToast } from "../utils/showToast";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import IconFA from "react-native-vector-icons/FontAwesome";
-import labour_logo from "../../assets/labour_log.png"
+import labour_logo from "../../assets/labour_log.png";
 
 const FALLBACK_PROFILE =
   "https://cdn-icons-png.flaticon.com/512/149/149071.png";
@@ -72,6 +73,7 @@ const SiteLayout = ({
     loginLocation,
     activeUsers,
     token,
+    uuid
   } = state;
 
   const userName = username || "User";
@@ -166,15 +168,13 @@ const SiteLayout = ({
         setRemainingTime(remainingSeconds);
         setRandomTrigger(Math.random());
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   }, []);
 
   const concurrentLoginDetection = useCallback(async () => {
     try {
       const response = await myAxios.get(SERVICE_AUTH_END_POINT);
       if (response.status === 200) {
-
         const activeCount = parseInt(
           response?.data?.activeusers?.count || 0,
           10,
@@ -190,7 +190,6 @@ const SiteLayout = ({
         error?.response?.data?.message ||
         error?.message ||
         "Something went wrong";
-
 
       showErrorToast(`${message}`);
       navigation?.reset?.({
@@ -305,7 +304,14 @@ const SiteLayout = ({
     }
   }, [serviceChecking, navigation]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const response = await myAxios.get(
+      `${LOGOUT_END_POINT}?uuid=${uuid}&roleName=${roleName}&type=USER`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+   
+    
+
     dispatch(logOut());
     setLogoutVisible(false);
     setProfileMenuVisible(false);
@@ -949,7 +955,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     flex: 1,
-    gap:10
+    gap: 10,
   },
   headerLogo: {
     width: 60,
@@ -1583,9 +1589,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 8,
   },
-  labour_logo:{
-    height:40,
-    width:40,
-    borderRadius:10
-  }
+  labour_logo: {
+    height: 40,
+    width: 40,
+    borderRadius: 10,
+  },
 });
