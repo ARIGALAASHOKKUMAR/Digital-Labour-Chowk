@@ -33,7 +33,6 @@ import { new_dist, profileMenu } from "../commonFunction";
 // ==================== Basic Details Component ====================
 
 const BasicDetails = ({ userData }) => {
-
   const dispatch = useDispatch();
   const state = useSelector((state) => state.LoginReducer);
 
@@ -74,7 +73,6 @@ const BasicDetails = ({ userData }) => {
 
   // ✅ initialValues now populated from API data
 
-
   const formik = useFormik({
     initialValues: {
       fullName: userData?.full_name || "",
@@ -103,8 +101,7 @@ const BasicDetails = ({ userData }) => {
         dispatch,
       );
 
-      console.log("reeee",response);
-      
+      console.log("reeee", response);
 
       if (response?.status === 200) {
         resetForm();
@@ -117,7 +114,7 @@ const BasicDetails = ({ userData }) => {
   }
 
   // Check if employer type should be shown
-  const showEmployerType = state.roleName === "DLC Empoyeer";
+  const showEmployerType = state.roleName === "DLC Employer";
 
   console.log("ttttttesds", userData);
 
@@ -337,12 +334,12 @@ const IdentityVerification = ({ userData }) => {
   const dispatch = useDispatch();
 
   // Determine which field to show based on role
-  console.log("userData",userData);
+  console.log("userData", userData);
 
-  const showLabourLicence = state.roleName === "DLC Empoyeer";
+  const showLabourLicence = state.roleName === "DLC Employer";
   const conditionalFieldName = showLabourLicence
     ? "labourLicence"
-    : "eShramCardNumber";
+    : "eshramCardNumber";
   const conditionalFieldLabel = showLabourLicence
     ? "Labour Licence Number"
     : "e-Shram Card Number";
@@ -364,8 +361,8 @@ const IdentityVerification = ({ userData }) => {
       documentNumber: userData?.document_number || "",
       uploadDocument: userData?.upload_document || "test",
       // Conditional field based on role
-      [conditionalFieldName]: showLabourLicence 
-        ? userData?.labour_licence || "" 
+      [conditionalFieldName]: showLabourLicence
+        ? userData?.labour_licence || ""
         : userData?.e_shram_card_number || "",
     },
     validationSchema,
@@ -596,11 +593,11 @@ const LocationInformation = ({ userData }) => {
     const loadInitialData = async () => {
       if (userData?.district && !initialDataLoaded) {
         await getmandals(userData.district);
-        
+
         if (userData?.mandal) {
           await getVillages(userData.district, userData.mandal);
         }
-        
+
         setInitialDataLoaded(true);
       }
     };
@@ -961,9 +958,8 @@ const SkillDetails = ({ userData }) => {
 
   // Parse skills from API (stored as string "[1, 3, 5]")
   const parseSkills = () => {
+    console.log("userData?.skills", userData.eshramCardNumber);
 
-    console.log("userData?.skills",userData?.skills);
-    
     try {
       if (userData?.skills) {
         return JSON.parse(userData.skills);
@@ -980,7 +976,7 @@ const SkillDetails = ({ userData }) => {
     experienceYears: Yup.string().required("Required"),
     preferredWorkType: Yup.string().required("Required"),
     dailyRate: Yup.string().required("Required"),
-    workAvailability: Yup.string().required("Required"),
+    workType: Yup.string().required("Required"),
   });
 
   // ✅ initialValues now populated from API data
@@ -992,7 +988,7 @@ const SkillDetails = ({ userData }) => {
       experienceYears: userData?.skill_experience_years?.toString() || "",
       preferredWorkType: userData?.skill_preferred_work_type || "",
       dailyRate: userData?.skill_daily_rate?.toString() || "",
-      workAvailability: userData?.work_availability || "",
+      workType: userData?.skill_work_type || "",
     },
     validationSchema,
     onSubmit: handleSubmit,
@@ -1143,12 +1139,11 @@ const SkillDetails = ({ userData }) => {
             keyboardType="numeric"
             maxLength={2}
           />
-          {formik.errors.experienceYears &&
-            formik.touched.experienceYears && (
-              <Text style={styles.errorText}>
-                {formik.errors.experienceYears}
-              </Text>
-            )}
+          {formik.errors.experienceYears && formik.touched.experienceYears && (
+            <Text style={styles.errorText}>
+              {formik.errors.experienceYears}
+            </Text>
+          )}
         </View>
 
         <View style={styles.inputBlock}>
@@ -1233,16 +1228,16 @@ const SkillDetails = ({ userData }) => {
           <View
             style={[
               styles.selectBox,
-              formik.errors.workAvailability &&
-                formik.touched.workAvailability &&
+              formik.errors.workType &&
+                formik.touched.workType &&
                 styles.inputError,
             ]}
           >
             <Picker
-              selectedValue={formik.values.workAvailability}
+              selectedValue={formik.values.workType}
               onValueChange={(itemValue) => {
-                formik.setFieldTouched("workAvailability", true);
-                formik.setFieldValue("workAvailability", itemValue);
+                formik.setFieldTouched("workType", true);
+                formik.setFieldValue("workType", itemValue);
               }}
             >
               <Picker.Item label="Select Availability" value="" />
@@ -1250,12 +1245,9 @@ const SkillDetails = ({ userData }) => {
               <Picker.Item label="No" value="no" />
             </Picker>
           </View>
-          {formik.errors.workAvailability &&
-            formik.touched.workAvailability && (
-              <Text style={styles.errorText}>
-                {formik.errors.workAvailability}
-              </Text>
-            )}
+          {formik.errors.workType && formik.touched.workType && (
+            <Text style={styles.errorText}>{formik.errors.workType}</Text>
+          )}
         </View>
 
         <TouchableOpacity
@@ -1287,19 +1279,38 @@ const WorkExperience = ({ userData }) => {
   const [currentIndex, setCurrentIndex] = useState(null);
   const [pickerDate, setPickerDate] = useState(new Date());
 
+  // Format date from API (YYYY-MM-DD) to display format (DD-MM-YYYY)
+  const formatDateForDisplay = (dateStr) => {
+    if (!dateStr) return "";
+
+    const ddmmyyyyPattern = /^\d{2}-\d{2}-\d{4}$/;
+    if (ddmmyyyyPattern.test(dateStr)) {
+      return dateStr;
+    }
+
+    const yyyymmddPattern = /^\d{4}-\d{2}-\d{2}$/;
+    if (yyyymmddPattern.test(dateStr)) {
+      const [yyyy, mm, dd] = dateStr.split("-");
+      return `${dd}-${mm}-${yyyy}`;
+    }
+
+    return "";
+  };
+
   // Parse work history from API (stored as JSON string)
   const parseWorkHistory = () => {
     try {
       if (userData?.work_history) {
         const parsedData = JSON.parse(userData.work_history);
-        // Map API field names to form field names
+        console.log("userData", parsedData);
+
         return parsedData.map((item) => ({
-          employerName: item.employeeName || "",
+          employeeName: item.employeeName || "",
           projectName: item.projectName || "",
           workPlace: item.workPlace || "",
           workType: item.workType || "",
-          skillId: item.skillId ? [item.skillId] : [], // Convert single skillId to array
-          taskDesc: item.taskDescription || "",
+          skillIds: item.skillId ? [item.skillId] : [],
+          taskDescription: item.taskDescription || "",
           startDate: item.startDate ? formatDateForDisplay(item.startDate) : "",
           endDate: item.endDate ? formatDateForDisplay(item.endDate) : "",
           daysWorked: item.daysWorked?.toString() || "",
@@ -1317,23 +1328,13 @@ const WorkExperience = ({ userData }) => {
     }
   };
 
-  // Format date from API (YYYY-MM-DD) to display format (DD-MM-YYYY)
-  const formatDateForDisplay = (dateStr) => {
-    if (!dateStr) return "";
-    const parts = dateStr.split("-");
-    if (parts.length === 3) {
-      return `${parts[2]}-${parts[1]}-${parts[0]}`; // Convert YYYY-MM-DD to DD-MM-YYYY
-    }
-    return dateStr;
-  };
-
   const emptyExperience = {
-    employerName: "",
+    employeeName: "",
     projectName: "",
     workPlace: "",
     workType: "",
     skillIds: [],
-    taskDesc: "",
+    taskDescription: "",
     startDate: "",
     endDate: "",
     daysWorked: "",
@@ -1362,12 +1363,12 @@ const WorkExperience = ({ userData }) => {
   const validationSchema = Yup.object().shape({
     workerExperienceList: Yup.array().of(
       Yup.object().shape({
-        employerName: Yup.string().required("Required"),
+        employeeName: Yup.string().required("Required"),
         projectName: Yup.string().required("Required"),
         workPlace: Yup.string().required("Required"),
         workType: Yup.string().required("Required"),
         skillIds: Yup.array().min(1, "Required").required("Required"),
-        taskDesc: Yup.string().required("Required"),
+        taskDescription: Yup.string().required("Required"),
         startDate: Yup.string().required("Required"),
         endDate: Yup.string().required("Required"),
         daysWorked: Yup.string().required("Required"),
@@ -1382,17 +1383,6 @@ const WorkExperience = ({ userData }) => {
 
   // Initialize with parsed work history data
   const initialExperiences = parseWorkHistory();
-  
-  const formik = useFormik({
-    initialValues: {
-      userType: state.roleName || "",
-      stageName: "WORK_HISTORY",
-      workerExperienceList: initialExperiences.length > 0 ? initialExperiences : [{ ...emptyExperience }],
-    },
-    validationSchema,
-    onSubmit: handleSubmit,
-    enableReinitialize: true, // Allow form to update when userData changes
-  });
 
   const formatDate = (date) => {
     if (!date) return "";
@@ -1419,14 +1409,39 @@ const WorkExperience = ({ userData }) => {
     return new Date(Number(yyyy), Number(mm) - 1, Number(dd));
   };
 
+  const formik = useFormik({
+    initialValues: {
+      userType: state.roleName || "",
+      stageName: "WORK_HISTORY",
+      workerExperienceList:
+        initialExperiences.length > 0
+          ? initialExperiences
+          : [{ ...emptyExperience }],
+    },
+    validationSchema,
+    onSubmit: handleSubmit,
+    enableReinitialize: true,
+  });
+
   async function handleSubmit(values, { resetForm, setSubmitting }) {
     try {
-      // ✅ USING VALUES DIRECTLY AS PAYLOAD
-      console.log("Work Experience Payload =>", JSON.stringify(values, null, 2));
+      const payload = {
+        ...values,
+        workerExperienceList: values.workerExperienceList.map((item) => ({
+          ...item,
+          startDate: formatDateToApi(item.startDate),
+          endDate: formatDateToApi(item.endDate),
+        })),
+      };
+
+      console.log(
+        "Work Experience Payload =>",
+        JSON.stringify(payload, null, 2),
+      );
 
       const response = await commonAPICall(
         BASICPROFILE,
-        values,
+        payload,
         "POST",
         dispatch,
       );
@@ -1604,23 +1619,23 @@ const WorkExperience = ({ userData }) => {
               <TextInput
                 style={[
                   styles.input,
-                  formik.touched.workerExperienceList?.[index]?.employerName &&
-                    formik.errors.workerExperienceList?.[index]?.employerName &&
+                  formik.touched.workerExperienceList?.[index]?.employeeName &&
+                    formik.errors.workerExperienceList?.[index]?.employeeName &&
                     styles.inputError,
                 ]}
-                value={item.employerName}
+                value={item.employeeName}
                 onChangeText={formik.handleChange(
-                  `workerExperienceList[${index}].employerName`,
+                  `workerExperienceList[${index}].employeeName`,
                 )}
                 onBlur={formik.handleBlur(
-                  `workerExperienceList[${index}].employerName`,
+                  `workerExperienceList[${index}].employeeName`,
                 )}
                 placeholder="Enter Employer Name"
               />
-              {formik.touched.workerExperienceList?.[index]?.employerName &&
-                formik.errors.workerExperienceList?.[index]?.employerName && (
+              {formik.touched.workerExperienceList?.[index]?.employeeName &&
+                formik.errors.workerExperienceList?.[index]?.employeeName && (
                   <Text style={styles.errorText}>
-                    {formik.errors.workerExperienceList[index].employerName}
+                    {formik.errors.workerExperienceList[index].employeeName}
                   </Text>
                 )}
             </View>
@@ -1793,26 +1808,29 @@ const WorkExperience = ({ userData }) => {
                 style={[
                   styles.input,
                   styles.textArea,
-                  formik.touched.workerExperienceList?.[index]?.taskDesc &&
-                    formik.errors.workerExperienceList?.[index]?.taskDesc &&
+                  formik.touched.workerExperienceList?.[index]
+                    ?.taskDescription &&
+                    formik.errors.workerExperienceList?.[index]
+                      ?.taskDescription &&
                     styles.inputError,
                 ]}
-                value={item.taskDesc}
+                value={item.taskDescription}
                 onChangeText={formik.handleChange(
-                  `workerExperienceList[${index}].taskDesc`,
+                  `workerExperienceList[${index}].taskDescription`,
                 )}
                 onBlur={formik.handleBlur(
-                  `workerExperienceList[${index}].taskDesc`,
+                  `workerExperienceList[${index}].taskDescription`,
                 )}
                 placeholder="Enter Task Description"
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
               />
-              {formik.touched.workerExperienceList?.[index]?.taskDesc &&
-                formik.errors.workerExperienceList?.[index]?.taskDesc && (
+              {formik.touched.workerExperienceList?.[index]?.taskDescription &&
+                formik.errors.workerExperienceList?.[index]
+                  ?.taskDescription && (
                   <Text style={styles.errorText}>
-                    {formik.errors.workerExperienceList[index].taskDesc}
+                    {formik.errors.workerExperienceList[index].taskDescription}
                   </Text>
                 )}
             </View>
@@ -2143,7 +2161,8 @@ const EmployerWorkDetails = ({ userData }) => {
       userType: state.roleName,
       stageName: "EMPLOYER_WORK_DETAILS",
       workCategoryIds: parseCategories(),
-      averageWorkersHiredPerMonth: userData?.average_workers_hired_per_month?.toString() || "",
+      averageWorkersHiredPerMonth:
+        userData?.average_workers_hired_per_month?.toString() || "",
     },
     validationSchema,
     onSubmit: handleSubmit,
@@ -2350,7 +2369,7 @@ const Education = ({ userData }) => {
           educationLevel: item.educationLevel || "",
           institutionName: item.institutionName || "",
           passingYear: item.passingYear?.toString() || "",
-          certificateFile: item.certificate || "",
+          uploadCertificate: item.certificate || "",
         }));
       }
       return [];
@@ -2364,7 +2383,7 @@ const Education = ({ userData }) => {
     educationLevel: "",
     institutionName: "",
     passingYear: "",
-    certificateFile: "",
+    uploadCertificate: "",
   };
 
   const validationSchema = Yup.object().shape({
@@ -2374,7 +2393,7 @@ const Education = ({ userData }) => {
           educationLevel: Yup.string().required("Required"),
           institutionName: Yup.string().required("Required"),
           passingYear: Yup.string().required("Required"),
-          // certificateFile: Yup.string().required("Required"),
+          // uploadCertificate: Yup.string().required("Required"),
         }),
       )
       .min(1, "Required"),
@@ -2382,12 +2401,13 @@ const Education = ({ userData }) => {
 
   // Initialize with parsed education data
   const initialEducation = parseEducation();
-  
+
   const formik = useFormik({
     initialValues: {
       userType: state.roleName,
       stageName: "EDUCATION",
-      workerEducationList: initialEducation.length > 0 ? initialEducation : [emptyEducation],
+      workerEducationList:
+        initialEducation.length > 0 ? initialEducation : [emptyEducation],
     },
     validationSchema,
     onSubmit: handleSubmit,
@@ -2567,12 +2587,12 @@ const Education = ({ userData }) => {
                       <TouchableOpacity
                         style={[
                           styles.uploadButton,
-                          getError(index, "certificateFile") &&
+                          getError(index, "uploadCertificate") &&
                             styles.inputError,
                         ]}
                         onPress={async () => {
                           formik.setFieldTouched(
-                            `workerEducationList[${index}].certificateFile`,
+                            `workerEducationList[${index}].uploadCertificate`,
                             true,
                           );
 
@@ -2583,7 +2603,7 @@ const Education = ({ userData }) => {
                           );
 
                           formik.setFieldValue(
-                            `workerEducationList[${index}].certificateFile`,
+                            `workerEducationList[${index}].uploadCertificate`,
                             "certificate-uploaded",
                           );
                         }}
@@ -2593,19 +2613,19 @@ const Education = ({ userData }) => {
                         </Text>
                       </TouchableOpacity>
 
-                      {item.certificateFile ? (
+                      {item.uploadCertificate ? (
                         <Text style={styles.fileNameText}>
-                          {item.certificateFile === "certificate-uploaded" 
-                            ? "Certificate selected" 
+                          {item.uploadCertificate === "certificate-uploaded"
+                            ? "Certificate selected"
                             : "Certificate available"}
                         </Text>
                       ) : null}
 
-                      {getError(index, "certificateFile") ? (
+                      {getError(index, "uploadCertificate") ? (
                         <Text style={styles.errorText}>
                           {
                             formik.errors.workerEducationList[index]
-                              .certificateFile
+                              .uploadCertificate
                           }
                         </Text>
                       ) : null}
@@ -2842,7 +2862,7 @@ const ProfileUpdate = () => {
               {profileMenu
                 .filter((item) => {
                   // Hide skill_details, education, work_experience for employers
-                  if (state.roleName === "DLC Empoyeer") {
+                  if (state.roleName === "DLC Employer") {
                     return ![
                       "skill_details",
                       "education",

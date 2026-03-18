@@ -682,7 +682,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
       password: "",
       confirmPassword: "",
       otp: "",
-      userType: type.toUpperCase(),
+      userType: type,
       agreeTerms: false,
       registrationId: "", // Will be generated in handleSubmit
     },
@@ -716,7 +716,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
       }
     } catch (error) {
       console.error("Registration error:", error);
-      showErrorToast(error?.message || "Registration failed");
+      showErrorToast(error?.response.message || "Registration failed");
     } finally {
       setLoading(false);
       setSubmitting(false);
@@ -1353,11 +1353,11 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
   );
 };
 export const RegisterWorker = ({ navigation }) => {
-  return <CommonRegistrationForm navigation={navigation} type="worker" />;
+  return <CommonRegistrationForm navigation={navigation} type="DLC Worker" />;
 };
 
 export const RegisterEmployer = ({ navigation }) => {
-  return <CommonRegistrationForm navigation={navigation} type="employer" />;
+  return <CommonRegistrationForm navigation={navigation} type="DLC Employer" />;
 };
 
 export default LoginCommon;
