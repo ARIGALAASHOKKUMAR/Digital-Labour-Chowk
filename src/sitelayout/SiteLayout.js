@@ -967,13 +967,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: "white",
-    fontSize: 15,
+    fontSize: 10,
     fontWeight: "bold",
-    letterSpacing: 0.5,
+    letterSpacing: 0.2,
     textShadowColor: "rgba(0,0,0,0.2)",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
-    marginBottom: 4,
   },
   headerTitle2: {
     color: "green",
@@ -1122,6 +1121,10 @@ const styles = StyleSheet.create({
   profileTextContainer: {
     marginLeft: 12,
     flex: 1,
+    marginTop:10
+  },
+  textContainer:{
+    width:130
   },
   profileName: {
     fontSize: 18,
@@ -1597,6 +1600,8 @@ const styles = StyleSheet.create({
   },
   teluguText:{
     color:"white",
-    fontWeight:"bold"
+    fontWeight:"bold",
+    fontSize:11,
+    marginBottom:6
   }
 });
