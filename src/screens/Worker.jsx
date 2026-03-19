@@ -136,7 +136,7 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
 
   return (
     <ScrollView
-      showsVerticalScrollIndicator={false}
+      showsVerticalScrollIndicator={true}
       contentContainerStyle={styles.scrollContent}
     >
       <View style={styles.topCard}>
@@ -334,10 +334,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#eef3f8",
   },
-  scrollContent: {
-    padding: 10,
-    paddingBottom: 24,
-  },
+ scrollContent: {
+  padding: 10,
+  paddingBottom: 120,
+  flexGrow: 1,
+},
 
   topCard: {
     backgroundColor: "#fff",
