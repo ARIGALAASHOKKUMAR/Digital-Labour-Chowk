@@ -1,23 +1,73 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   Image,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { useDispatch } from "react-redux";
+
+import PostJob from "./PostJob";
+import { commonAPICall, DIGITALLABOURCHOWKDETAILS } from "../utils/utils";
 
 const Employer = () => {
-  const skills = ["Helper Mason", "Helper Electrician", "Acoustical Insulator"];
+  const [selectedScreen, setSelectedScreen] = useState("home");
+  const [employerdata, setEmployerdata] = useState([]);
+  const dispatch = useDispatch();
+
+  const fetchWorkerDetails = async () => {
+    const res = await commonAPICall(
+      DIGITALLABOURCHOWKDETAILS,
+      {},
+      "get",
+      dispatch
+    );
+
+    if (res?.status === 200) {
+      const data = res?.data?.DigitalLabourChowkRegistration_Details || [];
+      setEmployerdata(data);
+    }
+  };
+
+  useEffect(() => {
+    fetchWorkerDetails();
+  }, []);
+
+  const employer = employerdata?.[0] || {};
+
+  const parsedCategories = (() => {
+    try {
+      return employer?.categories ? JSON.parse(employer.categories) : [];
+    } catch (error) {
+      return [];
+    }
+  })();
+
+  const skills =
+    parsedCategories.length > 0
+      ? parsedCategories.map((item) => item.categoryName)
+      : [];
+
+  const fullName = employer?.full_name || "Employer Name";
+  const mobileNumber = employer?.mobile_number || "Mobile Number";
+  const employerType = employer?.employer_type_name || "Employer Type";
+  const location = [
+    employer?.village_name,
+    employer?.mandal_name,
+    employer?.dist_name,
+  ]
+    .filter(Boolean)
+    .join(", ");
 
   const menuItems = [
     {
       title: "Post Job",
       icon: "briefcase-outline",
-      onPress: () => {},
+      onPress: () => setSelectedScreen("postJob"),
     },
     {
       title: "My Jobs",
@@ -32,33 +82,77 @@ const Employer = () => {
     },
   ];
 
+  if (selectedScreen === "postJob") {
+    return (
+      <SafeAreaView style={{ flex: 1 }}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => setSelectedScreen("home")}>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Post a New Job</Text>
+          <View style={{ width: 24 }} />
+        </View>
+
+        <PostJob
+          userData={{}}
+          onUpdateSuccess={() => {
+            setSelectedScreen("home");
+            fetchWorkerDetails();
+          }}
+        />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
-        {/* Profile Card */}
         <View style={styles.profileCard}>
           <Image
             source={{
-              uri: "https://i.pravatar.cc/150?img=12",
+              uri:
+                employer?.profile_image &&
+                employer?.profile_image !== "base64imageorURL"
+                  ? employer.profile_image
+                  : "https://i.pravatar.cc/150?img=12",
             }}
             style={styles.profileImage}
           />
 
           <View style={styles.profileInfo}>
-            <Text style={styles.name}>Vikesh Kumar</Text>
-            <Text style={styles.mobile}>5825812045</Text>
+            <Text style={styles.name}>{fullName}</Text>
+            <Text style={styles.mobile}>{mobileNumber}</Text>
+
+            {!!employerType && (
+              <View style={styles.infoRow}>
+                <Ionicons name="business-outline" size={14} color="#666" />
+                <Text style={styles.infoText}>{employerType}</Text>
+              </View>
+            )}
+
+            {!!location && (
+              <View style={styles.infoRow}>
+                <Ionicons name="location-outline" size={14} color="#666" />
+                <Text style={styles.infoText}>{location}</Text>
+              </View>
+            )}
 
             <View style={styles.skillWrap}>
-              {skills.map((item, index) => (
-                <View key={index} style={styles.skillChip}>
-                  <Text style={styles.skillText}>{item}</Text>
+              {skills.length > 0 ? (
+                skills.map((item, index) => (
+                  <View key={index} style={styles.skillChip}>
+                    <Text style={styles.skillText}>{item}</Text>
+                  </View>
+                ))
+              ) : (
+                <View style={styles.skillChip}>
+                  <Text style={styles.skillText}>No Categories</Text>
                 </View>
-              ))}
+              )}
             </View>
           </View>
         </View>
 
-        {/* Menu Grid */}
         <View style={styles.gridRow}>
           {menuItems.slice(0, 2).map((item, index) => (
             <TouchableOpacity
@@ -98,6 +192,19 @@ const styles = StyleSheet.create({
     backgroundColor: "#eaf4ff",
     flexGrow: 1,
   },
+  header: {
+    height: 56,
+    backgroundColor: "#1976d2",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+  },
+  headerTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+  },
   profileCard: {
     flexDirection: "row",
     backgroundColor: "#fff",
@@ -129,12 +236,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#666",
     marginTop: 2,
-    marginBottom: 10,
+    marginBottom: 6,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  infoText: {
+    marginLeft: 6,
+    fontSize: 12,
+    color: "#555",
+    flexShrink: 1,
   },
   skillWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    marginTop: 4,
   },
   skillChip: {
     backgroundColor: "#f1f1f1",

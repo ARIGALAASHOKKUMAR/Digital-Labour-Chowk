@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -45,6 +45,9 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
     { id: 4, label: "Agency" },
   ];
 
+  console.log("userData",userData);
+  
+
   const validationSchema = Yup.object().shape({
     fullName: Yup.string().required("Required"),
     mobileNumber: Yup.string().required("Required"),
@@ -66,6 +69,18 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
     }
     return dateStr;
   };
+
+  const formatDate = (date) => {
+    if (!date) return "";
+
+    const parts = date.split("-"); // assuming DD-MM-YYYY
+    if (parts.length !== 3) return date;
+
+    return `${parts[2]}-${parts[1]}-${parts[0]}`; // YYYY-MM-DD
+  };
+
+  console.log("userData?.date_of_birth",userData?.date_of_birth);
+  
 
   const formik = useFormik({
     enableReinitialize: true,
@@ -90,12 +105,13 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
     try {
       const payload = {
         ...values,
+        dateOfBirth: formatDate(values.dateOfBirth),
         employerTypeId: values.employerTypeId
           ? Number(values.employerTypeId)
           : "",
       };
 
-      console.log("Sending payload to backend:", payload);
+      console.log("Sending employer profile payload to backend:", payload);
 
       const response = await commonAPICall(
         BASICPROFILE,
@@ -2151,6 +2167,10 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
   );
 };
 
+
+
+
+
 const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
@@ -2158,7 +2178,6 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
   const [skillsList, setSkillsList] = useState([]);
   const [showSkillsDropdown, setShowSkillsDropdown] = useState(false);
 
-  // Average workers hired per month options
   const averageWorkersOptions = [
     { label: "1-10", value: 10 },
     { label: "11-50", value: 50 },
@@ -2166,36 +2185,54 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
     { label: "100+", value: 101 },
   ];
 
-  // Parse categories from API (stored as string "[1, 2, 5]")
-  const parseCategories = () => {
+  const normalizeCategoryIds = (categoriesValue) => {
     try {
-      if (userData?.categories) {
-        return JSON.parse(userData.categories);
+      let parsed = categoriesValue;
+
+      if (!parsed) return [];
+
+      if (typeof parsed === "string") {
+        parsed = JSON.parse(parsed);
       }
-      return [];
+
+      if (!Array.isArray(parsed)) return [];
+
+      return parsed
+        .map((item) => {
+          if (typeof item === "number") return item;
+          if (typeof item === "string") return Number(item);
+          if (item && typeof item === "object") {
+            return Number(item.categoryId ?? item.id);
+          }
+          return NaN;
+        })
+        .filter((id) => !isNaN(id));
     } catch (e) {
       console.log("Error parsing categories:", e);
       return [];
     }
   };
 
+  const initialCategoryIds = useMemo(() => {
+    return normalizeCategoryIds(userData?.categories);
+  }, [userData?.categories]);
+
   const validationSchema = Yup.object().shape({
     workCategoryIds: Yup.array().min(1, "Required").required("Required"),
     averageWorkersHiredPerMonth: Yup.string().required("Required"),
   });
 
-  // ✅ initialValues populated from API data
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
       userType: state.roleName,
       stageName: "EMPLOYER_WORK_DETAILS",
-      workCategoryIds: parseCategories(),
+      workCategoryIds: initialCategoryIds,
       averageWorkersHiredPerMonth:
         userData?.average_workers_hired_per_month?.toString() || "",
     },
     validationSchema,
     onSubmit: handleSubmit,
-    enableReinitialize: true, // Allow form to update when userData changes
   });
 
   const getSkillsData = async () => {
@@ -2203,8 +2240,7 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
       const response = await commonAPICall(GETSKILLS, {}, "get", dispatch);
 
       if (response?.status === 200) {
-        const skillData = response?.data?.Skill_Info_Details || [];
-        setSkillsList(skillData);
+        setSkillsList(response?.data?.Skill_Info_Details || []);
       }
     } catch (error) {
       console.log("Error fetching skills:", error);
@@ -2217,12 +2253,20 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
 
   async function handleSubmit(values, { resetForm, setSubmitting }) {
     try {
-      // ✅ USING VALUES DIRECTLY AS PAYLOAD
-      console.log("Submitting employer work details:", values);
+      const payload = {
+        userType: state.roleName,
+        stageName: "EMPLOYER_WORK_DETAILS",
+        workCategoryIds: normalizeCategoryIds(values.workCategoryIds),
+        averageWorkersHiredPerMonth: Number(
+          values.averageWorkersHiredPerMonth,
+        ),
+      };
+
+      console.log("Submitting employer work details:", payload);
 
       const response = await commonAPICall(
         BASICPROFILE,
-        values,
+        payload,
         "POST",
         dispatch,
       );
@@ -2234,7 +2278,7 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
         };
         dispatch(login(updatedPayload));
         resetForm();
-        onUpdateSuccess();
+        onUpdateSuccess?.();
         setShowSkillsDropdown(false);
       }
     } catch (error) {
@@ -2245,21 +2289,30 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
   }
 
   const toggleSkill = (skillId) => {
+    const numericSkillId = Number(skillId);
     formik.setFieldTouched("workCategoryIds", true);
-    const selectedIds = formik.values.workCategoryIds || [];
 
-    if (selectedIds.includes(skillId)) {
+    const selectedIds = normalizeCategoryIds(formik.values.workCategoryIds);
+
+    if (selectedIds.includes(numericSkillId)) {
       formik.setFieldValue(
         "workCategoryIds",
-        selectedIds.filter((id) => id !== skillId),
+        selectedIds.filter((id) => id !== numericSkillId),
       );
     } else {
-      formik.setFieldValue("workCategoryIds", [...selectedIds, skillId]);
+      formik.setFieldValue("workCategoryIds", [
+        ...selectedIds,
+        numericSkillId,
+      ]);
     }
   };
 
   const selectedSkillNames = skillsList
-    .filter((item) => formik.values.workCategoryIds.includes(item.id))
+    .filter((item) =>
+      normalizeCategoryIds(formik.values.workCategoryIds).includes(
+        Number(item.id),
+      ),
+    )
     .map((item) => item.skill_name)
     .join(", ");
 
@@ -2268,7 +2321,6 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Employer Work Details</Text>
 
-        {/* Work Categories Multi-select using Skills API */}
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
             Work Categories <Text style={styles.requiredStar}>*</Text>
@@ -2301,9 +2353,9 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
           {showSkillsDropdown && (
             <View style={styles.dropdownBox}>
               {skillsList.map((item) => {
-                const selected = formik.values.workCategoryIds.includes(
-                  item.id,
-                );
+                const selected = normalizeCategoryIds(
+                  formik.values.workCategoryIds,
+                ).includes(Number(item.id));
 
                 return (
                   <TouchableOpacity
@@ -2330,12 +2382,12 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
           ) : null}
         </View>
 
-        {/* Average Workers Hired Per Month Dropdown */}
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
             Average Workers Hired Per Month{" "}
             <Text style={styles.requiredStar}>*</Text>
           </Text>
+
           <View
             style={[
               styles.selectBox,
@@ -2361,6 +2413,7 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
               ))}
             </Picker>
           </View>
+
           {formik.errors.averageWorkersHiredPerMonth &&
             formik.touched.averageWorkersHiredPerMonth && (
               <Text style={styles.errorText}>
@@ -2385,6 +2438,8 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
     </FormikProvider>
   );
 };
+
+
 
 const Education = ({ userData, onUpdateSuccess }) => {
   const state = useSelector((state) => state.LoginReducer);
@@ -2938,7 +2993,9 @@ const ProfileUpdate = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
         <Text style={styles.header}>
-          {selectedSection ? (selectedSection.replace(/_/g, " ")).toUpperCase() : "My Profile"}
+          {selectedSection
+            ? selectedSection.replace(/_/g, " ").toUpperCase()
+            : "My Profile"}
         </Text>
         <View style={styles.panel}>
           {!selectedSection ? (
