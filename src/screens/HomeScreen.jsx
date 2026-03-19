@@ -12,15 +12,15 @@ import { useSelector } from "react-redux";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Worker from "./Worker";
+import Employer from "./Employer";
 
 const HomeScreen = ({ navigation }) => {
   const state = useSelector((state) => state.LoginReducer);
-  const roleId = state.roleId
+  const roleId = state.roleId;
 
-  return <SafeAreaView>
-    <Worker/>
-  </SafeAreaView>;
+  return (
+    <SafeAreaView>{roleId == 12 ? <Worker /> : <Employer />}</SafeAreaView>
+  );
 };
-
 
 export default HomeScreen;
