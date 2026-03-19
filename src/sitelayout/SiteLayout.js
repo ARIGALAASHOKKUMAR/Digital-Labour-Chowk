@@ -270,7 +270,7 @@ const SiteLayout = ({
 
     intervalRef.current = setInterval(() => {
       concurrentLoginDetection();
-    }, 3000);
+    }, 10000);
 
     return () => {
       if (intervalRef.current) {
