@@ -665,23 +665,27 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
   const [otpTimer, setOtpTimer] = useState(0);
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
+  const [showErrors, setShowErrors] = useState(false); // 👈 Only this new state
 
   // Refs for OTP inputs
   const otpInputs = useRef([]);
   const dispatch = useDispatch();
 
-  // ✅ SIMPLE REQUIRED VALIDATION like previous components
+  // Simple validation schema
   const validationSchema = Yup.object().shape({
-    fullName: Yup.string().required("Required"),
-    email: Yup.string().required("Required"),
-    mobileNumber: Yup.string().required("Required"),
-    password: Yup.string().required("Required"),
-    confirmPassword: Yup.string().required("Required"),
-    otp: Yup.string().required("Required"),
-    agreeTerms: Yup.boolean().required("Required").oneOf([true], "Required"),
+    fullName: Yup.string().required("Full name is required"),
+    email: Yup.string().email("Invalid email").required("Email is required"),
+    mobileNumber: Yup.string()
+      .matches(/^[0-9]{10}$/, "10 digits required")
+      .required("Mobile number is required"),
+    password: Yup.string().min(6, "Min 6 characters").required("Password is required"),
+    confirmPassword: Yup.string()
+      .oneOf([Yup.ref('password')], "Passwords must match")
+      .required("Confirm password is required"),
+    otp: Yup.string().matches(/^[0-9]{6}$/, "6 digits required"),
+    agreeTerms: Yup.boolean().oneOf([true], "Required").required("Required"),
   });
 
-  // ✅ initialValues now matches EXACT backend payload structure
   const formik = useFormik({
     initialValues: {
       fullName: "",
@@ -692,7 +696,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
       otp: "",
       userType: type,
       agreeTerms: false,
-      registrationId: "", // Will be generated in handleSubmit
+      registrationId: "",
     },
     validationSchema,
     onSubmit: handleSubmit,
@@ -701,30 +705,28 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
   async function handleSubmit(values, { setSubmitting, resetForm }) {
     setLoading(true);
     try {
-      // ✅ USING VALUES DIRECTLY AS PAYLOAD with additional computed field
+      if (!values.otp || values.otp.length !== 6) {
+        showErrorToast("Please enter valid 6-digit OTP");
+        return;
+      }
+
       const payload = {
         ...values,
         registrationId: `DL-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000)}`,
       };
 
-      console.log(`${type} registration payload =>`, payload);
-
       const res = await commonAPICall(EMPLOYEEREG, payload, "post", dispatch);
-      console.log("Registration response:", res);
 
       if (res?.status === 200 || res?.status === 201) {
         setShowOtpModal(false);
-        showSuccessToast(
-          `${isWorker ? "Worker" : "Employer"} registered successfully`,
-        );
+        showSuccessToast(`${isWorker ? "Worker" : "Employer"} registered successfully`);
         navigation.goBack();
         resetForm();
       } else {
         throw new Error(res?.message || "Registration failed");
       }
     } catch (error) {
-      console.error("Registration error:", error);
-      showErrorToast(error?.response.message || "Registration failed");
+      showErrorToast(error?.response?.message || "Registration failed");
     } finally {
       setLoading(false);
       setSubmitting(false);
@@ -742,15 +744,12 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
     const currentOtp = formik.values.otp;
     let newOtp = currentOtp.split("");
 
-    // Ensure we have 6 positions
     while (newOtp.length < 6) newOtp.push("");
 
-    // Allow only single digit
     if (text.length > 1) {
       text = text.charAt(text.length - 1);
     }
 
-    // Only allow numbers
     if (text && !/^\d+$/.test(text)) {
       return;
     }
@@ -758,18 +757,12 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
     newOtp[index] = text;
     formik.setFieldValue("otp", newOtp.join(""));
 
-    // Clear OTP error when user starts typing
-    if (formik.errors.otp) {
-      formik.setFieldError("otp", undefined);
-    }
-
-    // Auto-focus next input
     if (text && index < 5) {
       otpInputs.current[index + 1]?.focus();
     }
   };
 
-  // Handle OTP key press (backspace)
+  // Handle OTP key press
   const handleOtpKeyPress = (e, index) => {
     const currentOtp = formik.values.otp;
     const otpArray = currentOtp.split("");
@@ -785,59 +778,30 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
     formik.setFieldValue("otp", digits);
   };
 
-  // Validate all fields before sending OTP
-  const validateAllFields = async () => {
-    const fieldsToValidate = [
-      "fullName",
-      "email",
-      "mobileNumber",
-      "password",
-      "confirmPassword",
-      "agreeTerms",
-    ];
-
-    // Set all fields as touched
-    const touchedFields = {};
-    fieldsToValidate.forEach((field) => {
-      touchedFields[field] = true;
-    });
-
-    await formik.setTouched(touchedFields);
-    await formik.validateForm();
-
-    // Check if there are any errors
-    const hasErrors = fieldsToValidate.some((field) => formik.errors[field]);
-
-    if (hasErrors) {
-      const firstErrorField = fieldsToValidate.find(
-        (field) => formik.errors[field],
-      );
-      if (firstErrorField) {
-        showErrorToast(formik.errors[firstErrorField]);
-      }
-    }
-
-    return !hasErrors;
-  };
-
-  // Send OTP - only enabled when terms are accepted
+  // 👇 ONLY THIS FUNCTION MATTERS - validates when clicking Send OTP
   const handleSendOtp = async () => {
-    const isValid = await validateAllFields();
+    // Set showErrors to true to display all validation errors
+    setShowErrors(true);
+    
+    // Manually validate all fields except OTP
+    const errors = await formik.validateForm();
+    
+    // Check if there are errors in required fields (excluding otp)
+    const hasErrors = 
+      errors.fullName || 
+      errors.email || 
+      errors.mobileNumber || 
+      errors.password || 
+      errors.confirmPassword || 
+      errors.agreeTerms;
 
-    if (isValid && formik.values.agreeTerms) {
+    if (!hasErrors && formik.values.agreeTerms) {
       try {
         setOtpLoading(true);
         const mobileNumber = formik.values.mobileNumber;
-        const email = formik.values.email;
-
-        console.log("Sending OTP to:", { phone: mobileNumber, email });
 
         const url = `${EMPLOYEEREGOTP}${mobileNumber}&userType=${type.toUpperCase()}`;
-        console.log("uuuuuuuuuu", url);
-
         const getotp = await commonAPICall(url, {}, "post", dispatch);
-
-        console.log("OTP response:", getotp?.data);
 
         if (getotp?.status === 200 || getotp?.status === 201) {
           setOtpSent(true);
@@ -858,26 +822,19 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
           throw new Error(getotp?.message || "Failed to send OTP");
         }
       } catch (error) {
-        console.error("OTP sending error:", error);
         showErrorToast(error?.message || "Failed to send OTP");
       } finally {
         setOtpLoading(false);
       }
-    } else if (!formik.values.agreeTerms) {
-      showErrorToast("Please accept terms and conditions to continue");
-    }
+    } 
   };
 
-  // Reset OTP fields when modal closes
   const handleCloseModal = () => {
     setShowOtpModal(false);
     formik.setFieldValue("otp", "");
-    formik.setFieldTouched("otp", false);
-    formik.setFieldError("otp", undefined);
     setOtpTimer(0);
   };
 
-  // Handle resend OTP
   const handleResendOtp = async () => {
     if (otpTimer > 0) return;
 
@@ -885,11 +842,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
       setOtpLoading(true);
       const mobileNumber = formik.values.mobileNumber;
 
-      console.log("Resending OTP to:", mobileNumber);
-
       const url = `${EMPLOYEEREGOTP}${mobileNumber}&userType=${type.toUpperCase()}`;
-      console.log("url", url);
-
       const getotp = await commonAPICall(url, {}, "post", dispatch);
 
       if (getotp?.status === 200 || getotp?.status === 201) {
@@ -912,9 +865,6 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
       setOtpLoading(false);
     }
   };
-
-  // Check if terms are accepted
-  const isTermsAccepted = formik.values.agreeTerms;
 
   return (
     <View style={styles.screen}>
@@ -982,9 +932,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
               <View
                 style={[
                   styles.inputWrapper,
-                  formik.touched.fullName &&
-                    formik.errors.fullName &&
-                    styles.inputWrapperError,
+                  showErrors && formik.errors.fullName && styles.inputWrapperError, // 👈 Only show error when showErrors is true
                 ]}
               >
                 <Ionicons
@@ -994,21 +942,14 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   style={styles.leftIcon}
                 />
                 <TextInput
-                  placeholder={
-                    isWorker
-                      ? "Enter worker full name"
-                      : "Enter employer full name"
-                  }
+                  placeholder={isWorker ? "Enter worker full name" : "Enter employer full name"}
                   placeholderTextColor="#94a3b8"
                   style={styles.input}
                   value={formik.values.fullName}
-                  onChangeText={(text) =>
-                    formik.setFieldValue("fullName", text)
-                  }
-                  onBlur={() => formik.setFieldTouched("fullName", true)}
+                  onChangeText={(text) => formik.setFieldValue("fullName", text)}
                 />
               </View>
-              {formik.touched.fullName && formik.errors.fullName && (
+              {showErrors && formik.errors.fullName && ( // 👈 Only show error when showErrors is true
                 <Text style={styles.errorText}>{formik.errors.fullName}</Text>
               )}
             </View>
@@ -1018,9 +959,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
               <View
                 style={[
                   styles.inputWrapper,
-                  formik.touched.email &&
-                    formik.errors.email &&
-                    styles.inputWrapperError,
+                  showErrors && formik.errors.email && styles.inputWrapperError,
                 ]}
               >
                 <Ionicons
@@ -1030,19 +969,16 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   style={styles.leftIcon}
                 />
                 <TextInput
-                  placeholder={
-                    isWorker ? "Enter worker email" : "Enter employer email"
-                  }
+                  placeholder={isWorker ? "Enter worker email" : "Enter employer email"}
                   placeholderTextColor="#94a3b8"
                   style={styles.input}
                   value={formik.values.email}
                   onChangeText={formik.handleChange("email")}
-                  onBlur={formik.handleBlur("email")}
                   autoCapitalize="none"
                   keyboardType="email-address"
                 />
               </View>
-              {formik.touched.email && formik.errors.email && (
+              {showErrors && formik.errors.email && (
                 <Text style={styles.errorText}>{formik.errors.email}</Text>
               )}
             </View>
@@ -1052,9 +988,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
               <View
                 style={[
                   styles.inputWrapper,
-                  formik.touched.mobileNumber &&
-                    formik.errors.mobileNumber &&
-                    styles.inputWrapperError,
+                  showErrors && formik.errors.mobileNumber && styles.inputWrapperError,
                 ]}
               >
                 <Ionicons
@@ -1064,24 +998,17 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   style={styles.leftIcon}
                 />
                 <TextInput
-                  placeholder={
-                    isWorker
-                      ? "Enter worker phone number"
-                      : "Enter employer phone number"
-                  }
+                  placeholder={isWorker ? "Enter worker phone number" : "Enter employer phone number"}
                   placeholderTextColor="#94a3b8"
                   style={styles.input}
                   value={formik.values.mobileNumber}
                   onChangeText={handlePhoneChange}
-                  onBlur={formik.handleBlur("mobileNumber")}
                   keyboardType="number-pad"
                   maxLength={10}
                 />
               </View>
-              {formik.touched.mobileNumber && formik.errors.mobileNumber && (
-                <Text style={styles.errorText}>
-                  {formik.errors.mobileNumber}
-                </Text>
+              {showErrors && formik.errors.mobileNumber && (
+                <Text style={styles.errorText}>{formik.errors.mobileNumber}</Text>
               )}
             </View>
 
@@ -1090,9 +1017,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
               <View
                 style={[
                   styles.inputWrapper,
-                  formik.touched.password &&
-                    formik.errors.password &&
-                    styles.inputWrapperError,
+                  showErrors && formik.errors.password && styles.inputWrapperError,
                 ]}
               >
                 <Ionicons
@@ -1107,7 +1032,6 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   style={styles.input}
                   value={formik.values.password}
                   onChangeText={formik.handleChange("password")}
-                  onBlur={formik.handleBlur("password")}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -1123,7 +1047,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   />
                 </TouchableOpacity>
               </View>
-              {formik.touched.password && formik.errors.password && (
+              {showErrors && formik.errors.password && (
                 <Text style={styles.errorText}>{formik.errors.password}</Text>
               )}
             </View>
@@ -1133,9 +1057,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
               <View
                 style={[
                   styles.inputWrapper,
-                  formik.touched.confirmPassword &&
-                    formik.errors.confirmPassword &&
-                    styles.inputWrapperError,
+                  showErrors && formik.errors.confirmPassword && styles.inputWrapperError,
                 ]}
               >
                 <Ionicons
@@ -1150,7 +1072,6 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   style={styles.input}
                   value={formik.values.confirmPassword}
                   onChangeText={formik.handleChange("confirmPassword")}
-                  onBlur={formik.handleBlur("confirmPassword")}
                   secureTextEntry={!showConfirmPassword}
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -1160,29 +1081,22 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   style={styles.eyeButton}
                 >
                   <Ionicons
-                    name={
-                      showConfirmPassword ? "eye-outline" : "eye-off-outline"
-                    }
+                    name={showConfirmPassword ? "eye-outline" : "eye-off-outline"}
                     size={22}
                     color="#1e3a5f"
                   />
                 </TouchableOpacity>
               </View>
-              {formik.touched.confirmPassword &&
-                formik.errors.confirmPassword && (
-                  <Text style={styles.errorText}>
-                    {formik.errors.confirmPassword}
-                  </Text>
-                )}
+              {showErrors && formik.errors.confirmPassword && (
+                <Text style={styles.errorText}>{formik.errors.confirmPassword}</Text>
+              )}
             </View>
 
             {/* Terms and Conditions Checkbox */}
             <View style={styles.termsContainer}>
               <TouchableOpacity
                 style={styles.checkboxWrapper}
-                onPress={() =>
-                  formik.setFieldValue("agreeTerms", !formik.values.agreeTerms)
-                }
+                onPress={() => formik.setFieldValue("agreeTerms", !formik.values.agreeTerms)}
                 activeOpacity={0.8}
               >
                 <View
@@ -1199,37 +1113,29 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   I accept the{" "}
                   <Text
                     style={styles.termsLink}
-                    onPress={() => {
-                      navigation.navigate("TermsAndConditions");
-                    }}
+                    onPress={() => navigation.navigate("TermsAndConditions")}
                   >
                     Terms and Conditions
                   </Text>{" "}
                   and{" "}
                   <Text
                     style={styles.termsLink}
-                    onPress={() => {
-                      navigation.navigate("PrivacyPolicy");
-                    }}
+                    onPress={() => navigation.navigate("PrivacyPolicy")}
                   >
                     Privacy Policy
                   </Text>
                 </Text>
               </TouchableOpacity>
-              {formik.touched.agreeTerms && formik.errors.agreeTerms && (
+              {showErrors && formik.errors.agreeTerms && (
                 <Text style={styles.errorText}>{formik.errors.agreeTerms}</Text>
               )}
             </View>
 
             {/* Send OTP Button */}
             <TouchableOpacity
-              style={[
-                styles.sendOtpButton,
-                (!isTermsAccepted || otpLoading) &&
-                  styles.sendOtpButtonDisabled,
-              ]}
+              style={[styles.sendOtpButton, otpLoading && styles.sendOtpButtonDisabled]}
               onPress={handleSendOtp}
-              disabled={!isTermsAccepted || otpLoading}
+              disabled={otpLoading}
               activeOpacity={0.85}
             >
               {otpLoading ? (
@@ -1253,16 +1159,12 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            {/* Modal Header */}
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
                 <Ionicons name="lock-closed" size={24} color="#1e3a5f" />
                 <Text style={styles.modalTitle}>Verify OTP</Text>
               </View>
-              <TouchableOpacity
-                onPress={handleCloseModal}
-                style={styles.modalCloseButton}
-              >
+              <TouchableOpacity onPress={handleCloseModal} style={styles.modalCloseButton}>
                 <Ionicons name="close" size={24} color="#94a3b8" />
               </TouchableOpacity>
             </View>
@@ -1271,66 +1173,40 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
               Enter the 6-digit code sent to {formik.values.mobileNumber}
             </Text>
 
-            {/* OTP Input Fields */}
             <View style={styles.modalOtpContainer}>
               <View style={styles.otpInputsContainer}>
-                {Array(6)
-                  .fill(0)
-                  .map((_, index) => {
-                    const otpValue = formik.values.otp[index] || "";
-                    return (
-                      <TextInput
-                        key={index}
-                        ref={(ref) => (otpInputs.current[index] = ref)}
-                        style={[
-                          styles.otpInput,
-                          formik.touched.otp &&
-                            formik.errors.otp &&
-                            styles.otpInputError,
-                        ]}
-                        value={otpValue}
-                        onChangeText={(text) => handleOtpChange(text, index)}
-                        onKeyPress={(e) => handleOtpKeyPress(e, index)}
-                        onPaste={(e) => handleOtpPaste(e.nativeEvent.text)}
-                        keyboardType="number-pad"
-                        maxLength={1}
-                        onBlur={() => formik.setFieldTouched("otp", true)}
-                        autoFocus={index === 0}
-                        editable={!loading}
-                      />
-                    );
-                  })}
+                {Array(6).fill(0).map((_, index) => {
+                  const otpValue = formik.values.otp[index] || "";
+                  return (
+                    <TextInput
+                      key={index}
+                      ref={(ref) => (otpInputs.current[index] = ref)}
+                      style={styles.otpInput}
+                      value={otpValue}
+                      onChangeText={(text) => handleOtpChange(text, index)}
+                      onKeyPress={(e) => handleOtpKeyPress(e, index)}
+                      onPaste={(e) => handleOtpPaste(e.nativeEvent.text)}
+                      keyboardType="number-pad"
+                      maxLength={1}
+                      autoFocus={index === 0}
+                      editable={!loading}
+                    />
+                  );
+                })}
               </View>
 
-              {formik.touched.otp && formik.errors.otp && (
-                <Text style={styles.errorText}>{formik.errors.otp}</Text>
-              )}
-
-              {/* Resend OTP */}
               <View style={styles.resendOtpContainer}>
                 <Text style={styles.resendOtpText}>Didn't receive OTP? </Text>
-                <TouchableOpacity
-                  onPress={handleResendOtp}
-                  disabled={otpTimer > 0 || otpLoading}
-                >
-                  <Text
-                    style={[
-                      styles.resendOtpLink,
-                      otpTimer > 0 && styles.resendOtpDisabled,
-                    ]}
-                  >
+                <TouchableOpacity onPress={handleResendOtp} disabled={otpTimer > 0 || otpLoading}>
+                  <Text style={[styles.resendOtpLink, otpTimer > 0 && styles.resendOtpDisabled]}>
                     Resend {otpTimer > 0 ? `(${otpTimer}s)` : ""}
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Submit Button inside Modal */}
             <TouchableOpacity
-              style={[
-                styles.modalSubmitButton,
-                loading ? styles.submitButtonDisabled : null,
-              ]}
+              style={[styles.modalSubmitButton, loading ? styles.submitButtonDisabled : null]}
               onPress={formik.handleSubmit}
               disabled={loading}
               activeOpacity={0.85}
@@ -1340,12 +1216,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
               ) : (
                 <>
                   <Text style={styles.submitButtonText}>Verify & Register</Text>
-                  <Ionicons
-                    name="checkmark-circle-outline"
-                    size={20}
-                    color="#fff"
-                    style={{ marginLeft: 8 }}
-                  />
+                  <Ionicons name="checkmark-circle-outline" size={20} color="#fff" style={{ marginLeft: 8 }} />
                 </>
               )}
             </TouchableOpacity>

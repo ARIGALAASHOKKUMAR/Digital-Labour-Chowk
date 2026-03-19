@@ -45,7 +45,6 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
     { id: 4, label: "Agency" },
   ];
 
-  console.log("userData", userData);
 
   const validationSchema = Yup.object().shape({
     fullName: Yup.string().required("Required"),
@@ -93,7 +92,6 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
     return `${year}-${month}-${day}`;
   };
 
-  console.log("userData?.date_of_birth", userData?.date_of_birth);
 
   const formik = useFormik({
     enableReinitialize: true,
@@ -124,7 +122,6 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
           : "",
       };
 
-      console.log("Sending employer profile payload to backend:", payload);
 
       const response = await commonAPICall(
         BASICPROFILE,
@@ -191,7 +188,8 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
             )}
           </View>
 
-          <View style={styles.inputBlock}>
+          {state.roleId == 12&&(
+             <View style={styles.inputBlock}>
             <Text style={styles.label}>
               Date of Birth <Text style={styles.requiredStar}>*</Text>
             </Text>
@@ -253,6 +251,9 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
               />
             )}
           </View>
+          )}
+
+         
 
           <View style={styles.inputBlock}>
             <Text style={styles.label}>
@@ -391,7 +392,6 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
 
-  console.log("userData", userData);
 
   const showLabourLicence = state.roleName === "DLC Employer";
   const conditionalFieldName = showLabourLicence
@@ -426,7 +426,6 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
 
   async function handleSubmit(values, { setSubmitting }) {
     try {
-      console.log("Sending payload to backend:", values);
 
       const response = await commonAPICall(
         BASICPROFILE,
@@ -595,7 +594,6 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
 
   const getdists = async () => {
     const response = await commonAPICall(GETDISTSAPP, {}, "get", dispatch);
-    console.log("ress", response);
     if (response?.status === 200) {
       setDists(response?.data?.District_List || []);
     }
@@ -694,7 +692,6 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
   async function handleSubmit(values, { setSubmitting, resetForm }) {
     try {
       // ✅ USING VALUES DIRECTLY AS PAYLOAD - NO MODIFICATIONS NEEDED
-      console.log("Sending payload to backend:", values);
 
       const response = await commonAPICall(
         BASICPROFILE,
@@ -1012,6 +1009,7 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
   const [skillsList, setSkillsList] = useState([]);
   const [showSkillsDropdown, setShowSkillsDropdown] = useState(false);
 
+
   // Parse skills from API (stored as string "[1, 3, 5]")
   const parseSkills = () => {
     try {
@@ -1072,7 +1070,6 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
   async function handleSubmit(values, { resetForm, setSubmitting }) {
     try {
       // ✅ USING VALUES DIRECTLY AS PAYLOAD
-      console.log("Submitting skill details:", values);
 
       const response = await commonAPICall(
         BASICPROFILE,
@@ -1086,10 +1083,11 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
           ...state,
           isProfileUpdated: "Y",
         };
-        dispatch(login(updatedPayload));
+        // dispatch(login(updatedPayload));
+        setShowSkillsDropdown(false);
+
         resetForm();
         onUpdateSuccess();
-        setShowSkillsDropdown(false);
       }
     } catch (error) {
       console.log("Error:", error);
@@ -1384,7 +1382,6 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
     try {
       if (userData?.work_history) {
         const parsedData = JSON.parse(userData.work_history);
-        console.log("userData", parsedData);
 
         return parsedData.map((item) => ({
           employeeName: item.employeeName || "",
@@ -1516,10 +1513,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
         })),
       };
 
-      console.log(
-        "Work Experience Payload =>",
-        JSON.stringify(payload, null, 2),
-      );
+      
 
       const response = await commonAPICall(
         BASICPROFILE,
@@ -1560,7 +1554,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
     formik.setFieldValue("workerExperienceList", newExperiences);
   };
 
-  // Toggle skill selection for multi-select
+  // Toggle skill selection for multi-select - FIXED: removed setCurrentSkillIndex(null)
   const toggleSkill = (expIndex, skillId) => {
     formik.setFieldTouched(`workerExperienceList[${expIndex}].skillIds`, true);
     const currentSkillIds =
@@ -1577,7 +1571,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
       `workerExperienceList[${expIndex}].skillIds`,
       newSkillIds,
     );
-    setCurrentSkillIndex(null);
+    // REMOVED: setCurrentSkillIndex(null); - This was closing the dropdown
   };
 
   // Get selected skill names for display
@@ -1807,7 +1801,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                 )}
             </View>
 
-            {/* Skills Multi-select */}
+            {/* Skills Multi-select - UPDATED with new styles */}
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
                 Skills <Text style={styles.requiredStar}>*</Text>
@@ -1816,6 +1810,10 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
               <TouchableOpacity
                 style={[
                   styles.selectBox,
+                  styles.skillsSelectBoxNew,
+                  showSkillsDropdown &&
+                    currentSkillIndex === index &&
+                    styles.skillsSelectBoxOpenNew,
                   formik.touched.workerExperienceList?.[index]?.skillIds &&
                     formik.errors.workerExperienceList?.[index]?.skillIds &&
                     styles.inputError,
@@ -1825,20 +1823,24 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                     `workerExperienceList[${index}].skillIds`,
                     true,
                   );
+                  // Toggle dropdown for this specific index
                   setCurrentSkillIndex(
                     currentSkillIndex === index ? null : index,
                   );
-                  setShowSkillsDropdown(!showSkillsDropdown);
+                  setShowSkillsDropdown(currentSkillIndex !== index);
                 }}
+                activeOpacity={0.8}
               >
                 <Text
-                  style={{
-                    color: getSelectedSkillNames(index) ? "#000" : "#999",
-                    flex: 1,
-                  }}
+                  numberOfLines={2}
+                  style={[
+                    styles.skillsSelectedTextNew,
+                    { color: getSelectedSkillNames(index) ? "#000" : "#999" },
+                  ]}
                 >
                   {getSelectedSkillNames(index) || "Select Skills"}
                 </Text>
+
                 <Ionicons
                   name={
                     showSkillsDropdown && currentSkillIndex === index
@@ -1851,8 +1853,8 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
               </TouchableOpacity>
 
               {showSkillsDropdown && currentSkillIndex === index && (
-                <View style={styles.dropdownBox}>
-                  {skillsList.map((skill) => {
+                <View style={[styles.dropdownBox, styles.skillsDropdownBoxNew]}>
+                  {skillsList.map((skill, idx) => {
                     const selected = formik.values.workerExperienceList[
                       index
                     ]?.skillIds?.includes(skill.id);
@@ -1860,10 +1862,26 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                     return (
                       <TouchableOpacity
                         key={skill.id}
-                        style={styles.skillItem}
+                        style={[
+                          styles.skillItem,
+                          styles.skillsDropdownItemNew,
+                          selected && styles.skillsDropdownItemSelectedNew,
+                          idx === skillsList.length - 1 &&
+                            styles.skillsDropdownLastItemNew,
+                        ]}
                         onPress={() => toggleSkill(index, skill.id)}
+                        activeOpacity={0.7}
                       >
-                        <Text style={styles.skillText}>{skill.skill_name}</Text>
+                        <Text
+                          style={[
+                            styles.skillText,
+                            styles.skillsDropdownTextNew,
+                            selected && styles.skillsDropdownTextSelectedNew,
+                          ]}
+                        >
+                          {skill.skill_name}
+                        </Text>
+
                         <Ionicons
                           name={selected ? "checkbox" : "square-outline"}
                           size={22}
@@ -2294,7 +2312,6 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
         averageWorkersHiredPerMonth: Number(values.averageWorkersHiredPerMonth),
       };
 
-      console.log("Submitting employer work details:", payload);
 
       const response = await commonAPICall(
         BASICPROFILE,
@@ -2477,7 +2494,6 @@ const Education = ({ userData, onUpdateSuccess }) => {
     try {
       if (userData?.education) {
         const parsedData = JSON.parse(userData.education);
-        console.log("parsedData", parsedData);
 
         return parsedData.map((item) => ({
           educationLevel: item.educationLevel || "",
@@ -2531,7 +2547,6 @@ const Education = ({ userData, onUpdateSuccess }) => {
   async function handleSubmit(values, { resetForm, setSubmitting }) {
     try {
       // ✅ USING VALUES DIRECTLY AS PAYLOAD
-      console.log("Education payload =>", values);
 
       const response = await commonAPICall(
         BASICPROFILE,
