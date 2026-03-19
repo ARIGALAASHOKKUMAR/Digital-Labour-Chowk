@@ -450,9 +450,8 @@ const SiteLayout = ({
   }, []);
 
   return (
-    <>
-    <SafeAreaView edges={["top", "bottom"]} style={styles.safeArea}/>
-      <StatusBar backgroundColor="#1e7e34" />
+    <SafeAreaView  style={styles.safeArea}>
+      {/* <StatusBar backgroundColor="#1e7e34" /> */}
       <Pressable
         style={styles.flex1}
         onPress={() => {
@@ -472,9 +471,7 @@ const SiteLayout = ({
               {/* TEXTS */}
               <View style={styles.textContainer}>
                 <Text style={styles.teluguText}>Digital Labour Chowk</Text>
-                <Text style={styles.headerTitle}>
-                  Labour Dept,Govt of A.P
-                </Text>
+                <Text style={styles.headerTitle}>Labour Dept,Govt. of A.P</Text>
               </View>
             </View>
           </View>
@@ -487,7 +484,7 @@ const SiteLayout = ({
               <MaterialCommunityIcons
                 name="incognito"
                 size={24}
-                color="white"
+                color="#374151"
                 style={[blink && styles.blinkIcon]}
               />
               <View style={styles.badge}>
@@ -906,7 +903,7 @@ const SiteLayout = ({
           </View>
         </Modal>
       </Pressable>
-      </>
+    </SafeAreaView>
   );
 };
 
@@ -915,10 +912,12 @@ export default SiteLayout;
 const styles = StyleSheet.create({
   flex1: {
     flex: 1,
+    backgroundColor:"white"
+    
   },
   safeArea: {
-    backgroundColor:"#0d6efd",
-    height:10
+    flex: 1,
+        backgroundColor: "#0d6efd",
   },
   header: {
     backgroundColor: "#0d6efd",
@@ -976,11 +975,6 @@ const styles = StyleSheet.create({
     textShadowRadius: 3,
     marginBottom: 4,
   },
-  teluguText: {
-    color: "white",
-    fontWeight: "bold",
-  },
-
   headerTitle2: {
     color: "green",
     fontSize: 16,
@@ -1601,4 +1595,8 @@ const styles = StyleSheet.create({
     width: 40,
     borderRadius: 10,
   },
+  teluguText:{
+    color:"white",
+    fontWeight:"bold"
+  }
 });
