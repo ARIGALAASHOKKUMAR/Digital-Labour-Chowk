@@ -15,7 +15,10 @@ import ProfileUpdate from "./src/sitelayout/ProfileUpdate";
 import Toast from "react-native-toast-message";
 import ModalPopup from "./src/sitelayout/ModalPopup";
 import Overlay from "./src/sitelayout/Overlay";
-import LoginCommon, { RegisterEmployer, RegisterWorker } from "./src/screens/LoginCommon";
+import LoginCommon, {
+  RegisterEmployer,
+  RegisterWorker,
+} from "./src/screens/LoginCommon";
 import { ToastProvider } from "react-native-sprinkle-toast";
 
 const Stack = createNativeStackNavigator();
@@ -72,6 +75,7 @@ export default function App() {
                     <SiteLayout
                       navigation={props.navigation}
                       currentScreenName="HOME"
+                      scrollEnabled={false}
                     >
                       <HomeScreen {...props} />
                     </SiteLayout>

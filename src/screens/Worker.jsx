@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ScrollView,
   View,
@@ -11,30 +11,8 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { commonAPICall, DIGITALLABOURCHOWKDETAILS } from "../utils/utils";
-import { useDispatch } from "react-redux";
 
-const Worker = () => {
-  const dispatch = useDispatch();
-
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const [workerData, setWorkerData] = useState(null);
-  const [workHistory, setWorkHistory] = useState([]);
-  const [skills, setSkills] = useState([]);
-
-  const safeParseArray = (value) => {
-    if (!value) return [];
-    if (Array.isArray(value)) return value;
-    try {
-      const parsed = JSON.parse(value);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (e) {
-      return [];
-    }
-  };
-
+const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
   const calculateAge = (dob) => {
     if (!dob) return "";
     try {
@@ -68,48 +46,6 @@ const Worker = () => {
     } catch (e) {
       return "";
     }
-  };
-
-  const fetchWorkerDetails = async () => {
-    try {
-      const res = await commonAPICall(
-        DIGITALLABOURCHOWKDETAILS,
-        {},
-        "get",
-        dispatch,
-      );
-
-      if (res?.status === 200) {
-        const data = res?.data?.DigitalLabourChowkRegistration_Details || [];
-        if (data.length > 0) {
-          const worker = data[0];
-          setWorkerData(worker);
-          setWorkHistory(safeParseArray(worker.work_history));
-          setSkills(safeParseArray(worker.skills));
-        } else {
-          setWorkerData(null);
-          setWorkHistory([]);
-          setSkills([]);
-        }
-      }
-    } catch (error) {
-      console.log("Error fetching worker details:", error);
-      setWorkerData(null);
-      setWorkHistory([]);
-      setSkills([]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchWorkerDetails();
-  }, []);
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchWorkerDetails();
   };
 
   const profile = useMemo(() => {
@@ -199,196 +135,185 @@ const Worker = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#2a7fd1"]}
-          />
-        }
-      >
-        <View style={styles.topCard}>
-          <View style={styles.profileRow}>
-            <View style={styles.profileImageWrap}>
-              {profile.image ? (
-                <Image
-                  source={{ uri: profile.image }}
-                  style={styles.profileImage}
-                />
-              ) : (
-                <Image
-                  source={{
-                    uri: "https://cdn.pixabay.com/photo/2019/08/11/18/59/icon-4399701_1280.png",
-                  }}
-                  style={styles.profileImage}
-                />
-              )}
-            </View>
-
-            <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>{profile.fullName}</Text>
-
-              <View style={styles.infoLine}>
-                <Icon name="phone" size={16} color="#2a7fd1" />
-                <Text style={styles.infoText}>{profile.mobile}</Text>
-              </View>
-
-              <View style={styles.infoLine}>
-                <Icon name="email" size={16} color="#2a7fd1" />
-                <Text style={styles.infoText}>{profile.email}</Text>
-              </View>
-            </View>
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.scrollContent}
+    >
+      <View style={styles.topCard}>
+        <View style={styles.profileRow}>
+          <View style={styles.profileImageWrap}>
+            {profile.image ? (
+              <Image
+                source={{ uri: profile.image }}
+                style={styles.profileImage}
+              />
+            ) : (
+              <Image
+                source={{
+                  uri: "https://cdn.pixabay.com/photo/2019/08/11/18/59/icon-4399701_1280.png",
+                }}
+                style={styles.profileImage}
+              />
+            )}
           </View>
 
-          <View style={styles.tileRow}>
-            <View style={[styles.topTile, styles.statusTile]}>
-              <Icon name="access-time" size={20} color="#7da3c7" />
-              <Text style={styles.statusTitle}>Not Available</Text>
-              <View style={styles.toggleCircle} />
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{profile.fullName}</Text>
+
+            <View style={styles.infoLine}>
+              <Icon name="phone" size={16} color="#2a7fd1" />
+              <Text style={styles.infoText}>{profile.mobile}</Text>
             </View>
 
-            <TouchableOpacity
-              activeOpacity={0.9}
-              style={[styles.topTile, styles.blueTile]}
-            >
-              <Icon name="work" size={22} color="#2a7fd1" />
-              <Text style={styles.blueTileText}>Work / Job{"\n"}Applied</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.9}
-              style={[styles.topTile, styles.blueTile]}
-            >
-              <Icon name="chat" size={22} color="#2a7fd1" />
-              <Text style={styles.blueTileText}>Chat</Text>
-            </TouchableOpacity>
+            <View style={styles.infoLine}>
+              <Icon name="email" size={16} color="#2a7fd1" />
+              <Text style={styles.infoText}>{profile.email}</Text>
+            </View>
           </View>
         </View>
 
-        <View style={styles.infoGrid}>
-          <View style={styles.infoBox}>
-            <Icon name="location-on" size={20} color="#2a7fd1" />
-            <Text style={styles.infoBoxLabel}>Location</Text>
-            <Text style={styles.infoBoxValue}>{profile.location}</Text>
+        <View style={styles.tileRow}>
+          <View style={[styles.topTile, styles.statusTile]}>
+            <Icon name="access-time" size={20} color="#7da3c7" />
+            <Text style={styles.statusTitle}>Not Available</Text>
+            <View style={styles.toggleCircle} />
           </View>
 
-          <View style={styles.infoBox}>
-            <Icon name="work-outline" size={20} color="#2a7fd1" />
-            <Text style={styles.infoBoxLabel}>Experience</Text>
-            <Text style={styles.infoBoxValue}>{profile.experience}</Text>
-          </View>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            style={[styles.topTile, styles.blueTile]}
+          >
+            <Icon name="work" size={22} color="#2a7fd1" />
+            <Text style={styles.blueTileText}>Work / Job{"\n"}Applied</Text>
+          </TouchableOpacity>
 
-          <View style={styles.infoBox}>
-            <Icon name="badge" size={20} color="#2a7fd1" />
-            <Text style={styles.infoBoxLabel}>Age</Text>
-            <Text style={styles.infoBoxValue}>{profile.age}</Text>
-          </View>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            style={[styles.topTile, styles.blueTile]}
+          >
+            <Icon name="chat" size={22} color="#2a7fd1" />
+            <Text style={styles.blueTileText}>Chat</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
-          <View style={[styles.infoBox, styles.activeSchemeBox]}>
-            <Icon name="currency-rupee" size={20} color="#2a7fd1" />
-            <Text style={styles.infoBoxValue}>Welfare and Schemes</Text>
-          </View>
+      <View style={styles.infoGrid}>
+        <View style={styles.infoBox}>
+          <Icon name="location-on" size={20} color="#2a7fd1" />
+          <Text style={styles.infoBoxLabel}>Location</Text>
+          <Text style={styles.infoBoxValue}>{profile.location}</Text>
         </View>
 
-        <View style={styles.sectionWrap}>
-          <Text style={styles.sectionTitle}>Work History</Text>
+        <View style={styles.infoBox}>
+          <Icon name="work-outline" size={20} color="#2a7fd1" />
+          <Text style={styles.infoBoxLabel}>Experience</Text>
+          <Text style={styles.infoBoxValue}>{profile.experience}</Text>
+        </View>
 
-          {displayWorkHistory.map((item, index) => {
-            const itemSkills =
-              item?.skills &&
-              Array.isArray(item.skills) &&
-              item.skills.length > 0
-                ? item.skills
-                : [];
+        <View style={styles.infoBox}>
+          <Icon name="badge" size={20} color="#2a7fd1" />
+          <Text style={styles.infoBoxLabel}>Age</Text>
+          <Text style={styles.infoBoxValue}>{profile.age}</Text>
+        </View>
 
-            return (
-              <View key={index} style={styles.workCard}>
-                <View style={styles.dateColumn}>
-                  <Text style={styles.dateText}>
-                    {formatDate(item.startDate)}-{formatDate(item.endDate)}
-                  </Text>
-                  {/* <Text style={styles.dateText}>
+        <View style={[styles.infoBox, styles.activeSchemeBox]}>
+          <Icon name="currency-rupee" size={20} color="#2a7fd1" />
+          <Text style={styles.infoBoxValue}>Welfare and Schemes</Text>
+        </View>
+      </View>
+
+      <View style={styles.sectionWrap}>
+        <Text style={styles.sectionTitle}>Work History</Text>
+
+        {displayWorkHistory.map((item, index) => {
+          const itemSkills =
+            item?.skills && Array.isArray(item.skills) && item.skills.length > 0
+              ? item.skills
+              : [];
+
+          return (
+            <View key={index} style={styles.workCard}>
+              <View style={styles.dateColumn}>
+                <Text style={styles.dateText}>
+                  {formatDate(item.startDate)}-{formatDate(item.endDate)}
+                </Text>
+                {/* <Text style={styles.dateText}>
                     {formatDate(item.endDate)}
                   </Text> */}
-                </View>
-
-                <Text style={styles.workText}>
-                  <Text style={styles.boldText}>Project Name: </Text>
-                  {item.projectName || "N/A"}
-                </Text>
-
-                <Text style={styles.workText}>
-                  <Text style={styles.boldText}>Employer Name: </Text>
-                  {item.employerName || item.employeeName || "N/A"}
-                </Text>
-
-                <Text style={styles.workText}>
-                  <Text style={styles.boldText}>Description: </Text>
-                  {item.taskDescription || "N/A"}
-                </Text>
-
-                <Text style={[styles.workText, { marginTop: 6 }]}>
-                  <Text style={styles.boldText}>Skills:</Text>
-                </Text>
-
-                <View style={styles.chipWrap}>
-                  {itemSkills.length > 0 ? (
-                    itemSkills.map((skill, idx) => (
-                      <View key={idx} style={styles.skillChip}>
-                        <Text style={styles.skillChipText}>
-                          {typeof skill === "string"
-                            ? skill
-                            : skill?.skillName || "Skill"}
-                        </Text>
-                      </View>
-                    ))
-                  ) : (
-                    <>
-                      <View style={styles.skillChip}>
-                        <Text style={styles.skillChipText}>RCC Work</Text>
-                      </View>
-                      <View style={styles.skillChip}>
-                        <Text style={styles.skillChipText}>Bar Bending</Text>
-                      </View>
-                    </>
-                  )}
-                </View>
-
-                <View style={styles.bottomRow}>
-                  <Text style={styles.paymentText}>
-                    <Text style={styles.boldText}>Payment: </Text>
-                    {item.paymentStatus || "Completed"} ( ₹
-                    {item.totalAmount || "42,000/month"})
-                  </Text>
-
-                  <Text style={styles.ratingText}>
-                    <Text style={styles.boldText}>Rating: </Text>
-                    {item.rating || "4.7"}/5
-                  </Text>
-                </View>
               </View>
-            );
-          })}
-        </View>
 
-        <View style={styles.sectionWrap}>
-          <Text style={styles.sectionTitle}>Skill & Specializations</Text>
-          <View style={styles.chipWrap}>
-            {displaySkills.map((skill, index) => (
-              <View key={index} style={styles.bottomSkillChip}>
-                <Text style={styles.bottomSkillText}>
-                  {skill?.skillName || "Skill"}
+              <Text style={styles.workText}>
+                <Text style={styles.boldText}>Project Name: </Text>
+                {item.projectName || "N/A"}
+              </Text>
+
+              <Text style={styles.workText}>
+                <Text style={styles.boldText}>Employer Name: </Text>
+                {item.employerName || item.employeeName || "N/A"}
+              </Text>
+
+              <Text style={styles.workText}>
+                <Text style={styles.boldText}>Description: </Text>
+                {item.taskDescription || "N/A"}
+              </Text>
+
+              <Text style={[styles.workText, { marginTop: 6 }]}>
+                <Text style={styles.boldText}>Skills:</Text>
+              </Text>
+
+              <View style={styles.chipWrap}>
+                {itemSkills.length > 0 ? (
+                  itemSkills.map((skill, idx) => (
+                    <View key={idx} style={styles.skillChip}>
+                      <Text style={styles.skillChipText}>
+                        {typeof skill === "string"
+                          ? skill
+                          : skill?.skillName || "Skill"}
+                      </Text>
+                    </View>
+                  ))
+                ) : (
+                  <>
+                    <View style={styles.skillChip}>
+                      <Text style={styles.skillChipText}>RCC Work</Text>
+                    </View>
+                    <View style={styles.skillChip}>
+                      <Text style={styles.skillChipText}>Bar Bending</Text>
+                    </View>
+                  </>
+                )}
+              </View>
+
+              <View style={styles.bottomRow}>
+                <Text style={styles.paymentText}>
+                  <Text style={styles.boldText}>Payment: </Text>
+                  {item.paymentStatus || "Completed"} ( ₹
+                  {item.totalAmount || "42,000/month"})
+                </Text>
+
+                <Text style={styles.ratingText}>
+                  <Text style={styles.boldText}>Rating: </Text>
+                  {item.rating || "4.7"}/5
                 </Text>
               </View>
-            ))}
-          </View>
+            </View>
+          );
+        })}
+      </View>
+
+      <View style={styles.sectionWrap}>
+        <Text style={styles.sectionTitle}>Skill & Specializations</Text>
+        <View style={styles.chipWrap}>
+          {displaySkills.map((skill, index) => (
+            <View key={index} style={styles.bottomSkillChip}>
+              <Text style={styles.bottomSkillText}>
+                {skill?.skillName || "Skill"}
+              </Text>
+            </View>
+          ))}
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </ScrollView>
   );
 };
 

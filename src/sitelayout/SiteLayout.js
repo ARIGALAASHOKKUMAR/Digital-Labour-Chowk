@@ -53,6 +53,7 @@ const SiteLayout = ({
   navigation,
   currentScreenName = "HOME",
   showProfile = true,
+  scrollEnabled = true,
 }) => {
   const dispatch = useDispatch();
   const state = useSelector((s) => s.LoginReducer);
@@ -450,7 +451,7 @@ const SiteLayout = ({
   }, []);
 
   return (
-    <SafeAreaView  style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea}>
       {/* <StatusBar backgroundColor="#1e7e34" /> */}
       <Pressable
         style={styles.flex1}
@@ -578,19 +579,23 @@ const SiteLayout = ({
 
         <UserMessage />
 
-        <ScrollView
-          contentContainerStyle={styles.contentContainer}
-          showsVerticalScrollIndicator={false}
-          onScrollBeginDrag={resetActivity}
-          onTouchStart={resetActivity}
-          onMomentumScrollBegin={resetActivity}
-          scrollEventThrottle={16} // Add this for smoother scrolling
-          removeClippedSubviews={true} // Improve performance by removing off-screen views
-          maxToRenderPerBatch={10} // Limit rendering batch size
-          windowSize={5}
-        >
-          {children}
-        </ScrollView>
+        <View style={{ flex: 1 }}>
+          {scrollEnabled ? (
+            <ScrollView
+              contentContainerStyle={styles.contentContainer}
+              showsVerticalScrollIndicator={false}
+              onScrollBeginDrag={resetActivity}
+              onTouchStart={resetActivity}
+              onMomentumScrollBegin={resetActivity}
+              scrollEventThrottle={16}
+              removeClippedSubviews={true}
+            >
+              {children}
+            </ScrollView>
+          ) : (
+            <View style={{ flex: 1 }}>{children}</View>
+          )}
+        </View>
 
         <View style={styles.bottomNav}>
           <View
@@ -912,12 +917,11 @@ export default SiteLayout;
 const styles = StyleSheet.create({
   flex1: {
     flex: 1,
-    backgroundColor:"white"
-    
+    backgroundColor: "white",
   },
   safeArea: {
     flex: 1,
-        backgroundColor: "#0d6efd",
+    backgroundColor: "#0d6efd",
   },
   header: {
     backgroundColor: "#0d6efd",
@@ -1121,10 +1125,10 @@ const styles = StyleSheet.create({
   profileTextContainer: {
     marginLeft: 12,
     flex: 1,
-    marginTop:10
+    marginTop: 10,
   },
-  textContainer:{
-    width:130
+  textContainer: {
+    width: 130,
   },
   profileName: {
     fontSize: 18,
@@ -1598,10 +1602,10 @@ const styles = StyleSheet.create({
     width: 40,
     borderRadius: 10,
   },
-  teluguText:{
-    color:"white",
-    fontWeight:"bold",
-    fontSize:11,
-    marginBottom:6
-  }
+  teluguText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 11,
+    marginBottom: 6,
+  },
 });
