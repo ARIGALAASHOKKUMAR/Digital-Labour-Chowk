@@ -45,8 +45,7 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
     { id: 4, label: "Agency" },
   ];
 
-  console.log("userData",userData);
-  
+  console.log("userData", userData);
 
   const validationSchema = Yup.object().shape({
     fullName: Yup.string().required("Required"),
@@ -73,14 +72,28 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
   const formatDate = (date) => {
     if (!date) return "";
 
-    const parts = date.split("-"); // assuming DD-MM-YYYY
+    const parts = date.split("-");
     if (parts.length !== 3) return date;
 
-    return `${parts[2]}-${parts[1]}-${parts[0]}`; // YYYY-MM-DD
+    let day, month, year;
+
+    // detect format
+    if (parts[0].length === 4) {
+      // YYYY-MM-DD
+      [year, month, day] = parts;
+    } else {
+      // DD-MM-YYYY
+      [day, month, year] = parts;
+    }
+
+    // ensure 2-digit day & month
+    day = day.padStart(2, "0");
+    month = month.padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
   };
 
-  console.log("userData?.date_of_birth",userData?.date_of_birth);
-  
+  console.log("userData?.date_of_birth", userData?.date_of_birth);
 
   const formik = useFormik({
     enableReinitialize: true,
@@ -132,6 +145,25 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
 
   const showEmployerType = state.roleName === "DLC Employer";
 
+  const reverseDate = (date) => {
+    if (!date) return "";
+
+    const parts = date.split(/[-/]/);
+    if (parts.length !== 3) return date;
+
+    let day, month, year;
+
+    if (parts[0].length === 4) {
+      // YYYY-MM-DD
+      [year, month, day] = parts;
+    } else {
+      // DD-MM-YYYY
+      [day, month, year] = parts;
+    }
+
+    return `${String(day).padStart(2, "0")}-${String(month).padStart(2, "0")}-${year}`;
+  };
+
   return (
     <FormikProvider value={formik}>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -182,7 +214,10 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
                 setShowDatePicker(true);
               }}
             >
-              <Text>{formik.values.dateOfBirth || "Select Date of Birth"}</Text>
+              <Text>
+                {reverseDate(formik.values.dateOfBirth) ||
+                  "Select Date of Birth"}
+              </Text>{" "}
               <Ionicons name="calendar-outline" size={20} />
             </TouchableOpacity>
 
@@ -199,8 +234,10 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
                 }
                 mode="date"
                 display="default"
+                maximumDate={new Date()} // ✅ Restrict future dates
                 onChange={(event, selectedDate) => {
                   setShowDatePicker(false);
+
                   if (selectedDate) {
                     const day = String(selectedDate.getDate()).padStart(2, "0");
                     const month = String(selectedDate.getMonth() + 1).padStart(
@@ -208,6 +245,7 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
                       "0",
                     );
                     const year = selectedDate.getFullYear();
+
                     const formatted = `${day}-${month}-${year}`;
                     formik.setFieldValue("dateOfBirth", formatted);
                   }
@@ -2167,10 +2205,6 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
   );
 };
 
-
-
-
-
 const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
@@ -2257,9 +2291,7 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
         userType: state.roleName,
         stageName: "EMPLOYER_WORK_DETAILS",
         workCategoryIds: normalizeCategoryIds(values.workCategoryIds),
-        averageWorkersHiredPerMonth: Number(
-          values.averageWorkersHiredPerMonth,
-        ),
+        averageWorkersHiredPerMonth: Number(values.averageWorkersHiredPerMonth),
       };
 
       console.log("Submitting employer work details:", payload);
@@ -2300,10 +2332,7 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
         selectedIds.filter((id) => id !== numericSkillId),
       );
     } else {
-      formik.setFieldValue("workCategoryIds", [
-        ...selectedIds,
-        numericSkillId,
-      ]);
+      formik.setFieldValue("workCategoryIds", [...selectedIds, numericSkillId]);
     }
   };
 
@@ -2438,8 +2467,6 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
     </FormikProvider>
   );
 };
-
-
 
 const Education = ({ userData, onUpdateSuccess }) => {
   const state = useSelector((state) => state.LoginReducer);
