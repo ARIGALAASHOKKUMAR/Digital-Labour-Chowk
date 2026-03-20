@@ -71,15 +71,15 @@ export default function App() {
               {/* Protected HOME Screen */}
               <Stack.Screen name="HOME">
                 {(props) => (
-                  <SessionChecking navigation={props.navigation}>
-                    <SiteLayout
-                      navigation={props.navigation}
-                      currentScreenName="HOME"
-                      scrollEnabled={false}
-                    >
+                  <SiteLayout
+                    navigation={props.navigation}
+                    currentScreenName="HOME"
+                    scrollEnabled={false}
+                  >
+                    <SessionChecking navigation={props.navigation}>
                       <HomeScreen {...props} />
-                    </SiteLayout>
-                  </SessionChecking>
+                    </SessionChecking>
+                  </SiteLayout>
                 )}
               </Stack.Screen>
             </Stack.Navigator>

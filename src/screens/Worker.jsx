@@ -13,6 +13,9 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
+
+  console.log("workHistory0",)
+
   const calculateAge = (dob) => {
     if (!dob) return "";
     try {
@@ -262,8 +265,8 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
               </Text>
 
               <View style={styles.chipWrap}>
-                {itemSkills.length > 0 ? (
-                  itemSkills.map((skill, idx) => (
+                {item.skillName.length > 0 ? (
+                  item?.skillName?.map((skill, idx) => (
                     <View key={idx} style={styles.skillChip}>
                       <Text style={styles.skillChipText}>
                         {typeof skill === "string"
