@@ -1,0 +1,804 @@
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
+import { useDispatch } from "react-redux";
+import { Picker } from "@react-native-picker/picker";
+import Ionicons from "react-native-vector-icons/Ionicons";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { commonAPICall, GETDISTSAPP, GETMANDALSAPP, GETVILLAGESAPP, GETSKILLS, JOBSEARCH } from "../utils/utils";
+
+const JobSearchScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
+
+  const [dists, setDists] = useState([]);
+  const [mandal, setMandal] = useState([]);
+  const [village, setVillage] = useState([]);
+
+  const [skillsList, setSkillsList] = useState([]);
+  const [showSkillsDropdown, setShowSkillsDropdown] = useState(false);
+
+  const [districtId, setDistrictId] = useState("");
+  const [mandalId, setMandalId] = useState("");
+  const [villageId, setVillageId] = useState("");
+  const [skillIds, setSkillIds] = useState([]);
+  const [workRate, setWorkRate] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [jobsList, setJobsList] = useState([]);
+
+  const getdists = async () => {
+    try {
+      const response = await commonAPICall(GETDISTSAPP, {}, "get", dispatch);
+      if (response?.status === 200) {
+        setDists(response?.data?.District_List || []);
+      } else {
+        setDists([]);
+      }
+    } catch (error) {
+      console.log("Error fetching districts:", error);
+      setDists([]);
+    }
+  };
+
+  const getmandals = async (distcode) => {
+    try {
+      const response = await commonAPICall(
+        GETMANDALSAPP + distcode,
+        {},
+        "get",
+        dispatch,
+      );
+
+      if (response?.status === 200) {
+        setMandal(response?.data?.Mandal_List || []);
+      } else {
+        setMandal([]);
+      }
+    } catch (error) {
+      console.log("Error fetching mandals:", error);
+      setMandal([]);
+    }
+  };
+
+  const getVillages = async (distcode, mandalcode) => {
+    try {
+      const cleanMandalCode = String(mandalcode || "").replace(/,/g, "");
+
+      const response = await commonAPICall(
+        `${GETVILLAGESAPP}?distCode=${distcode}&mandalCode=${cleanMandalCode}`,
+        {},
+        "get",
+        dispatch,
+      );
+
+      if (response?.status === 200) {
+        setVillage(response?.data?.Village_List || []);
+      } else {
+        setVillage([]);
+      }
+    } catch (error) {
+      console.log("Error fetching villages:", error);
+      setVillage([]);
+    }
+  };
+
+  const getSkillsData = async () => {
+    try {
+      const response = await commonAPICall(GETSKILLS, {}, "get", dispatch);
+
+      if (response?.status === 200) {
+        const skillData = response?.data?.Skill_Info_Details || [];
+        setSkillsList(skillData);
+      } else {
+        setSkillsList([]);
+      }
+    } catch (error) {
+      console.log("Error fetching skills:", error);
+      setSkillsList([]);
+    }
+  };
+
+  useEffect(() => {
+    getdists();
+    getSkillsData();
+  }, []);
+
+  const toggleSkill = (id) => {
+    setSkillIds((prev) => {
+      if (prev.includes(id)) {
+        return prev.filter((item) => item !== id);
+      }
+      return [...prev, id];
+    });
+  };
+
+  const selectedSkillNames = useMemo(() => {
+    if (!skillIds.length) return "";
+    return skillsList
+      .filter((item) => skillIds.includes(item.id))
+      .map((item) => item.skill_name)
+      .join(", ");
+  }, [skillIds, skillsList]);
+
+  const handleSearch = async () => {
+    try {
+      if (!districtId) {
+        Alert.alert("Validation", "Please select district");
+        return;
+      }
+      if (!mandalId) {
+        Alert.alert("Validation", "Please select mandal");
+        return;
+      }
+      if (!villageId) {
+        Alert.alert("Validation", "Please select village");
+        return;
+      }
+      if (!skillIds.length) {
+        Alert.alert("Validation", "Please select at least one skill");
+        return;
+      }
+      if (!workRate) {
+        Alert.alert("Validation", "Please enter range amount");
+        return;
+      }
+
+      setLoading(true);
+      setShowSkillsDropdown(false);
+
+      const queryParams = new URLSearchParams();
+      queryParams.append("districtId", districtId);
+      queryParams.append("mandalId", mandalId);
+      queryParams.append("villageId", villageId);
+
+      skillIds.forEach((id) => {
+        queryParams.append("jobCategoryList", id);
+      });
+
+      queryParams.append("workRate", workRate);
+
+      const url = `${JOBSEARCH}?${queryParams.toString()}`;
+
+      console.log("JOB SEARCH URL:", url);
+
+      const response = await commonAPICall(url, {}, "get", dispatch);
+
+      if (response?.status === 200) {
+        const jobs =
+          response?.data?.DigitalLabourChowkJobPostings ||
+          response?.data?.jobPostings ||
+          response?.data?.data ||
+          response?.data ||
+          [];
+
+        setJobsList(Array.isArray(jobs) ? jobs : []);
+      } else {
+        setJobsList([]);
+        Alert.alert("Info", "No jobs found");
+      }
+    } catch (error) {
+      console.log("Job search error:", error);
+      setJobsList([]);
+      Alert.alert("Error", "Unable to fetch jobs");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatTimeAgo = (value) => {
+    if (!value) return "Recently posted";
+    return value;
+  };
+
+  const formatSalary = (value) => {
+    if (value === null || value === undefined || value === "") return "Not mentioned";
+    return `₹ ${value}/month`;
+  };
+
+  const renderJobCard = (item, index) => {
+    const title =
+      item?.jobTitle ||
+      item?.job_title ||
+      item?.jobName ||
+      item?.job_name ||
+      item?.jobPostingTitle ||
+      "Job Required";
+
+    const location =
+      item?.location ||
+      item?.districtName ||
+      item?.district_name ||
+      item?.villageName ||
+      item?.village_name ||
+      item?.mandalName ||
+      item?.mandal_name ||
+      "Location not available";
+
+    const postedTime =
+      item?.postedAgo ||
+      item?.posted_ago ||
+      item?.createdAgo ||
+      item?.created_ago ||
+      item?.postedDate ||
+      item?.created_at;
+
+    const salary =
+      item?.salary ||
+      item?.workRate ||
+      item?.work_rate ||
+      item?.monthlySalary ||
+      item?.monthly_salary;
+
+    return (
+      <TouchableOpacity
+        key={item?.id ? String(item.id) : String(index)}
+        style={styles.jobCard}
+        activeOpacity={0.85}
+        onPress={() => {
+          if (navigation) {
+            navigation.navigate("JobDetails", { jobData: item });
+          }
+        }}
+      >
+        <View style={styles.jobLeftIconWrap}>
+          <View style={styles.jobLeftIconCircle}>
+            <MaterialIcons name="work" size={22} color="#000" />
+          </View>
+        </View>
+
+        <View style={styles.jobContent}>
+          <Text style={styles.jobTitle} numberOfLines={1}>
+            {title}
+          </Text>
+
+          <View style={styles.jobMetaRow}>
+            <Ionicons name="location-sharp" size={13} color="#e75480" />
+            <Text style={styles.jobMetaText} numberOfLines={1}>
+              {location}
+            </Text>
+          </View>
+
+          <View style={styles.jobMetaRow}>
+            <Ionicons name="calendar-outline" size={13} color="#666" />
+            <Text style={styles.jobMetaText}>{formatTimeAgo(postedTime)}</Text>
+          </View>
+
+          <View style={styles.jobMetaRow}>
+            <FontAwesome5 name="rupee-sign" size={11} color="#c58543" />
+            <Text style={styles.jobMetaText}>{formatSalary(salary)}</Text>
+          </View>
+        </View>
+
+        <View style={styles.jobArrowWrap}>
+          <TouchableOpacity
+            style={styles.arrowButton}
+            onPress={() => {
+              if (navigation) {
+                navigation.navigate("JobDetails", { jobData: item });
+              }
+            }}
+          >
+            <Ionicons name="chevron-forward" size={18} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text style={styles.pageTitle}>Find Work / Jobs</Text>
+
+        <View style={styles.formCard}>
+          <View style={styles.row}>
+            <View style={styles.halfWidth}>
+              <Text style={styles.fieldLabel}>District</Text>
+              <View style={styles.selectBox}>
+                <Picker
+                  selectedValue={districtId}
+                  onValueChange={(itemValue) => {
+                    setDistrictId(itemValue);
+                    setMandalId("");
+                    setVillageId("");
+                    setMandal([]);
+                    setVillage([]);
+
+                    if (itemValue) {
+                      getmandals(itemValue);
+                    }
+                  }}
+                >
+                  <Picker.Item label="Select District" value="" />
+                  {dists.map((dist) => (
+                    <Picker.Item
+                      key={String(dist.dist_code)}
+                      label={dist.dist_name}
+                      value={String(dist.dist_code)}
+                    />
+                  ))}
+                </Picker>
+              </View>
+            </View>
+
+            <View style={styles.halfWidth}>
+              <Text style={styles.fieldLabel}>Mandal</Text>
+              <View style={styles.selectBox}>
+                <Picker
+                  selectedValue={mandalId}
+                  enabled={!!districtId}
+                  onValueChange={(itemValue) => {
+                    setMandalId(itemValue);
+                    setVillageId("");
+                    setVillage([]);
+
+                    if (itemValue && districtId) {
+                      getVillages(districtId, itemValue);
+                    }
+                  }}
+                >
+                  <Picker.Item label="Select Mandal" value="" />
+                  {mandal.map((item) => (
+                    <Picker.Item
+                      key={String(item.mandal_code)}
+                      label={item.mandal_name}
+                      value={String(item.mandal_code)}
+                    />
+                  ))}
+                </Picker>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.row}>
+            <View style={styles.halfWidth}>
+              <Text style={styles.fieldLabel}>Village</Text>
+              <View style={styles.selectBox}>
+                <Picker
+                  selectedValue={villageId}
+                  enabled={!!mandalId}
+                  onValueChange={(itemValue) => {
+                    setVillageId(itemValue);
+                  }}
+                >
+                  <Picker.Item label="Select Village" value="" />
+                  {village.map((item) => (
+                    <Picker.Item
+                      key={String(item.village_code)}
+                      label={item.village_name}
+                      value={String(item.village_code)}
+                    />
+                  ))}
+                </Picker>
+              </View>
+            </View>
+
+            <View style={styles.halfWidth}>
+              <Text style={styles.fieldLabel}>Range (₹)</Text>
+              <View style={styles.inputWithIcon}>
+                <Ionicons name="cash-outline" size={18} color="#666" />
+                <TextInput
+                  style={styles.iconInput}
+                  value={workRate}
+                  onChangeText={(text) =>
+                    setWorkRate(text.replace(/[^0-9]/g, ""))
+                  }
+                  placeholder="Enter amount"
+                  keyboardType="numeric"
+                  maxLength={10}
+                />
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.fullWidthBlock}>
+            <Text style={styles.fieldLabel}>Skills</Text>
+
+            <TouchableOpacity
+              style={[
+                styles.selectBox,
+                styles.skillsSelectBoxNew,
+                showSkillsDropdown && styles.skillsSelectBoxOpenNew,
+              ]}
+              onPress={() => setShowSkillsDropdown(!showSkillsDropdown)}
+              activeOpacity={0.8}
+            >
+              <Text
+                numberOfLines={2}
+                style={[
+                  styles.skillsSelectedTextNew,
+                  { color: selectedSkillNames ? "#000" : "#999" },
+                ]}
+              >
+                {selectedSkillNames || "Select Skills"}
+              </Text>
+
+              <Ionicons
+                name={showSkillsDropdown ? "chevron-up" : "chevron-down"}
+                size={20}
+                color="#333"
+              />
+            </TouchableOpacity>
+
+            {showSkillsDropdown && (
+              <View style={[styles.dropdownBox, styles.skillsDropdownBoxNew]}>
+                <ScrollView nestedScrollEnabled style={{ maxHeight: 220 }}>
+                  {skillsList.map((item, index) => {
+                    const selected = skillIds.includes(item.id);
+
+                    return (
+                      <TouchableOpacity
+                        key={String(item.id)}
+                        style={[
+                          styles.skillItem,
+                          styles.skillsDropdownItemNew,
+                          selected && styles.skillsDropdownItemSelectedNew,
+                          index === skillsList.length - 1 &&
+                            styles.skillsDropdownLastItemNew,
+                        ]}
+                        onPress={() => toggleSkill(item.id)}
+                        activeOpacity={0.7}
+                      >
+                        <Text
+                          style={[
+                            styles.skillText,
+                            styles.skillsDropdownTextNew,
+                            selected && styles.skillsDropdownTextSelectedNew,
+                          ]}
+                        >
+                          {item.skill_name}
+                        </Text>
+
+                        <Ionicons
+                          name={selected ? "checkbox" : "square-outline"}
+                          size={22}
+                          color={selected ? "#1e3a5f" : "#999"}
+                        />
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={styles.searchButton}
+              onPress={handleSearch}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <>
+                  <Ionicons name="search" size={16} color="#fff" />
+                  <Text style={styles.searchButtonText}>SEARCH</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.mapButton}>
+              <Ionicons name="map-outline" size={16} color="#2d7fd3" />
+              <Text style={styles.mapButtonText}>MAP VIEW</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <Text style={styles.resultsHeading}>Search Results</Text>
+
+        {loading ? (
+          <ActivityIndicator size="large" color="#2d7fd3" style={{ marginTop: 20 }} />
+        ) : jobsList?.length > 0 ? (
+          jobsList.map((item, index) => renderJobCard(item, index))
+        ) : (
+          <View style={styles.noDataCard}>
+            <Text style={styles.noDataText}>No jobs found</Text>
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+export default JobSearchScreen;
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#2d7fd3",
+  },
+  topHeader: {
+    backgroundColor: "#2d7fd3",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  logoCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
+  },
+  logoText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#2d7fd3",
+  },
+  headerGovText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  headerGovSubText: {
+    color: "#fff",
+    fontSize: 11,
+  },
+  logoutWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  logoutText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#eaf3fb",
+  },
+  contentContainer: {
+    padding: 12,
+    paddingBottom: 30,
+  },
+  pageTitle: {
+    textAlign: "center",
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#222",
+    marginVertical: 10,
+  },
+  formCard: {
+    backgroundColor: "#eaf3fb",
+    borderRadius: 8,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+    gap: 10,
+  },
+  halfWidth: {
+    flex: 1,
+  },
+  fullWidthBlock: {
+    marginBottom: 12,
+    zIndex: 99,
+  },
+  fieldLabel: {
+    fontSize: 12,
+    color: "#6b7280",
+    marginBottom: 4,
+    marginLeft: 2,
+  },
+  selectBox: {
+    borderWidth: 1,
+    borderColor: "#cfd8e3",
+    borderRadius: 4,
+    backgroundColor: "#fff",
+    overflow: "hidden",
+    minHeight: 48,
+    justifyContent: "center",
+  },
+  inputWithIcon: {
+    minHeight: 48,
+    borderWidth: 1,
+    borderColor: "#cfd8e3",
+    borderRadius: 4,
+    backgroundColor: "#fff",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+  },
+  iconInput: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 14,
+    color: "#222",
+  },
+  skillsSelectBoxNew: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minHeight: 50,
+  },
+  skillsSelectBoxOpenNew: {
+    borderColor: "#2d7fd3",
+  },
+  skillsSelectedTextNew: {
+    flex: 1,
+    fontSize: 14,
+    marginRight: 10,
+  },
+  dropdownBox: {
+    marginTop: 6,
+    borderWidth: 1,
+    borderColor: "#cfd8e3",
+    borderRadius: 6,
+    backgroundColor: "#fff",
+  },
+  skillsDropdownBoxNew: {
+    maxHeight: 220,
+  },
+  skillItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  skillsDropdownItemNew: {
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eef2f7",
+  },
+  skillsDropdownItemSelectedNew: {
+    backgroundColor: "#f1f7ff",
+  },
+  skillsDropdownLastItemNew: {
+    borderBottomWidth: 0,
+  },
+  skillText: {
+    flex: 1,
+  },
+  skillsDropdownTextNew: {
+    fontSize: 14,
+    color: "#333",
+    paddingRight: 10,
+  },
+  skillsDropdownTextSelectedNew: {
+    color: "#1e3a5f",
+    fontWeight: "600",
+  },
+  buttonRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 6,
+    gap: 10,
+  },
+  searchButton: {
+    flex: 1,
+    backgroundColor: "#2d7fd3",
+    height: 42,
+    borderRadius: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  searchButtonText: {
+    color: "#fff",
+    fontWeight: "700",
+    marginLeft: 8,
+    letterSpacing: 0.5,
+  },
+  mapButton: {
+    width: 105,
+    height: 42,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: "#bfd4ea",
+    backgroundColor: "#fff",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  mapButtonText: {
+    color: "#2d7fd3",
+    fontWeight: "700",
+    fontSize: 12,
+    marginLeft: 5,
+  },
+  resultsHeading: {
+    marginTop: 14,
+    marginBottom: 10,
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#333",
+  },
+  jobCard: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 10,
+    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  jobLeftIconWrap: {
+    marginRight: 10,
+  },
+  jobLeftIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#d9efff",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  jobContent: {
+    flex: 1,
+  },
+  jobTitle: {
+    fontSize: 18,
+    fontWeight: "500",
+    color: "#333",
+    marginBottom: 6,
+  },
+  jobMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 3,
+  },
+  jobMetaText: {
+    marginLeft: 6,
+    fontSize: 13,
+    color: "#666",
+  },
+  jobArrowWrap: {
+    marginLeft: 10,
+  },
+  arrowButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#2d7fd3",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  noDataCard: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 6,
+  },
+  noDataText: {
+    fontSize: 14,
+    color: "#666",
+    fontWeight: "500",
+  },
+});

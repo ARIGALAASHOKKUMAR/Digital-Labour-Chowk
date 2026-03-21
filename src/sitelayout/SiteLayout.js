@@ -295,15 +295,15 @@ const SiteLayout = ({
     }
   }, [sessionAlertVisible]);
 
-  useEffect(() => {
-    if (!serviceChecking()) {
-      Alert.alert("Access Denied", "You are not authorized for this screen.");
-      navigation?.reset?.({
-        index: 0,
-        routes: [{ name: "HOME" }],
-      });
-    }
-  }, [serviceChecking, navigation]);
+  // useEffect(() => {
+  //   if (!serviceChecking()) {
+  //     Alert.alert("Access Denied", "You are not authorized for this screen.");
+  //     navigation?.reset?.({
+  //       index: 0,
+  //       routes: [{ name: "HOME" }],
+  //     });
+  //   }
+  // }, [serviceChecking, navigation]);
 
   const handleLogout = async () => {
     const response = await myAxios.get(
@@ -650,6 +650,17 @@ const SiteLayout = ({
                   </TouchableOpacity>
                 );
               })}
+
+              {roleId === 12 &&(  <TouchableOpacity
+              style={styles.bottomNavItem}
+              onPress={() => navigation.navigate("JOBSEARCH")}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="search-outline" size={24} color={"#555"} />
+              <Text>Search</Text>
+            </TouchableOpacity>)}
+
+          
           </View>
 
           <Modal
