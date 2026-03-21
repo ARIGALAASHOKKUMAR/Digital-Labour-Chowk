@@ -452,14 +452,10 @@ const SiteLayout = ({
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* <StatusBar backgroundColor="#1e7e34" /> */}
-      <Pressable
-        style={styles.flex1}
-        onPress={() => {
-          resetActivity();
-          setProfileMenuVisible(false);
-        }}
-      >
+      {" "}
+      {/* ✅ FIXED: Removed Pressable */}{" "}
+      <View style={styles.flex1}>
+        {" "}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <View style={styles.logoContainer}>
@@ -485,7 +481,7 @@ const SiteLayout = ({
               <MaterialCommunityIcons
                 name="incognito"
                 size={24}
-                color="#374151"
+                color="white"
                 style={[blink && styles.blinkIcon]}
               />
               <View style={styles.badge}>
@@ -515,8 +511,7 @@ const SiteLayout = ({
               </TouchableOpacity>
             )}
           </View>
-        </View>
-
+        </View>{" "}
         {profileMenuVisible && (
           <View style={[styles.profileDropdown, profileMenuPosition]}>
             <TouchableOpacity
@@ -576,27 +571,26 @@ const SiteLayout = ({
             </TouchableOpacity>
           </View>
         )}
-
-        <UserMessage />
-
+        <UserMessage /> {/* ✅ FIXED SCROLL AREA */}{" "}
         <View style={{ flex: 1 }}>
+          {" "}
           {scrollEnabled ? (
             <ScrollView
-              contentContainerStyle={styles.contentContainer}
+              contentContainerStyle={[styles.contentContainer, { flexGrow: 1 }]}
+              keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
               onScrollBeginDrag={resetActivity}
               onTouchStart={resetActivity}
               onMomentumScrollBegin={resetActivity}
               scrollEventThrottle={16}
-              removeClippedSubviews={true}
             >
-              {children}
+              {" "}
+              {children}{" "}
             </ScrollView>
           ) : (
             <View style={{ flex: 1 }}>{children}</View>
-          )}
-        </View>
-
+          )}{" "}
+        </View>{" "}
         <View style={styles.bottomNav}>
           <View
             style={{
@@ -657,257 +651,263 @@ const SiteLayout = ({
                 );
               })}
           </View>
-        </View>
 
-        <Modal
-          visible={bottomMenuVisible}
-          animationType="slide"
-          transparent
-          onRequestClose={() => setBottomMenuVisible(false)}
-        >
-          <Pressable
-            style={styles.bottomSheetOverlay}
-            onPress={() => setBottomMenuVisible(false)}
+          <Modal
+            visible={bottomMenuVisible}
+            animationType="slide"
+            transparent
+            onRequestClose={() => setBottomMenuVisible(false)}
           >
-            <Pressable style={styles.bottomSheet}>
-              <View style={styles.sheetHandle} />
-              <View style={styles.sheetHeader}>
-                <Text style={styles.sheetTitle}>
-                  {selectedParent?.menuitemname || "Menu"}
-                </Text>
-                <TouchableOpacity onPress={() => setBottomMenuVisible(false)}>
-                  <Text style={styles.sheetClose}>✕</Text>
-                </TouchableOpacity>
-              </View>
+            <Pressable
+              style={styles.bottomSheetOverlay}
+              onPress={() => setBottomMenuVisible(false)}
+            >
+              <Pressable style={styles.bottomSheet}>
+                <View style={styles.sheetHandle} />
+                <View style={styles.sheetHeader}>
+                  <Text style={styles.sheetTitle}>
+                    {selectedParent?.menuitemname || "Menu"}
+                  </Text>
+                  <TouchableOpacity onPress={() => setBottomMenuVisible(false)}>
+                    <Text style={styles.sheetClose}>✕</Text>
+                  </TouchableOpacity>
+                </View>
 
-              <ScrollView
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.sheetScrollContent}
-              >
-                {(selectedParent?.childs || []).map((child, index) => {
-                  const hasSubchilds =
-                    child?.subchilds && child.subchilds.length > 0;
+                <ScrollView
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.sheetScrollContent}
+                >
+                  {(selectedParent?.childs || []).map((child, index) => {
+                    const hasSubchilds =
+                      child?.subchilds && child.subchilds.length > 0;
 
-                  const childActive =
-                    String(child?.targeturl_c || "").toUpperCase() ===
-                      String(currentScreenName || "").toUpperCase() ||
-                    (child?.subchilds || []).some(
-                      (sub) =>
-                        String(sub?.targeturl_sc || "").toUpperCase() ===
-                        String(currentScreenName || "").toUpperCase(),
-                    );
+                    const childActive =
+                      String(child?.targeturl_c || "").toUpperCase() ===
+                        String(currentScreenName || "").toUpperCase() ||
+                      (child?.subchilds || []).some(
+                        (sub) =>
+                          String(sub?.targeturl_sc || "").toUpperCase() ===
+                          String(currentScreenName || "").toUpperCase(),
+                      );
 
-                  return (
-                    <View key={index} style={styles.childBlock}>
-                      <TouchableOpacity
-                        style={[
-                          styles.childRow,
-                          childActive && styles.childRowActive,
-                        ]}
-                        onPress={() => handleChildPress(child, index)}
-                        activeOpacity={0.85}
-                      >
-                        <Text
+                    return (
+                      <View key={index} style={styles.childBlock}>
+                        <TouchableOpacity
                           style={[
-                            styles.childRowText,
-                            childActive && styles.childRowTextActive,
+                            styles.childRow,
+                            childActive && styles.childRowActive,
                           ]}
+                          onPress={() => handleChildPress(child, index)}
+                          activeOpacity={0.85}
                         >
-                          {child?.menuitemname_c || "Untitled"}
-                        </Text>
-
-                        {hasSubchilds && (
                           <Text
                             style={[
-                              styles.childArrow,
+                              styles.childRowText,
                               childActive && styles.childRowTextActive,
                             ]}
                           >
-                            {expandedChildIndex === index ? "▲" : "▼"}
+                            {child?.menuitemname_c || "Untitled"}
                           </Text>
-                        )}
-                      </TouchableOpacity>
 
-                      {hasSubchilds && expandedChildIndex === index && (
-                        <View style={styles.subChildWrapper}>
-                          {child.subchilds.map((subchild, subIndex) => {
-                            const isSubActive =
-                              String(
-                                subchild?.targeturl_sc || "",
-                              ).toUpperCase() ===
-                              String(currentScreenName || "").toUpperCase();
+                          {hasSubchilds && (
+                            <Text
+                              style={[
+                                styles.childArrow,
+                                childActive && styles.childRowTextActive,
+                              ]}
+                            >
+                              {expandedChildIndex === index ? "▲" : "▼"}
+                            </Text>
+                          )}
+                        </TouchableOpacity>
 
-                            return (
-                              <TouchableOpacity
-                                key={subIndex}
-                                style={[
-                                  styles.subChildRow,
-                                  isSubActive && styles.subChildRowActive,
-                                ]}
-                                onPress={() => handleSubChildPress(subchild)}
-                                activeOpacity={0.85}
-                              >
-                                <Text
+                        {hasSubchilds && expandedChildIndex === index && (
+                          <View style={styles.subChildWrapper}>
+                            {child.subchilds.map((subchild, subIndex) => {
+                              const isSubActive =
+                                String(
+                                  subchild?.targeturl_sc || "",
+                                ).toUpperCase() ===
+                                String(currentScreenName || "").toUpperCase();
+
+                              return (
+                                <TouchableOpacity
+                                  key={subIndex}
                                   style={[
-                                    styles.subChildRowText,
-                                    isSubActive && styles.subChildRowTextActive,
+                                    styles.subChildRow,
+                                    isSubActive && styles.subChildRowActive,
                                   ]}
+                                  onPress={() => handleSubChildPress(subchild)}
+                                  activeOpacity={0.85}
                                 >
-                                  {subchild?.menuitemname_sc || "Untitled"}
-                                </Text>
-                              </TouchableOpacity>
-                            );
-                          })}
-                        </View>
-                      )}
-                    </View>
-                  );
-                })}
-              </ScrollView>
+                                  <Text
+                                    style={[
+                                      styles.subChildRowText,
+                                      isSubActive &&
+                                        styles.subChildRowTextActive,
+                                    ]}
+                                  >
+                                    {subchild?.menuitemname_sc || "Untitled"}
+                                  </Text>
+                                </TouchableOpacity>
+                              );
+                            })}
+                          </View>
+                        )}
+                      </View>
+                    );
+                  })}
+                </ScrollView>
+              </Pressable>
             </Pressable>
-          </Pressable>
-        </Modal>
+          </Modal>
 
-        <Modal visible={profileVisible} animationType="fade" transparent>
-          <View style={styles.modalBackdrop}>
-            <View style={styles.modalCard}>
-              <Text style={styles.modalTitle}>Profile Details</Text>
-              <Image source={profileSource} style={styles.modalProfileImage} />
+          <Modal visible={profileVisible} animationType="fade" transparent>
+            <View style={styles.modalBackdrop}>
+              <View style={styles.modalCard}>
+                <Text style={styles.modalTitle}>Profile Details</Text>
+                <Image
+                  source={profileSource}
+                  style={styles.modalProfileImage}
+                />
 
-              <Text style={styles.detailText}>USER ID: {userId || "-"}</Text>
-              <Text style={styles.detailText}>Name: {username || "-"}</Text>
-              <Text style={styles.detailText}>Role: {roleName || "-"}</Text>
-              <Text style={styles.detailText}>
-                Last Login Time: {formatSimpleHtmlText(lastLoginTime)}
-              </Text>
-              <Text style={styles.detailText}>
-                Last Logout Time: {formatSimpleHtmlText(lastLogoutTime)}
-              </Text>
-              <Text style={styles.detailText}>
-                Last Failure Login Time:{" "}
-                {formatSimpleHtmlText(lastFailureAttemptTime)}
-              </Text>
-
-              {!!loginLocation && roleId === 1 && (
+                <Text style={styles.detailText}>USER ID: {userId || "-"}</Text>
+                <Text style={styles.detailText}>Name: {username || "-"}</Text>
+                <Text style={styles.detailText}>Role: {roleName || "-"}</Text>
                 <Text style={styles.detailText}>
-                  Login Location: {loginLocation}
+                  Last Login Time: {formatSimpleHtmlText(lastLoginTime)}
                 </Text>
-              )}
-
-              <TouchableOpacity
-                style={styles.primaryBtn}
-                onPress={() => setProfileVisible(false)}
-              >
-                <Text style={styles.primaryBtnText}>Close</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-
-        <Modal visible={notificationVisible} animationType="fade" transparent>
-          <View style={styles.modalBackdrop}>
-            <View style={styles.modalCard}>
-              <Text style={styles.modalTitle}>Notifications</Text>
-
-              <View style={styles.notificationBox}>
-                <Text style={styles.notificationTitle}></Text>
-                <Text style={styles.notificationMsg}>REACT</Text>
-                <Text style={styles.notificationTime}>Just now</Text>
-              </View>
-
-              <TouchableOpacity
-                style={styles.primaryBtn}
-                onPress={() => setNotificationVisible(false)}
-              >
-                <Text style={styles.primaryBtnText}>Close</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-
-        <Modal visible={logoutVisible} animationType="fade" transparent>
-          <View style={styles.modalBackdrop}>
-            <View style={styles.modalCard}>
-              <Text style={styles.modalTitle}>Logout</Text>
-              <Text style={styles.modalSubTitle}>
-                Are you sure you want to logout?
-              </Text>
-
-              <View style={styles.rowButtons}>
-                <TouchableOpacity
-                  style={styles.secondaryBtn}
-                  onPress={() => {
-                    setLogoutVisible(false);
-                    serviceAuthentication();
-                  }}
-                >
-                  <Text style={styles.secondaryBtnText}>Stay Connected</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.dangerBtn}
-                  onPress={handleLogout}
-                >
-                  <Text style={styles.dangerBtnText}>Logout</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-
-        <Modal visible={sessionAlertVisible} animationType="fade" transparent>
-          <View style={styles.modalBackdrop}>
-            <View style={[styles.modalCard, { maxHeight: "80%" }]}>
-              <Text style={[styles.modalTitle, { color: "#d9534f" }]}>
-                Security Alert
-              </Text>
-
-              <Text style={styles.alertHeading}>
-                There are {activeUsersCount} other active session(s) using this
-                account.
-              </Text>
-
-              <ScrollView style={styles.sessionDetailsBox}>
-                <Text style={styles.sessionDetailsText}>
-                  {formatSessionDetails(sessionDetails)}
+                <Text style={styles.detailText}>
+                  Last Logout Time: {formatSimpleHtmlText(lastLogoutTime)}
                 </Text>
-              </ScrollView>
+                <Text style={styles.detailText}>
+                  Last Failure Login Time:{" "}
+                  {formatSimpleHtmlText(lastFailureAttemptTime)}
+                </Text>
 
-              <Text style={styles.alertInstruction}>
-                Review the session details above. If this looks suspicious,
-                logout from all sessions.
-              </Text>
-
-              <View style={styles.columnButtons}>
-                <TouchableOpacity
-                  style={styles.dangerFullBtn}
-                  onPress={() => logoutAll("A")}
-                >
-                  <Text style={styles.dangerBtnText}>
-                    Logout from All Sessions
+                {!!loginLocation && roleId === 1 && (
+                  <Text style={styles.detailText}>
+                    Login Location: {loginLocation}
                   </Text>
-                </TouchableOpacity>
+                )}
 
                 <TouchableOpacity
-                  style={styles.warningFullBtn}
-                  onPress={() => logoutAll("E")}
+                  style={styles.primaryBtn}
+                  onPress={() => setProfileVisible(false)}
                 >
-                  <Text style={styles.warningBtnText}>
-                    Logout from All Except This Session
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.secondaryBtnFull}
-                  onPress={() => setSessionAlertVisible(false)}
-                >
-                  <Text style={styles.secondaryBtnText}>Close</Text>
+                  <Text style={styles.primaryBtnText}>Close</Text>
                 </TouchableOpacity>
               </View>
             </View>
-          </View>
-        </Modal>
-      </Pressable>
+          </Modal>
+
+          <Modal visible={notificationVisible} animationType="fade" transparent>
+            <View style={styles.modalBackdrop}>
+              <View style={styles.modalCard}>
+                <Text style={styles.modalTitle}>Notifications</Text>
+
+                <View style={styles.notificationBox}>
+                  <Text style={styles.notificationTitle}></Text>
+                  <Text style={styles.notificationMsg}>REACT</Text>
+                  <Text style={styles.notificationTime}>Just now</Text>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.primaryBtn}
+                  onPress={() => setNotificationVisible(false)}
+                >
+                  <Text style={styles.primaryBtnText}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+
+          <Modal visible={logoutVisible} animationType="fade" transparent>
+            <View style={styles.modalBackdrop}>
+              <View style={styles.modalCard}>
+                <Text style={styles.modalTitle}>Logout</Text>
+                <Text style={styles.modalSubTitle}>
+                  Are you sure you want to logout?
+                </Text>
+
+                <View style={styles.rowButtons}>
+                  <TouchableOpacity
+                    style={styles.secondaryBtn}
+                    onPress={() => {
+                      setLogoutVisible(false);
+                      serviceAuthentication();
+                    }}
+                  >
+                    <Text style={styles.secondaryBtnText}>Stay Connected</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.dangerBtn}
+                    onPress={handleLogout}
+                  >
+                    <Text style={styles.dangerBtnText}>Logout</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
+
+          <Modal visible={sessionAlertVisible} animationType="fade" transparent>
+            <View style={styles.modalBackdrop}>
+              <View style={[styles.modalCard, { maxHeight: "80%" }]}>
+                <Text style={[styles.modalTitle, { color: "#d9534f" }]}>
+                  Security Alert
+                </Text>
+
+                <Text style={styles.alertHeading}>
+                  There are {activeUsersCount} other active session(s) using
+                  this account.
+                </Text>
+
+                <ScrollView style={styles.sessionDetailsBox}>
+                  <Text style={styles.sessionDetailsText}>
+                    {formatSessionDetails(sessionDetails)}
+                  </Text>
+                </ScrollView>
+
+                <Text style={styles.alertInstruction}>
+                  Review the session details above. If this looks suspicious,
+                  logout from all sessions.
+                </Text>
+
+                <View style={styles.columnButtons}>
+                  <TouchableOpacity
+                    style={styles.dangerFullBtn}
+                    onPress={() => logoutAll("A")}
+                  >
+                    <Text style={styles.dangerBtnText}>
+                      Logout from All Sessions
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.warningFullBtn}
+                    onPress={() => logoutAll("E")}
+                  >
+                    <Text style={styles.warningBtnText}>
+                      Logout from All Except This Session
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.secondaryBtnFull}
+                    onPress={() => setSessionAlertVisible(false)}
+                  >
+                    <Text style={styles.secondaryBtnText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
+        </View>
+        {/* ALL MODALS (unchanged) */}{" "}
+        {/* keep your existing modals here */}{" "}
+      </View>{" "}
     </SafeAreaView>
   );
 };
