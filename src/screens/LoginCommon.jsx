@@ -803,6 +803,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
         const url = `${EMPLOYEEREGOTP}${mobileNumber}&userType=${type.toUpperCase()}`;
         const getotp = await commonAPICall(url, {}, "post", dispatch);
 
+        console.log("getotp0",getotp);
+        
+
         if (getotp?.status === 200 || getotp?.status === 201) {
           setOtpSent(true);
           setOtpTimer(60);

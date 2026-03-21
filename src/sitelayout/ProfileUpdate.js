@@ -97,7 +97,7 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
     enableReinitialize: true,
     initialValues: {
       fullName: userData?.full_name || "",
-      dateOfBirth: userData?.date_of_birth || "",
+      dateOfBirth: userData?.date_of_birth,
       gender: userData?.gender || "",
       mobileNumber: userData?.mobile_number || "",
       email: userData?.email || "",
@@ -116,7 +116,7 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
     try {
       const payload = {
         ...values,
-        dateOfBirth: formatDate(values.dateOfBirth),
+        dateOfBirth:state.roleId === 12? formatDate(values.dateOfBirth):"NA",
         employerTypeId: values.employerTypeId
           ? Number(values.employerTypeId)
           : "",
@@ -2230,6 +2230,9 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
   const [skillsList, setSkillsList] = useState([]);
   const [showSkillsDropdown, setShowSkillsDropdown] = useState(false);
 
+  console.log("userDatauserData",userData.average_workers_hired_per_month);
+  
+
   const averageWorkersOptions = [
     { label: "1-10", value: 10 },
     { label: "11-50", value: 50 },
@@ -2281,7 +2284,7 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
       stageName: "EMPLOYER_WORK_DETAILS",
       workCategoryIds: initialCategoryIds,
       averageWorkersHiredPerMonth:
-        userData?.average_workers_hired_per_month?.toString() || "",
+        userData?.average_workers_hired_per_month|| "",
     },
     validationSchema,
     onSubmit: handleSubmit,
