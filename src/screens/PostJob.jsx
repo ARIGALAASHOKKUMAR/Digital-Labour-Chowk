@@ -15,7 +15,14 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import * as Location from "expo-location";
-import { commonAPICall, EMPLOYERJOBPOST, GETDISTSAPP, GETMANDALSAPP, GETVILLAGESAPP } from "../utils/utils";
+import {
+  commonAPICall,
+  EMPLOYERJOBPOST,
+  GETDISTSAPP,
+  GETMANDALSAPP,
+  GETSKILLS,
+  GETVILLAGESAPP,
+} from "../utils/utils";
 
 const PostJob = ({ userData, onUpdateSuccess }) => {
   const state = useSelector((state) => state.LoginReducer);
@@ -29,19 +36,33 @@ const PostJob = ({ userData, onUpdateSuccess }) => {
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
 
-  const jobCategoryOptions = [
-    { id: 1, label: "Mason" },
-    { id: 2, label: "Electrician" },
-    { id: 3, label: "Farm Labour" },
-    { id: 4, label: "Carpenter" },
-    { id: 5, label: "Painter" },
-  ];
+  const [skillsList, setSkillsList] = useState([]);
 
+  const getSkillsData = async () => {
+    try {
+      const response = await commonAPICall(GETSKILLS, {}, "get", dispatch);
+
+      if (response?.status === 200) {
+        const skillData = response?.data?.Skill_Info_Details || [];
+        setSkillsList(skillData);
+      } else {
+        setSkillsList([]);
+      }
+    } catch (error) {
+      console.log("Error fetching skills:", error);
+      setSkillsList([]);
+    }
+  };
+
+  useEffect(() => {
+    getSkillsData();
+  }, []);
   const facilityOptions = [
-    { id: 1, label: "Food" },
-    { id: 2, label: "Accommodation" },
-    { id: 3, label: "Transport" },
-    { id: 4, label: "Water" },
+    { id: 1, label: "Financial Aid" },
+    { id: 2, label: "Health Insurance" },
+    { id: 3, label: "Housing Assistance" },
+    { id: 4, label: "Pension Scheme" },
+    { id: 5, label: "Skill Development" },
   ];
 
   const preferredWorkTypes = [
@@ -230,7 +251,12 @@ const PostJob = ({ userData, onUpdateSuccess }) => {
 
       console.log("Sending job post payload:", payload);
 
-      const response = await commonAPICall(EMPLOYERJOBPOST, payload, "POST", dispatch);
+      const response = await commonAPICall(
+        EMPLOYERJOBPOST,
+        payload,
+        "POST",
+        dispatch,
+      );
 
       if (response?.status === 200 || response?.data?.status === "success") {
         resetForm();
@@ -302,9 +328,11 @@ const PostJob = ({ userData, onUpdateSuccess }) => {
             <Text style={styles.label}>
               Job Category <Text style={styles.requiredStar}>*</Text>
             </Text>
+
             <View style={styles.multiWrap}>
-              {jobCategoryOptions.map((item) => {
+              {skillsList.map((item) => {
                 const selected = formik.values.jobCategory.includes(item.id);
+
                 return (
                   <TouchableOpacity
                     key={item.id}
@@ -320,12 +348,13 @@ const PostJob = ({ userData, onUpdateSuccess }) => {
                         selected && styles.multiChipTextSelected,
                       ]}
                     >
-                      {item.label}
+                      {item.skill_name}
                     </Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
+
             {formik.errors.jobCategory && formik.touched.jobCategory && (
               <Text style={styles.errorText}>{formik.errors.jobCategory}</Text>
             )}
@@ -398,7 +427,10 @@ const PostJob = ({ userData, onUpdateSuccess }) => {
               onChange={(event, selectedDate) => {
                 setShowEndDatePicker(false);
                 if (selectedDate) {
-                  formik.setFieldValue("endDate", formatDateToApi(selectedDate));
+                  formik.setFieldValue(
+                    "endDate",
+                    formatDateToApi(selectedDate),
+                  );
                 }
               }}
             />
@@ -673,12 +705,11 @@ const PostJob = ({ userData, onUpdateSuccess }) => {
               placeholder="Enter Job Description"
               multiline
             />
-            {formik.errors.jobDescription &&
-              formik.touched.jobDescription && (
-                <Text style={styles.errorText}>
-                  {formik.errors.jobDescription}
-                </Text>
-              )}
+            {formik.errors.jobDescription && formik.touched.jobDescription && (
+              <Text style={styles.errorText}>
+                {formik.errors.jobDescription}
+              </Text>
+            )}
           </View>
 
           <View style={styles.inputBlock}>
@@ -697,12 +728,11 @@ const PostJob = ({ userData, onUpdateSuccess }) => {
               onBlur={formik.handleBlur("toolsRequired")}
               placeholder="Enter Tools Required"
             />
-            {formik.errors.toolsRequired &&
-              formik.touched.toolsRequired && (
-                <Text style={styles.errorText}>
-                  {formik.errors.toolsRequired}
-                </Text>
-              )}
+            {formik.errors.toolsRequired && formik.touched.toolsRequired && (
+              <Text style={styles.errorText}>
+                {formik.errors.toolsRequired}
+              </Text>
+            )}
           </View>
 
           <View style={styles.inputBlock}>
@@ -722,12 +752,11 @@ const PostJob = ({ userData, onUpdateSuccess }) => {
               placeholder="Enter Required People"
               keyboardType="numeric"
             />
-            {formik.errors.requiredPeople &&
-              formik.touched.requiredPeople && (
-                <Text style={styles.errorText}>
-                  {formik.errors.requiredPeople}
-                </Text>
-              )}
+            {formik.errors.requiredPeople && formik.touched.requiredPeople && (
+              <Text style={styles.errorText}>
+                {formik.errors.requiredPeople}
+              </Text>
+            )}
           </View>
 
           <View style={styles.inputBlock}>
@@ -805,12 +834,11 @@ const PostJob = ({ userData, onUpdateSuccess }) => {
               placeholder="Enter Rate Per Day"
               keyboardType="numeric"
             />
-            {formik.errors.workRatePerDay &&
-              formik.touched.workRatePerDay && (
-                <Text style={styles.errorText}>
-                  {formik.errors.workRatePerDay}
-                </Text>
-              )}
+            {formik.errors.workRatePerDay && formik.touched.workRatePerDay && (
+              <Text style={styles.errorText}>
+                {formik.errors.workRatePerDay}
+              </Text>
+            )}
           </View>
 
           <View style={styles.inputBlock}>
