@@ -25,6 +25,8 @@ import {
   JOBAPPLY,
   FINDWORKER,
 } from "../utils/utils";
+import { showModal } from "../actions";
+import JobDetailsCard from "./JobDetailsScreen";
 
 const JobSearchScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -230,8 +232,8 @@ const JobSearchScreen = ({ navigation }) => {
     );
     if (response.status === 200) {
       Alert.alert("Success", "Job applied successfully");
-      // handleSearch();
-      setResultsList([]);
+      handleSearch();
+      // setResultsList([]);
     }
   };
 
@@ -294,9 +296,7 @@ const JobSearchScreen = ({ navigation }) => {
         <TouchableOpacity
           style={styles.arrowButton}
           onPress={() => {
-            if (navigation) {
-              navigation.navigate("JobDetails", { jobData: item });
-            }
+            dispatch(showModal(<JobDetailsCard data={item} handleSearch={handleSearch}/>,true,true))
           }}
         >
           <Ionicons name="chevron-forward" size={18} color="#fff" />

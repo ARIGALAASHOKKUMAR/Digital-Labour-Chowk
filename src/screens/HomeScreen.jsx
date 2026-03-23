@@ -47,6 +47,7 @@ const HomeScreen = ({ navigation }) => {
 
       if (res?.status === 200) {
         const data = res?.data?.DigitalLabourChowkRegistration_Details || [];
+         console.log("ddddddddddddddd",data)        
         if (data.length > 0) {
           const worker = data[0];
           setWorkerData(worker);

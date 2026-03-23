@@ -1,9 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { commonAPICall, JOBSEARCH } from "../utils/utils";
 import { useDispatch } from "react-redux";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { FontAwesome5 } from "@expo/vector-icons";
+import { showModal } from "../actions";
+import JobDetailsCard from "./JobDetailsScreen";
 
 const AppliedJobs = ({ navigation }) => {
   const [jobsList, setJobs] = useState([]);
@@ -34,64 +42,72 @@ const AppliedJobs = ({ navigation }) => {
   return (
     <ScrollView>
       {jobsList?.length > 0 ? (
-        jobsList.filter((item) => item.isapplied === true).map((item, index) => (
-          <TouchableOpacity
-            key={item?.id ? String(item.id) : String(index)}
-            style={styles.jobCard}
-            activeOpacity={0.85}
-            onPress={() => {
-              if (navigation) {
-                navigation.navigate("JobDetails", { jobData: item });
-              }
-            }}
-          >
-            <View style={styles.jobLeftIconWrap}>
-              <View style={styles.jobLeftIconCircle}>
-                <MaterialIcons name="work" size={22} color="#000" />
+        jobsList
+          .filter((item) => item.isapplied === true)
+          .map((item, index) => (
+            <TouchableOpacity
+              key={item?.id ? String(item.id) : String(index)}
+              style={styles.jobCard}
+              activeOpacity={0.85}
+              onPress={() => {
+                if (navigation) {
+                  navigation.navigate("JobDetails", { jobData: item });
+                }
+              }}
+            >
+              <View style={styles.jobLeftIconWrap}>
+                <View style={styles.jobLeftIconCircle}>
+                  <MaterialIcons name="work" size={22} color="#000" />
+                </View>
               </View>
-            </View>
 
-            <View style={styles.jobContent}>
-              <Text style={styles.jobTitle} numberOfLines={1}>
-                {item.jobtitle}
-              </Text>
-
-              <View style={styles.jobMetaRow}>
-                <Ionicons name="location-sharp" size={13} color="#e75480" />
-                <Text style={styles.jobMetaText} numberOfLines={1}>
-                  {item.address}
+              <View style={styles.jobContent}>
+                <Text style={styles.jobTitle} numberOfLines={1}>
+                  {item.jobtitle}
                 </Text>
+
+                <View style={styles.jobMetaRow}>
+                  <Ionicons name="location-sharp" size={13} color="#e75480" />
+                  <Text style={styles.jobMetaText} numberOfLines={1}>
+                    {item.address}
+                  </Text>
+                </View>
+
+                <View style={styles.jobMetaRow}>
+                  <Ionicons name="calendar-outline" size={13} color="#666" />
+                  <Text style={styles.jobMetaText}>
+                    {formatTimeAgo(item.jobpostedtime)}
+                  </Text>
+                </View>
+
+                <View style={styles.jobMetaRow}>
+                  <FontAwesome5 name="rupee-sign" size={11} color="#c58543" />
+                  <Text style={styles.jobMetaText}>
+                    {formatSalary(item.workrateperday)}
+                  </Text>
+                </View>
               </View>
 
-              <View style={styles.jobMetaRow}>
-                <Ionicons name="calendar-outline" size={13} color="#666" />
-                <Text style={styles.jobMetaText}>
-                  {formatTimeAgo(item.jobpostedtime)}
-                </Text>
+              <View style={styles.jobArrowWrap}>
+                <TouchableOpacity
+                  style={styles.arrowButton}
+                  onPress={() => {
+                    dispatch(
+                      showModal(
+                        <JobDetailsCard
+                          data={item}
+                        />,
+                        true,
+                        true,
+                      ),
+                    );
+                  }}
+                >
+                  <Ionicons name="chevron-forward" size={18} color="#fff" />
+                </TouchableOpacity>
               </View>
-
-              <View style={styles.jobMetaRow}>
-                <FontAwesome5 name="rupee-sign" size={11} color="#c58543" />
-                <Text style={styles.jobMetaText}>
-                  {formatSalary(item.workrateperday)}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.jobArrowWrap}>
-              <TouchableOpacity
-                style={styles.arrowButton}
-                onPress={() => {
-                  if (navigation) {
-                    navigation.navigate("JobDetails", { jobData: item });
-                  }
-                }}
-              >
-                <Ionicons name="chevron-forward" size={18} color="#fff" />
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-        ))
+            </TouchableOpacity>
+          ))
       ) : (
         <View style={styles.noDataCard}>
           <Text style={styles.noDataText}>No jobs found</Text>
