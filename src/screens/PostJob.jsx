@@ -24,7 +24,7 @@ import {
   GETVILLAGESAPP,
 } from "../utils/utils";
 
-const PostJob = ({ userData, onUpdateSuccess }) => {
+const PostJob = () => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
 
@@ -126,23 +126,7 @@ const PostJob = ({ userData, onUpdateSuccess }) => {
     }
   };
 
-  useEffect(() => {
-    const loadInitialData = async () => {
-      if (userData?.district && !initialDataLoaded) {
-        await getmandals(userData.district);
 
-        if (userData?.mandal) {
-          await getVillages(userData.district, userData.mandal);
-        }
-
-        setInitialDataLoaded(true);
-      }
-    };
-
-    if (dists.length > 0) {
-      loadInitialData();
-    }
-  }, [userData, dists, initialDataLoaded]);
 
   const getLocation = async () => {
     try {
@@ -209,26 +193,26 @@ const PostJob = ({ userData, onUpdateSuccess }) => {
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
-      jobTitle: userData?.jobTitle || "",
-      jobCategory: userData?.jobCategory || [],
-      startDate: userData?.startDate || "",
-      endDate: userData?.endDate || "",
-      workDuration: userData?.workDuration?.toString() || "",
-      district: userData?.district?.toString() || "",
-      mandal: userData?.mandal?.toString() || "",
-      village: userData?.village?.toString() || "",
-      doorNo: userData?.doorNo || "",
-      landmark: userData?.landmark || "",
-      pincode: userData?.pincode?.toString() || "",
-      latitude: userData?.latitude?.toString() || "",
-      longitude: userData?.longitude?.toString() || "",
-      jobDescription: userData?.jobDescription || "",
-      toolsRequired: userData?.toolsRequired || "",
-      requiredPeople: userData?.requiredPeople?.toString() || "",
-      workTime: userData?.workTime || "",
-      preferredWorkType: userData?.preferredWorkType || "",
-      workRatePerDay: userData?.workRatePerDay?.toString() || "",
-      facilities: userData?.facilities || [],
+      jobTitle: "",
+      jobCategory: [],
+      startDate: "",
+      endDate: "",
+      workDuration: "",
+      district: "",
+      mandal: "",
+      village: "",
+      doorNo: "",
+      landmark: "",
+      pincode: "",
+      latitude: "",
+      longitude: "",
+      jobDescription: "",
+      toolsRequired: "",
+      requiredPeople: "",
+      workTime: "",
+      preferredWorkType: "",
+      workRatePerDay: "",
+      facilities: [],
     },
     validationSchema,
     onSubmit: handleSubmit,
@@ -260,7 +244,6 @@ const PostJob = ({ userData, onUpdateSuccess }) => {
 
       if (response?.status === 200 || response?.data?.status === "success") {
         resetForm();
-        onUpdateSuccess?.();
         setMandal([]);
         setVillage([]);
       }

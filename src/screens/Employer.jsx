@@ -24,7 +24,7 @@ const Employer = () => {
       DIGITALLABOURCHOWKDETAILS,
       {},
       "get",
-      dispatch
+      dispatch,
     );
 
     if (res?.status === 200) {
@@ -82,27 +82,7 @@ const Employer = () => {
     },
   ];
 
-  if (selectedScreen === "postJob") {
-    return (
-      <SafeAreaView style={{ flex: 1 }}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => setSelectedScreen("home")}>
-            <Ionicons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Post a New Job</Text>
-          <View style={{ width: 24 }} />
-        </View>
-
-        <PostJob
-          userData={{}}
-          onUpdateSuccess={() => {
-            setSelectedScreen("home");
-            fetchWorkerDetails();
-          }}
-        />
-      </SafeAreaView>
-    );
-  }
+  
 
   return (
     <SafeAreaView style={styles.safeArea}>

@@ -333,7 +333,10 @@ const LoginCommon = ({ navigation }) => {
         </View>
         <View style={styles.optionTextWrap}>
           <Text style={styles.optionTitle}>Quick Access/త్వరిత ప్రవేశం</Text>
-          <TouchableOpacity style={styles.eshramButton}   onPress={() => Linking.openURL("https://eshram.gov.in/")}>
+          <TouchableOpacity
+            style={styles.eshramButton}
+            onPress={() => Linking.openURL("https://eshram.gov.in/")}
+          >
             <Ionicons name="document-text-outline" size={20} color="#fff" />
             <Text style={styles.eshramText}>e-Shram Registration</Text>{" "}
           </TouchableOpacity>
@@ -678,9 +681,11 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
     mobileNumber: Yup.string()
       .matches(/^[0-9]{10}$/, "10 digits required")
       .required("Mobile number is required"),
-    password: Yup.string().min(6, "Min 6 characters").required("Password is required"),
+    password: Yup.string()
+      .min(6, "Min 6 characters")
+      .required("Password is required"),
     confirmPassword: Yup.string()
-      .oneOf([Yup.ref('password')], "Passwords must match")
+      .oneOf([Yup.ref("password")], "Passwords must match")
       .required("Confirm password is required"),
     otp: Yup.string().matches(/^[0-9]{6}$/, "6 digits required"),
     agreeTerms: Yup.boolean().oneOf([true], "Required").required("Required"),
@@ -719,7 +724,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
 
       if (res?.status === 200 || res?.status === 201) {
         setShowOtpModal(false);
-        showSuccessToast(`${isWorker ? "Worker" : "Employer"} registered successfully`);
+        showSuccessToast(
+          `${isWorker ? "Worker" : "Employer"} registered successfully`,
+        );
         navigation.goBack();
         resetForm();
       } else {
@@ -782,17 +789,17 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
   const handleSendOtp = async () => {
     // Set showErrors to true to display all validation errors
     setShowErrors(true);
-    
+
     // Manually validate all fields except OTP
     const errors = await formik.validateForm();
-    
+
     // Check if there are errors in required fields (excluding otp)
-    const hasErrors = 
-      errors.fullName || 
-      errors.email || 
-      errors.mobileNumber || 
-      errors.password || 
-      errors.confirmPassword || 
+    const hasErrors =
+      errors.fullName ||
+      errors.email ||
+      errors.mobileNumber ||
+      errors.password ||
+      errors.confirmPassword ||
       errors.agreeTerms;
 
     if (!hasErrors && formik.values.agreeTerms) {
@@ -803,8 +810,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
         const url = `${EMPLOYEEREGOTP}${mobileNumber}&userType=${type.toUpperCase()}`;
         const getotp = await commonAPICall(url, {}, "post", dispatch);
 
-        console.log("getotp0",getotp);
-        
+        console.log("getotp0", getotp);
 
         if (getotp?.status === 200 || getotp?.status === 201) {
           setOtpSent(true);
@@ -829,7 +835,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
       } finally {
         setOtpLoading(false);
       }
-    } 
+    }
   };
 
   const handleCloseModal = () => {
@@ -935,7 +941,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
               <View
                 style={[
                   styles.inputWrapper,
-                  showErrors && formik.errors.fullName && styles.inputWrapperError, // 👈 Only show error when showErrors is true
+                  showErrors &&
+                    formik.errors.fullName &&
+                    styles.inputWrapperError, // 👈 Only show error when showErrors is true
                 ]}
               >
                 <Ionicons
@@ -945,16 +953,23 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   style={styles.leftIcon}
                 />
                 <TextInput
-                  placeholder={isWorker ? "Enter worker full name" : "Enter employer full name"}
+                  placeholder={
+                    isWorker
+                      ? "Enter worker full name"
+                      : "Enter employer full name"
+                  }
                   placeholderTextColor="#94a3b8"
                   style={styles.input}
                   value={formik.values.fullName}
-                  onChangeText={(text) => formik.setFieldValue("fullName", text)}
+                  onChangeText={(text) =>
+                    formik.setFieldValue("fullName", text)
+                  }
                 />
               </View>
-              {showErrors && formik.errors.fullName && ( // 👈 Only show error when showErrors is true
-                <Text style={styles.errorText}>{formik.errors.fullName}</Text>
-              )}
+              {showErrors &&
+                formik.errors.fullName && ( // 👈 Only show error when showErrors is true
+                  <Text style={styles.errorText}>{formik.errors.fullName}</Text>
+                )}
             </View>
 
             {/* Email Field */}
@@ -972,7 +987,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   style={styles.leftIcon}
                 />
                 <TextInput
-                  placeholder={isWorker ? "Enter worker email" : "Enter employer email"}
+                  placeholder={
+                    isWorker ? "Enter worker email" : "Enter employer email"
+                  }
                   placeholderTextColor="#94a3b8"
                   style={styles.input}
                   value={formik.values.email}
@@ -991,7 +1008,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
               <View
                 style={[
                   styles.inputWrapper,
-                  showErrors && formik.errors.mobileNumber && styles.inputWrapperError,
+                  showErrors &&
+                    formik.errors.mobileNumber &&
+                    styles.inputWrapperError,
                 ]}
               >
                 <Ionicons
@@ -1001,7 +1020,11 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   style={styles.leftIcon}
                 />
                 <TextInput
-                  placeholder={isWorker ? "Enter worker phone number" : "Enter employer phone number"}
+                  placeholder={
+                    isWorker
+                      ? "Enter worker phone number"
+                      : "Enter employer phone number"
+                  }
                   placeholderTextColor="#94a3b8"
                   style={styles.input}
                   value={formik.values.mobileNumber}
@@ -1011,7 +1034,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                 />
               </View>
               {showErrors && formik.errors.mobileNumber && (
-                <Text style={styles.errorText}>{formik.errors.mobileNumber}</Text>
+                <Text style={styles.errorText}>
+                  {formik.errors.mobileNumber}
+                </Text>
               )}
             </View>
 
@@ -1020,7 +1045,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
               <View
                 style={[
                   styles.inputWrapper,
-                  showErrors && formik.errors.password && styles.inputWrapperError,
+                  showErrors &&
+                    formik.errors.password &&
+                    styles.inputWrapperError,
                 ]}
               >
                 <Ionicons
@@ -1060,7 +1087,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
               <View
                 style={[
                   styles.inputWrapper,
-                  showErrors && formik.errors.confirmPassword && styles.inputWrapperError,
+                  showErrors &&
+                    formik.errors.confirmPassword &&
+                    styles.inputWrapperError,
                 ]}
               >
                 <Ionicons
@@ -1084,14 +1113,18 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   style={styles.eyeButton}
                 >
                   <Ionicons
-                    name={showConfirmPassword ? "eye-outline" : "eye-off-outline"}
+                    name={
+                      showConfirmPassword ? "eye-outline" : "eye-off-outline"
+                    }
                     size={22}
                     color="#1e3a5f"
                   />
                 </TouchableOpacity>
               </View>
               {showErrors && formik.errors.confirmPassword && (
-                <Text style={styles.errorText}>{formik.errors.confirmPassword}</Text>
+                <Text style={styles.errorText}>
+                  {formik.errors.confirmPassword}
+                </Text>
               )}
             </View>
 
@@ -1099,7 +1132,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
             <View style={styles.termsContainer}>
               <TouchableOpacity
                 style={styles.checkboxWrapper}
-                onPress={() => formik.setFieldValue("agreeTerms", !formik.values.agreeTerms)}
+                onPress={() =>
+                  formik.setFieldValue("agreeTerms", !formik.values.agreeTerms)
+                }
                 activeOpacity={0.8}
               >
                 <View
@@ -1120,7 +1155,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                   >
                     Terms and Conditions
                   </Text>{" "}
-                  and{" "}
+                  <Text>and </Text>
                   <Text
                     style={styles.termsLink}
                     onPress={() => navigation.navigate("PrivacyPolicy")}
@@ -1136,7 +1171,10 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
 
             {/* Send OTP Button */}
             <TouchableOpacity
-              style={[styles.sendOtpButton, otpLoading && styles.sendOtpButtonDisabled]}
+              style={[
+                styles.sendOtpButton,
+                otpLoading && styles.sendOtpButtonDisabled,
+              ]}
               onPress={handleSendOtp}
               disabled={otpLoading}
               activeOpacity={0.85}
@@ -1167,7 +1205,10 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                 <Ionicons name="lock-closed" size={24} color="#1e3a5f" />
                 <Text style={styles.modalTitle}>Verify OTP</Text>
               </View>
-              <TouchableOpacity onPress={handleCloseModal} style={styles.modalCloseButton}>
+              <TouchableOpacity
+                onPress={handleCloseModal}
+                style={styles.modalCloseButton}
+              >
                 <Ionicons name="close" size={24} color="#94a3b8" />
               </TouchableOpacity>
             </View>
@@ -1178,30 +1219,40 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
 
             <View style={styles.modalOtpContainer}>
               <View style={styles.otpInputsContainer}>
-                {Array(6).fill(0).map((_, index) => {
-                  const otpValue = formik.values.otp[index] || "";
-                  return (
-                    <TextInput
-                      key={index}
-                      ref={(ref) => (otpInputs.current[index] = ref)}
-                      style={styles.otpInput}
-                      value={otpValue}
-                      onChangeText={(text) => handleOtpChange(text, index)}
-                      onKeyPress={(e) => handleOtpKeyPress(e, index)}
-                      onPaste={(e) => handleOtpPaste(e.nativeEvent.text)}
-                      keyboardType="number-pad"
-                      maxLength={1}
-                      autoFocus={index === 0}
-                      editable={!loading}
-                    />
-                  );
-                })}
+                {Array(6)
+                  .fill(0)
+                  .map((_, index) => {
+                    const otpValue = formik.values.otp[index] || "";
+                    return (
+                      <TextInput
+                        key={index}
+                        ref={(ref) => (otpInputs.current[index] = ref)}
+                        style={styles.otpInput}
+                        value={otpValue}
+                        onChangeText={(text) => handleOtpChange(text, index)}
+                        onKeyPress={(e) => handleOtpKeyPress(e, index)}
+                        onPaste={(e) => handleOtpPaste(e.nativeEvent.text)}
+                        keyboardType="number-pad"
+                        maxLength={1}
+                        autoFocus={index === 0}
+                        editable={!loading}
+                      />
+                    );
+                  })}
               </View>
 
               <View style={styles.resendOtpContainer}>
                 <Text style={styles.resendOtpText}>Didn't receive OTP? </Text>
-                <TouchableOpacity onPress={handleResendOtp} disabled={otpTimer > 0 || otpLoading}>
-                  <Text style={[styles.resendOtpLink, otpTimer > 0 && styles.resendOtpDisabled]}>
+                <TouchableOpacity
+                  onPress={handleResendOtp}
+                  disabled={otpTimer > 0 || otpLoading}
+                >
+                  <Text
+                    style={[
+                      styles.resendOtpLink,
+                      otpTimer > 0 && styles.resendOtpDisabled,
+                    ]}
+                  >
                     Resend {otpTimer > 0 ? `(${otpTimer}s)` : ""}
                   </Text>
                 </TouchableOpacity>
@@ -1209,7 +1260,10 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
             </View>
 
             <TouchableOpacity
-              style={[styles.modalSubmitButton, loading ? styles.submitButtonDisabled : null]}
+              style={[
+                styles.modalSubmitButton,
+                loading ? styles.submitButtonDisabled : null,
+              ]}
               onPress={formik.handleSubmit}
               disabled={loading}
               activeOpacity={0.85}
@@ -1219,7 +1273,12 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
               ) : (
                 <>
                   <Text style={styles.submitButtonText}>Verify & Register</Text>
-                  <Ionicons name="checkmark-circle-outline" size={20} color="#fff" style={{ marginLeft: 8 }} />
+                  <Ionicons
+                    name="checkmark-circle-outline"
+                    size={20}
+                    color="#fff"
+                    style={{ marginLeft: 8 }}
+                  />
                 </>
               )}
             </TouchableOpacity>
@@ -1726,7 +1785,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     textDecorationLine: "underline",
   },
-
 
   termsContainer: {
     marginBottom: 20,
