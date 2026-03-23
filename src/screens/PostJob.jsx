@@ -25,7 +25,6 @@ import {
 } from "../utils/utils";
 
 const PostJob = () => {
-  const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
 
   const [dists, setDists] = useState([]);
@@ -125,8 +124,6 @@ const PostJob = () => {
       setVillage([]);
     }
   };
-
-
 
   const getLocation = async () => {
     try {
@@ -802,7 +799,15 @@ const PostJob = () => {
 
           <View style={styles.inputBlock}>
             <Text style={styles.label}>
-              Work Rate Per Day <Text style={styles.requiredStar}>*</Text>
+              Work Rate{" "} 
+              {formik.values.preferredWorkType === "daily wages"
+                ? "Per Day"
+                : formik.values.preferredWorkType === "monthly"
+                  ? "Per Month"
+                  : formik.values.preferredWorkType === "contract"
+                    ? "Per Contract"
+                    : ""}{" "}
+              <Text style={styles.requiredStar}>*</Text>
             </Text>
             <TextInput
               style={[
@@ -814,7 +819,15 @@ const PostJob = () => {
               value={formik.values.workRatePerDay}
               onChangeText={formik.handleChange("workRatePerDay")}
               onBlur={formik.handleBlur("workRatePerDay")}
-              placeholder="Enter Rate Per Day"
+              placeholder={
+                formik.values.preferredWorkType === "daily wages"
+                  ? "Enter Rate Per Day"
+                  : formik.values.preferredWorkType === "monthly"
+                    ? "Enter Monthly Salary"
+                    : formik.values.preferredWorkType === "contract"
+                      ? "Enter Contract Amount"
+                      : "Enter Rate"
+              }
               keyboardType="numeric"
             />
             {formik.errors.workRatePerDay && formik.touched.workRatePerDay && (

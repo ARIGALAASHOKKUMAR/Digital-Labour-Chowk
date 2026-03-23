@@ -45,7 +45,6 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
     { id: 4, label: "Agency" },
   ];
 
-
   const validationSchema = Yup.object().shape({
     fullName: Yup.string().required("Required"),
     mobileNumber: Yup.string().required("Required"),
@@ -92,7 +91,6 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
     return `${year}-${month}-${day}`;
   };
 
-
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
@@ -116,14 +114,11 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
     try {
       const payload = {
         ...values,
-        dateOfBirth:state.roleId === 12? formatDate(values.dateOfBirth):"2022-01-01",
+        dateOfBirth: formatDate(values.dateOfBirth),
         employerTypeId: values.employerTypeId
           ? Number(values.employerTypeId)
           : "",
       };
-
-      
-
 
       const response = await commonAPICall(
         BASICPROFILE,
@@ -190,8 +185,7 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
             )}
           </View>
 
-          {state.roleId == 12&&(
-             <View style={styles.inputBlock}>
+          <View style={styles.inputBlock}>
             <Text style={styles.label}>
               Date of Birth <Text style={styles.requiredStar}>*</Text>
             </Text>
@@ -253,9 +247,6 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
               />
             )}
           </View>
-          )}
-
-         
 
           <View style={styles.inputBlock}>
             <Text style={styles.label}>
@@ -394,7 +385,6 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
   const state = useSelector((state) => state.LoginReducer);
   const dispatch = useDispatch();
 
-
   const showLabourLicence = state.roleName === "DLC Employer";
   const conditionalFieldName = showLabourLicence
     ? "labourLicence"
@@ -428,7 +418,6 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
 
   async function handleSubmit(values, { setSubmitting }) {
     try {
-
       const response = await commonAPICall(
         BASICPROFILE,
         values,
@@ -1011,7 +1000,6 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
   const [skillsList, setSkillsList] = useState([]);
   const [showSkillsDropdown, setShowSkillsDropdown] = useState(false);
 
-
   // Parse skills from API (stored as string "[1, 3, 5]")
   const parseSkills = () => {
     try {
@@ -1514,8 +1502,6 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
           endDate: formatDateToApi(item.endDate),
         })),
       };
-
-      
 
       const response = await commonAPICall(
         BASICPROFILE,
@@ -2232,8 +2218,7 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
   const [skillsList, setSkillsList] = useState([]);
   const [showSkillsDropdown, setShowSkillsDropdown] = useState(false);
 
-  console.log("userDatauserData",userData.average_workers_hired_per_month);
-  
+  console.log("userDatauserData", userData.average_workers_hired_per_month);
 
   const averageWorkersOptions = [
     { label: "1-10", value: 10 },
@@ -2286,7 +2271,7 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
       stageName: "EMPLOYER_WORK_DETAILS",
       workCategoryIds: initialCategoryIds,
       averageWorkersHiredPerMonth:
-        userData?.average_workers_hired_per_month|| "",
+        userData?.average_workers_hired_per_month || "",
     },
     validationSchema,
     onSubmit: handleSubmit,
@@ -2316,7 +2301,6 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
         workCategoryIds: normalizeCategoryIds(values.workCategoryIds),
         averageWorkersHiredPerMonth: Number(values.averageWorkersHiredPerMonth),
       };
-
 
       const response = await commonAPICall(
         BASICPROFILE,
