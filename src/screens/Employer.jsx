@@ -15,7 +15,6 @@ import PostJob from "./PostJob";
 import { commonAPICall, DIGITALLABOURCHOWKDETAILS } from "../utils/utils";
 
 const Employer = ({navigation}) => {
-  const [selectedScreen, setSelectedScreen] = useState("home");
   const [employerdata, setEmployerdata] = useState([]);
   const dispatch = useDispatch();
 
