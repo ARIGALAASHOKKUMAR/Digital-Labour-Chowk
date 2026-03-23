@@ -86,7 +86,7 @@ const HomeScreen = ({ navigation }) => {
           refreshing={refreshing}
         />
       ) : (
-        <Employer />
+        <Employer navigation={navigation}/>
       )}
     </>
   );

@@ -14,7 +14,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
 
-  console.log("workHistory0",)
 
   const calculateAge = (dob) => {
     if (!dob) return "";

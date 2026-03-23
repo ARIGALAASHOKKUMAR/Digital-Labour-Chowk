@@ -14,7 +14,7 @@ import { useDispatch } from "react-redux";
 import PostJob from "./PostJob";
 import { commonAPICall, DIGITALLABOURCHOWKDETAILS } from "../utils/utils";
 
-const Employer = () => {
+const Employer = ({navigation}) => {
   const [selectedScreen, setSelectedScreen] = useState("home");
   const [employerdata, setEmployerdata] = useState([]);
   const dispatch = useDispatch();
@@ -67,22 +67,20 @@ const Employer = () => {
     {
       title: "Post Job",
       icon: "briefcase-outline",
-      onPress: () => setSelectedScreen("postJob"),
+      onPress: () => navigation.navigate("JobPosting"), // Direct navigation
     },
     {
       title: "My Jobs",
       icon: "chatbox-ellipses-outline",
-      onPress: () => {},
+      onPress: () => navigation.navigate("EmployerJob"), // Direct navigation
     },
     {
       title: "Find Worker",
       icon: "person-search-outline",
-      onPress: () => {},
+      onPress: () => navigation.navigate("WorkerSearch"), // Direct navigation
       fullWidth: true,
     },
   ];
-
-  
 
   return (
     <SafeAreaView style={styles.safeArea}>
