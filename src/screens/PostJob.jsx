@@ -894,6 +894,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#eaf2f8",
+    paddingBottom:80
   },
   sectionCard: {
     backgroundColor: "#fff",
@@ -901,6 +902,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     elevation: 3,
+    paddingBottom:100
   },
   sectionTitle: {
     fontSize: 22,
