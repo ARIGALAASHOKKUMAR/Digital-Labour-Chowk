@@ -27,6 +27,7 @@ import {
 } from "../utils/utils";
 import { showModal } from "../actions";
 import JobDetailsCard from "./JobDetailsScreen";
+import UserInfoDisplay from "./UserInfoDisplay";
 
 const JobSearchScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -52,7 +53,6 @@ const JobSearchScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [resultsList, setResultsList] = useState([]);
 
-  console.log("resultsList", resultsList);
   console.log("User Role:", state?.roleId, isEmployer ? "Employer" : "Worker");
 
   const getdists = async () => {
@@ -296,7 +296,13 @@ const JobSearchScreen = ({ navigation }) => {
         <TouchableOpacity
           style={styles.arrowButton}
           onPress={() => {
-            dispatch(showModal(<JobDetailsCard data={item} handleSearch={handleSearch}/>,true,true))
+            dispatch(
+              showModal(
+                <JobDetailsCard data={item} handleSearch={handleSearch} />,
+                true,
+                true,
+              ),
+            );
           }}
         >
           <Ionicons name="chevron-forward" size={18} color="#fff" />
@@ -311,11 +317,6 @@ const JobSearchScreen = ({ navigation }) => {
       key={worker?.labour_id ? String(worker.labour_id) : String(index)}
       style={styles.jobCard}
       activeOpacity={0.85}
-      onPress={() => {
-        if (navigation) {
-          navigation.navigate("WorkerDetails", { workerData: worker });
-        }
-      }}
     >
       <View style={styles.jobLeftIconWrap}>
         <View style={styles.jobLeftIconCircle}>
@@ -368,15 +369,15 @@ const JobSearchScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.jobArrowWrap}>
-        <TouchableOpacity
-          style={styles.arrowButton}
-          onPress={() => {
-            if (navigation) {
-              navigation.navigate("WorkerDetails", { workerData: worker });
+        <TouchableOpacity style={styles.arrowButton}>
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color="#fff"
+            onPress={() =>
+              dispatch(showModal(<UserInfoDisplay data={worker} />, true, true))
             }
-          }}
-        >
-          <Ionicons name="chevron-forward" size={18} color="#fff" />
+          />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
