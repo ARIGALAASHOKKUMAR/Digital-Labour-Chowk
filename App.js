@@ -83,11 +83,11 @@ export default function App() {
                   </SiteLayout>
                 )}
               </Stack.Screen>
-              <Stack.Screen name="JOBSEARCH">
+              <Stack.Screen name="FindJob">
                 {(props) => (
                   <SiteLayout
                     navigation={props.navigation}
-                    currentScreenName="JOBSEARCH"
+                    currentScreenName="FindJob"
                     scrollEnabled={false}
                   >
                     <SessionChecking navigation={props.navigation}>

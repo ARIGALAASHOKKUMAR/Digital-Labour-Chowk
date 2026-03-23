@@ -15,7 +15,15 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { commonAPICall, GETDISTSAPP, GETMANDALSAPP, GETVILLAGESAPP, GETSKILLS, JOBSEARCH } from "../utils/utils";
+import {
+  commonAPICall,
+  GETDISTSAPP,
+  GETMANDALSAPP,
+  GETVILLAGESAPP,
+  GETSKILLS,
+  JOBSEARCH,
+  JOBAPPLY,
+} from "../utils/utils";
 
 const JobSearchScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -35,6 +43,8 @@ const JobSearchScreen = ({ navigation }) => {
 
   const [loading, setLoading] = useState(false);
   const [jobsList, setJobsList] = useState([]);
+
+  console.log("jobsList", jobsList);
 
   const getdists = async () => {
     try {
@@ -173,13 +183,11 @@ const JobSearchScreen = ({ navigation }) => {
 
       const response = await commonAPICall(url, {}, "get", dispatch);
 
+      console.log("response", response.data);
+
       if (response?.status === 200) {
         const jobs =
-          response?.data?.DigitalLabourChowkJobPostings ||
-          response?.data?.jobPostings ||
-          response?.data?.data ||
-          response?.data ||
-          [];
+          response?.data?.DigitalLabourChowkJobPosting_SearchResults || [];
 
         setJobsList(Array.isArray(jobs) ? jobs : []);
       } else {
@@ -201,103 +209,27 @@ const JobSearchScreen = ({ navigation }) => {
   };
 
   const formatSalary = (value) => {
-    if (value === null || value === undefined || value === "") return "Not mentioned";
+    if (value === null || value === undefined || value === "")
+      return "Not mentioned";
     return `₹ ${value}/month`;
   };
 
-  const renderJobCard = (item, index) => {
-    const title =
-      item?.jobTitle ||
-      item?.job_title ||
-      item?.jobName ||
-      item?.job_name ||
-      item?.jobPostingTitle ||
-      "Job Required";
-
-    const location =
-      item?.location ||
-      item?.districtName ||
-      item?.district_name ||
-      item?.villageName ||
-      item?.village_name ||
-      item?.mandalName ||
-      item?.mandal_name ||
-      "Location not available";
-
-    const postedTime =
-      item?.postedAgo ||
-      item?.posted_ago ||
-      item?.createdAgo ||
-      item?.created_ago ||
-      item?.postedDate ||
-      item?.created_at;
-
-    const salary =
-      item?.salary ||
-      item?.workRate ||
-      item?.work_rate ||
-      item?.monthlySalary ||
-      item?.monthly_salary;
-
-    return (
-      <TouchableOpacity
-        key={item?.id ? String(item.id) : String(index)}
-        style={styles.jobCard}
-        activeOpacity={0.85}
-        onPress={() => {
-          if (navigation) {
-            navigation.navigate("JobDetails", { jobData: item });
-          }
-        }}
-      >
-        <View style={styles.jobLeftIconWrap}>
-          <View style={styles.jobLeftIconCircle}>
-            <MaterialIcons name="work" size={22} color="#000" />
-          </View>
-        </View>
-
-        <View style={styles.jobContent}>
-          <Text style={styles.jobTitle} numberOfLines={1}>
-            {title}
-          </Text>
-
-          <View style={styles.jobMetaRow}>
-            <Ionicons name="location-sharp" size={13} color="#e75480" />
-            <Text style={styles.jobMetaText} numberOfLines={1}>
-              {location}
-            </Text>
-          </View>
-
-          <View style={styles.jobMetaRow}>
-            <Ionicons name="calendar-outline" size={13} color="#666" />
-            <Text style={styles.jobMetaText}>{formatTimeAgo(postedTime)}</Text>
-          </View>
-
-          <View style={styles.jobMetaRow}>
-            <FontAwesome5 name="rupee-sign" size={11} color="#c58543" />
-            <Text style={styles.jobMetaText}>{formatSalary(salary)}</Text>
-          </View>
-        </View>
-
-        <View style={styles.jobArrowWrap}>
-          <TouchableOpacity
-            style={styles.arrowButton}
-            onPress={() => {
-              if (navigation) {
-                navigation.navigate("JobDetails", { jobData: item });
-              }
-            }}
-          >
-            <Ionicons name="chevron-forward" size={18} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
+  const ApplyJob = async (id) => {
+    const response = await commonAPICall(
+      JOBAPPLY,
+      {
+        jobPostingId: 133,
+      },
+      "post",
+      dispatch,
     );
+    if (response.status === 200) {
+      setJobsList([]);
+    }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
@@ -504,9 +436,84 @@ const JobSearchScreen = ({ navigation }) => {
         <Text style={styles.resultsHeading}>Search Results</Text>
 
         {loading ? (
-          <ActivityIndicator size="large" color="#2d7fd3" style={{ marginTop: 20 }} />
+          <ActivityIndicator
+            size="large"
+            color="#2d7fd3"
+            style={{ marginTop: 20 }}
+          />
         ) : jobsList?.length > 0 ? (
-          jobsList.map((item, index) => renderJobCard(item, index))
+          jobsList.map((item, index) => (
+            <TouchableOpacity
+              key={item?.id ? String(item.id) : String(index)}
+              style={styles.jobCard}
+              activeOpacity={0.85}
+              onPress={() => {
+                if (navigation) {
+                  navigation.navigate("JobDetails", { jobData: item });
+                }
+              }}
+            >
+              <View style={styles.jobLeftIconWrap}>
+                <View style={styles.jobLeftIconCircle}>
+                  <MaterialIcons name="work" size={22} color="#000" />
+                </View>
+              </View>
+
+              <View style={styles.jobContent}>
+                <Text style={styles.jobTitle} numberOfLines={1}>
+                  {item.jobtitle}
+                </Text>
+
+                <View style={styles.jobMetaRow}>
+                  <Ionicons name="location-sharp" size={13} color="#e75480" />
+                  <Text style={styles.jobMetaText} numberOfLines={1}>
+                    {item.address}
+                  </Text>
+                </View>
+
+                <View style={styles.jobMetaRow}>
+                  <Ionicons name="calendar-outline" size={13} color="#666" />
+                  <Text style={styles.jobMetaText}>
+                    {formatTimeAgo(item.jobpostedtime)}
+                  </Text>
+                </View>
+
+                <View style={styles.jobMetaRow}>
+                  <FontAwesome5 name="rupee-sign" size={11} color="#c58543" />
+                  <Text style={styles.jobMetaText}>
+                    {formatSalary(item.workrateperday)}
+                  </Text>
+                </View>
+
+                <View style={styles.jobActionRow}>
+                  <TouchableOpacity
+                    style={styles.applyJobButton}
+                    onPress={() => ApplyJob(item.jobpostingid)}
+                  >
+                    <Ionicons
+                      name="checkmark-circle-outline"
+                      size={16}
+                      color="#fff"
+                    />
+                    <Text style={styles.applyJobButtonText}>Apply Job</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={styles.jobArrowWrap}>
+                <TouchableOpacity
+                  style={styles.arrowButton}
+                  onPress={() => {
+                    if (navigation) {
+                      navigation.navigate("JobDetails", { jobData: item });
+                    }
+                  }}
+                >
+                  <Ionicons name="chevron-forward" size={18} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          ))
         ) : (
           <View style={styles.noDataCard}>
             <Text style={styles.noDataText}>No jobs found</Text>
@@ -800,5 +807,29 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
     fontWeight: "500",
+  },
+  jobActionRow: {
+    marginTop: 10,
+    flexDirection: "row",
+    alignItems: "right",
+    justifyContent: "flex-end", // 👈 forces right alignment
+  },
+
+  applyJobButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "end",
+    backgroundColor: "#28a745",
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    alignSelf: "flex-end",
+    gap: 6,
+  },
+
+  applyJobButtonText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "700",
   },
 });

@@ -651,14 +651,7 @@ const SiteLayout = ({
                 );
               })}
 
-              {roleId === 12 &&(  <TouchableOpacity
-              style={styles.bottomNavItem}
-              onPress={() => navigation.navigate("JOBSEARCH")}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="search-outline" size={24} color={"#555"} />
-              <Text>Search</Text>
-            </TouchableOpacity>)}
+            
 
           
           </View>

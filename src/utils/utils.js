@@ -161,3 +161,4 @@ export const GETVILLAGESAPP = "/api/user/v1/villages";
 export const DIGITALLABOURCHOWKDETAILS ="/api/user/digitalLabourChowkRegDetails";
 export const EMPLOYERJOBPOST ="/api/user/digital-labour-chowk/createJobPosting";
 export const JOBSEARCH = "/api/user/digitalLabourChowkJobPostings/search";
+export const JOBAPPLY = "/api/user/digital-labour-chowk/applyJob";
