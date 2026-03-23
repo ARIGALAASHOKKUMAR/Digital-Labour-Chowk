@@ -21,6 +21,7 @@ import LoginCommon, {
 } from "./src/screens/LoginCommon";
 import { ToastProvider } from "react-native-sprinkle-toast";
 import JobSearchScreen from "./src/screens/JobSearch";
+import AppliedJobs from "./src/screens/AppliedJobs";
 
 const Stack = createNativeStackNavigator();
 
@@ -92,6 +93,19 @@ export default function App() {
                   >
                     <SessionChecking navigation={props.navigation}>
                       <JobSearchScreen {...props} />
+                    </SessionChecking>
+                  </SiteLayout>
+                )}
+              </Stack.Screen>
+              <Stack.Screen name="AppliedJob">
+                {(props) => (
+                  <SiteLayout
+                    navigation={props.navigation}
+                    currentScreenName="AppliedJob"
+                    scrollEnabled={false}
+                  >
+                    <SessionChecking navigation={props.navigation}>
+                      <AppliedJobs {...props} />
                     </SessionChecking>
                   </SiteLayout>
                 )}

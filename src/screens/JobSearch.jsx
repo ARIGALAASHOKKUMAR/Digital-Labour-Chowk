@@ -142,30 +142,9 @@ const JobSearchScreen = ({ navigation }) => {
 
   const handleSearch = async () => {
     try {
-      if (!districtId) {
-        Alert.alert("Validation", "Please select district");
-        return;
-      }
-      if (!mandalId) {
-        Alert.alert("Validation", "Please select mandal");
-        return;
-      }
-      if (!villageId) {
-        Alert.alert("Validation", "Please select village");
-        return;
-      }
-      if (!skillIds.length) {
-        Alert.alert("Validation", "Please select at least one skill");
-        return;
-      }
-      if (!workRate) {
-        Alert.alert("Validation", "Please enter range amount");
-        return;
-      }
-
+      
       setLoading(true);
       setShowSkillsDropdown(false);
-
       const queryParams = new URLSearchParams();
       queryParams.append("districtId", districtId);
       queryParams.append("mandalId", mandalId);
