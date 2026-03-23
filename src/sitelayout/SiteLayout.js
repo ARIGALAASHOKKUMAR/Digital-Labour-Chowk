@@ -650,10 +650,6 @@ const SiteLayout = ({
                   </TouchableOpacity>
                 );
               })}
-
-            
-
-          
           </View>
 
           <Modal

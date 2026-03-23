@@ -166,7 +166,7 @@ const JobSearchScreen = ({ navigation }) => {
       queryParams.append("workRate", workRate);
 
       // Use different API endpoints based on user role
-      const apiUrl = isEmployer ? FINDWORKER : JOBSEARCH;
+      const apiUrl = JOBSEARCH;
       const url = `${apiUrl}?${queryParams.toString()}`;
 
       const response = await commonAPICall(url, {}, "get", dispatch);
@@ -179,7 +179,7 @@ const JobSearchScreen = ({ navigation }) => {
         if (isEmployer) {
           // For employers: worker search results
           results =
-            response?.data?.DigitalLabourChowkRegistration_Details || [];
+            response?.data?.DigitalLabourChowkJobPosting_SearchResults || [];
           setResultsList(Array.isArray(results) ? results : []);
         } else {
           // For workers: job search results
@@ -312,88 +312,109 @@ const JobSearchScreen = ({ navigation }) => {
   );
 
   // Render worker card for employers
-  const renderWorkerCard = (worker, index) => (
-    <TouchableOpacity
-      key={worker?.labour_id ? String(worker.labour_id) : String(index)}
-      style={styles.jobCard}
-      activeOpacity={0.85}
-    >
-      <View style={styles.jobLeftIconWrap}>
-        <View style={styles.jobLeftIconCircle}>
-          <MaterialIcons name="person" size={22} color="#000" />
-        </View>
+ const getWorkerSkills = (skills) => {
+  try {
+    const parsed = JSON.parse(skills || "[]");
+    return parsed.slice(0, 2).map((s) => s.skillName).join(", ");
+  } catch {
+    return "";
+  }
+};
+
+const renderWorkerCard = (worker, index) => (
+  <TouchableOpacity
+    key={worker?.labour_id ? String(worker.labour_id) : String(index)}
+    style={styles.jobCard}
+    activeOpacity={0.85}
+  >
+    {/* Left Icon */}
+    <View style={styles.jobLeftIconWrap}>
+      <View style={styles.jobLeftIconCircle}>
+        <MaterialIcons name="person" size={22} color="#000" />
+      </View>
+    </View>
+
+    {/* Content */}
+    <View style={styles.jobContent}>
+      
+      {/* Name */}
+      <Text style={styles.jobTitle} numberOfLines={1}>
+        {worker.full_name}
+      </Text>
+
+      {/* Location */}
+      <View style={styles.jobMetaRow}>
+        <Ionicons name="location-sharp" size={13} color="#e75480" />
+        <Text style={styles.jobMetaText} numberOfLines={1}>
+          {worker.village_name}, {worker.mandal_name}, {worker.dist_name}
+        </Text>
       </View>
 
-      <View style={styles.jobContent}>
-        <Text style={styles.jobTitle} numberOfLines={1}>
-          {worker.full_name}
+      {/* Experience */}
+      <View style={styles.jobMetaRow}>
+        <MaterialIcons name="work-outline" size={13} color="#666" />
+        <Text style={styles.jobMetaText}>
+          {worker.skill_experience_years || 0} yrs experience
         </Text>
+      </View>
 
-        <View style={styles.jobMetaRow}>
-          <Ionicons name="location-sharp" size={13} color="#e75480" />
-          <Text style={styles.jobMetaText} numberOfLines={1}>
-            {worker.village_name}, {worker.mandal_name}, {worker.dist_name}
-          </Text>
-        </View>
+      {/* Wage */}
+      <View style={styles.jobMetaRow}>
+        <FontAwesome5 name="rupee-sign" size={11} color="#c58543" />
+        <Text style={styles.jobMetaText}>
+          ₹ {worker.skill_daily_rate || 0}/day
+        </Text>
+      </View>
 
-        <View style={styles.jobMetaRow}>
-          <MaterialIcons name="work-outline" size={13} color="#666" />
-          <Text style={styles.jobMetaText}>
-            {worker.skill_experience_years} years experience
-          </Text>
-        </View>
-
-        <View style={styles.jobMetaRow}>
-          <FontAwesome5 name="rupee-sign" size={11} color="#c58543" />
-          <Text style={styles.jobMetaText}>
-            ₹ {worker.skill_daily_rate}/day
-          </Text>
-        </View>
-
+      {/* Skills (optional short) */}
+      {worker.skills && (
         <View style={styles.jobMetaRow}>
           <Ionicons name="star" size={13} color="#ffc107" />
-          <Text style={styles.jobMetaText}>
-            Skills: {getWorkerSkills(worker.skills)}
+          <Text style={styles.jobMetaText} numberOfLines={1}>
+            {getWorkerSkills(worker.skills)}
           </Text>
         </View>
+      )}
 
-        <View style={styles.jobActionRow}>
-          <TouchableOpacity
-            style={styles.contactButton}
-            onPress={() => handleContactWorker(worker)}
-          >
-            <Ionicons name="call-outline" size={16} color="#fff" />
-            <Text style={styles.applyJobButtonText}>Contact Worker</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View style={styles.jobArrowWrap}>
-        <TouchableOpacity style={styles.arrowButton}>
-          <Ionicons
-            name="chevron-forward"
-            size={18}
-            color="#fff"
-            onPress={() =>
-              dispatch(showModal(<UserInfoDisplay data={worker} />, true, true))
-            }
-          />
+      {/* Button */}
+      <View style={styles.jobActionRow}>
+        <TouchableOpacity
+          style={styles.contactButton}
+          onPress={() => handleContactWorker(worker)}
+        >
+          <Ionicons name="call-outline" size={16} color="#fff" />
+          <Text style={styles.applyJobButtonText}>Contact</Text>
         </TouchableOpacity>
       </View>
-    </TouchableOpacity>
-  );
+    </View>
+
+    {/* Arrow */}
+    <View style={styles.jobArrowWrap}>
+      <TouchableOpacity style={styles.arrowButton}>
+        <Ionicons
+          name="chevron-forward"
+          size={18}
+          color="#fff"
+          onPress={() =>
+            dispatch(showModal(<UserInfoDisplay data={worker} />, true, true))
+          }
+        />
+      </TouchableOpacity>
+    </View>
+  </TouchableOpacity>
+);
 
   // Helper function to get worker skills summary
-  const getWorkerSkills = (skillsString) => {
-    try {
-      const skills = JSON.parse(skillsString || "[]");
-      if (skills.length === 0) return "No skills listed";
-      const skillNames = skills.slice(0, 3).map((s) => s.skillName);
-      return skillNames.join(", ") + (skills.length > 3 ? "..." : "");
-    } catch (error) {
-      return "Skills not available";
-    }
-  };
+  // const getWorkerSkills = (skillsString) => {
+  //   try {
+  //     const skills = JSON.parse(skillsString || "[]");
+  //     if (skills.length === 0) return "No skills listed";
+  //     const skillNames = skills.slice(0, 3).map((s) => s.skillName);
+  //     return skillNames.join(", ") + (skills.length > 3 ? "..." : "");
+  //   } catch (error) {
+  //     return "Skills not available";
+  //   }
+  // };
 
   const handleContactWorker = (worker) => {
     Alert.alert(
