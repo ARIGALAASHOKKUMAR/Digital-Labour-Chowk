@@ -116,11 +116,13 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
     try {
       const payload = {
         ...values,
-        dateOfBirth:state.roleId === 12? formatDate(values.dateOfBirth):"NA",
+        dateOfBirth:state.roleId === 12? formatDate(values.dateOfBirth):"2022-01-01",
         employerTypeId: values.employerTypeId
           ? Number(values.employerTypeId)
           : "",
       };
+
+      
 
 
       const response = await commonAPICall(
