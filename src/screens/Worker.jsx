@@ -13,11 +13,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
-
-
-  console.log("workerData",workerData);
-  
-
+  console.log("workerData", workerData);
 
   const calculateAge = (dob) => {
     if (!dob) return "";
@@ -181,7 +177,17 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
         <View style={styles.tileRow}>
           <View style={[styles.topTile, styles.statusTile]}>
             <Icon name="access-time" size={20} color="#7da3c7" />
-            <Text style={styles.statusTitle}>Not Available</Text>
+            <Text
+              style={{
+                fontSize: 16, // or whatever font size you need
+                fontWeight: "bold", // or whatever styling you need
+                color: workerData.skill_work_type === "yes" ? "green" : "red",
+              }}
+            >
+              {workerData.skill_work_type === "yes"
+                ? "Available"
+                : "Not Available"}
+            </Text>{" "}
             <View style={styles.toggleCircle} />
           </View>
 
@@ -340,11 +346,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#eef3f8",
   },
- scrollContent: {
-  padding: 10,
-  paddingBottom: 120,
-  flexGrow: 1,
-},
+  scrollContent: {
+    padding: 10,
+    paddingBottom: 120,
+    flexGrow: 1,
+  },
 
   topCard: {
     backgroundColor: "#fff",
