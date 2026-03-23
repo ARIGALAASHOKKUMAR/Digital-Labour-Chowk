@@ -7,11 +7,15 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   RefreshControl,
+  Modal,
+  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { commonAPICall, MYJOBSOFWORKER } from "../utils/utils";
 import { useDispatch } from "react-redux";
 import { showModal } from "../actions";
+
+const { width, height } = Dimensions.get("window");
 
 const Workerposetdjobs = () => {
   const dispatch = useDispatch();
@@ -19,6 +23,8 @@ const Workerposetdjobs = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const getWorkerJobs = async () => {
     try {
@@ -27,17 +33,19 @@ const Workerposetdjobs = () => {
 
       console.log("responseofworkerjobs", response.data);
 
-      if (response?.status === 200 && response?.data?.DigitalLabourChowkJobPosting_Details) {
+      if (
+        response?.status === 200 &&
+        response?.data?.DigitalLabourChowkJobPosting_Details
+      ) {
         // Parse JSON strings for jobcategories and facilities
-        const parsedJobs = response.data.DigitalLabourChowkJobPosting_Details.map(
-          (job) => ({
+        const parsedJobs =
+          response.data.DigitalLabourChowkJobPosting_Details.map((job) => ({
             ...job,
             jobcategories: job.jobcategories
               ? JSON.parse(job.jobcategories)
               : [],
             facilities: job.facilities ? JSON.parse(job.facilities) : [],
-          })
-        );
+          }));
         setJobs(parsedJobs);
       } else {
         setError(response?.data?.message || "No jobs found");
@@ -67,15 +75,15 @@ const Workerposetdjobs = () => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-IN", {
       day: "numeric",
-      month: "short",
+      month: "long",
       year: "numeric",
     });
   };
 
   // Helper function to get work type display
   const getWorkTypeDisplay = (type) => {
-    if (type === "daily wages") return "💰 Daily Wages";
-    if (type === "monthly") return "📅 Monthly";
+    if (type === "daily wages") return "Daily Wages";
+    if (type === "monthly") return "Monthly";
     return type;
   };
 
@@ -88,195 +96,252 @@ const Workerposetdjobs = () => {
     return time;
   };
 
-  // Minimal Job Card Component
-  const MinimalJobCard = ({ job, onPress }) => {
+  const openJobDetails = (job) => {
+    setSelectedJob(job);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setSelectedJob(null);
+  };
+
+  // Modern Job Card Component
+  const ModernJobCard = ({ job }) => {
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
-        <View style={styles.minimalCard}>
-          <View style={styles.minimalCardHeader}>
-            <View style={styles.minimalTitleContainer}>
-              <Text style={styles.minimalJobTitle}>{job.jobtitle}</Text>
-              <View style={styles.workTypeBadge}>
-                <Text style={styles.workTypeText}>
-                  {getWorkTypeDisplay(job.preferredworktype)}
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={() => openJobDetails(job)}
+        style={styles.card}
+      >
+        <View style={styles.cardHeader}>
+          <View style={styles.cardHeaderLeft}>
+            <View style={styles.companyIcon}>
+              <Text style={styles.companyIconText}>💼</Text>
+            </View>
+            <View style={styles.cardTitleContainer}>
+              <Text style={styles.jobTitle}>{job.jobtitle}</Text>
+              <View style={styles.locationContainer}>
+                <Ionicons name="location-outline" size={12} color="#666" />
+                <Text style={styles.locationText}>
+                  {job.village_name}, {job.mandalname}
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#fff" />
           </View>
+          <View style={styles.workTypeBadgeModern}>
+            <Text style={styles.workTypeTextModern}>
+              {getWorkTypeDisplay(job.preferredworktype)}
+            </Text>
+          </View>
+        </View>
 
-          <View style={styles.minimalDetails}>
-            <View style={styles.minimalInfoRow}>
-              <Text style={styles.minimalInfoLabel}>📍 Location:</Text>
-              <Text style={styles.minimalInfoValue}>
-                {job.village_name}, {job.mandalname}
-              </Text>
-            </View>
+        <View style={styles.cardDetails}>
+          <View style={styles.detailItemModern}>
+            <Ionicons name="cash-outline" size={16} color="#4CAF50" />
+            <Text style={styles.detailValueModern}>₹{job.workrateperday}/day</Text>
+          </View>
+          <View style={styles.detailItemModern}>
+            <Ionicons name="calendar-outline" size={16} color="#4CAF50" />
+            <Text style={styles.detailValueModern}>{job.workduration} days</Text>
+          </View>
+          <View style={styles.detailItemModern}>
+            <Ionicons name="people-outline" size={16} color="#4CAF50" />
+            <Text style={styles.detailValueModern}>{job.requiredpeople} required</Text>
+          </View>
+        </View>
 
-            <View style={styles.minimalInfoRow}>
-              <Text style={styles.minimalInfoLabel}>💰 Rate:</Text>
-              <Text style={styles.minimalInfoValue}>₹{job.workrateperday}/day</Text>
-            </View>
-
-            <View style={styles.minimalInfoRow}>
-              <Text style={styles.minimalInfoLabel}>📅 Duration:</Text>
-              <Text style={styles.minimalInfoValue}>{job.workduration} days</Text>
-            </View>
-
-            <View style={styles.minimalInfoRow}>
-              <Text style={styles.minimalInfoLabel}>👥 Required:</Text>
-              <Text style={styles.minimalInfoValue}>{job.requiredpeople} people</Text>
-            </View>
-
-            <View style={styles.minimalFooter}>
-              <Text style={styles.minimalDate}>
-                {formatDate(job.startdate)} - {formatDate(job.enddate)}
-              </Text>
-            </View>
+        <View style={styles.cardFooter}>
+          <View style={styles.dateRangeContainer}>
+            <Ionicons name="time-outline" size={12} color="#999" />
+            <Text style={styles.dateRangeText}>
+              {formatDate(job.startdate)} - {formatDate(job.enddate)}
+            </Text>
+          </View>
+          <View style={styles.viewDetailsButton}>
+            <Text style={styles.viewDetailsText}>View Details</Text>
+            <Ionicons name="arrow-forward" size={14} color="#4CAF50" />
           </View>
         </View>
       </TouchableOpacity>
     );
   };
 
-  // Full Job Details Component for Modal
-  const JobDetailsCard = ({ data, handleSearch }) => {
+  // Naukri-style Job Details Modal
+  const JobDetailsModal = () => {
+    if (!selectedJob) return null;
+
     return (
-      <ScrollView style={styles.modalContainer} showsVerticalScrollIndicator={false}>
-        <View style={styles.modalCard}>
-          {/* Job Title and ID */}
-          <View style={styles.modalTitleContainer}>
-            <View style={styles.titleWrapper}>
-              <Text style={styles.modalJobTitle}>{data.jobtitle}</Text>
-              <Text style={styles.jobId}>ID: {data.jobpostingid}</Text>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={closeModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {/* Header with gradient effect */}
+            <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+              <Text style={styles.modalHeaderTitle}>Job Details</Text>
+              <View style={{ width: 40 }} />
             </View>
-            <View style={styles.workTypeBadge}>
-              <Text style={styles.workTypeText}>
-                {getWorkTypeDisplay(data.preferredworktype)}
-              </Text>
-            </View>
-          </View>
 
-          {/* Location */}
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>📍 Location:</Text>
-            <Text style={styles.infoValue}>
-              {data.village_name}, {data.mandalname}, {data.districtname} - {data.pincode}
-            </Text>
-          </View>
-
-          {/* Address */}
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>🏠 Address:</Text>
-            <Text style={styles.infoValue}>
-              Door No: {data.doorno}
-              {data.landmark && `, ${data.landmark}`}
-            </Text>
-          </View>
-
-          {/* Work Details */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Work Details</Text>
-            <View style={styles.detailsGrid}>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Work Duration</Text>
-                <Text style={styles.detailValue}>{data.workduration} days</Text>
-              </View>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Rate/Day</Text>
-                <Text style={styles.detailValue}>₹{data.workrateperday}</Text>
-              </View>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Required People</Text>
-                <Text style={styles.detailValue}>{data.requiredpeople}</Text>
-              </View>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Work Time</Text>
-                <Text style={styles.detailValue}>
-                  {getWorkTimeDisplay(data.worktime)}
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Date Range */}
-          <View style={styles.dateContainer}>
-            <View style={styles.dateBox}>
-              <Text style={styles.dateLabel}>Start Date</Text>
-              <Text style={styles.dateValue}>{formatDate(data.startdate)}</Text>
-            </View>
-            <View style={styles.dateBox}>
-              <Text style={styles.dateLabel}>End Date</Text>
-              <Text style={styles.dateValue}>{formatDate(data.enddate)}</Text>
-            </View>
-          </View>
-
-          {/* Job Categories */}
-          {data.jobcategories && data.jobcategories.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Job Categories</Text>
-              <View style={styles.tagsContainer}>
-                {data.jobcategories.map((cat, index) => (
-                  <View key={index} style={styles.tag}>
-                    <Text style={styles.tagText}>{cat.jobCategoryName}</Text>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.modalScrollContent}
+            >
+              {/* Job Title Section */}
+              <View style={styles.jobTitleSection}>
+                <Text style={styles.modalJobTitle}>{selectedJob.jobtitle}</Text>
+                <View style={styles.badgeContainer}>
+                  <View style={[styles.badge, styles.workTypeBadgeModal]}>
+                    <Text style={styles.badgeText}>
+                      {getWorkTypeDisplay(selectedJob.preferredworktype)}
+                    </Text>
                   </View>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {/* Facilities */}
-          {data.facilities && data.facilities.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Facilities Provided</Text>
-              <View style={styles.tagsContainer}>
-                {data.facilities.map((fac, index) => (
-                  <View key={index} style={[styles.tag, styles.facilityTag]}>
-                    <Text style={styles.facilityTagText}>{fac.facilityName}</Text>
+                  <View style={[styles.badge, styles.jobIdBadge]}>
+                    <Text style={styles.jobIdText}>ID: {selectedJob.jobpostingid}</Text>
                   </View>
-                ))}
+                </View>
               </View>
-            </View>
-          )}
 
-          {/* Job Description */}
-          {data.jobdescription && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Description</Text>
-              <Text style={styles.description}>{data.jobdescription}</Text>
-            </View>
-          )}
+              {/* Key Metrics Cards */}
+              <View style={styles.metricsContainer}>
+                <View style={styles.metricCard}>
+                  <Ionicons name="cash-outline" size={24} color="#4CAF50" />
+                  <Text style={styles.metricValue}>₹{selectedJob.workrateperday}</Text>
+                  <Text style={styles.metricLabel}>Per Day</Text>
+                </View>
+                <View style={styles.metricCard}>
+                  <Ionicons name="calendar-outline" size={24} color="#4CAF50" />
+                  <Text style={styles.metricValue}>{selectedJob.workduration}</Text>
+                  <Text style={styles.metricLabel}>Days</Text>
+                </View>
+                <View style={styles.metricCard}>
+                  <Ionicons name="people-outline" size={24} color="#4CAF50" />
+                  <Text style={styles.metricValue}>{selectedJob.requiredpeople}</Text>
+                  <Text style={styles.metricLabel}>Required</Text>
+                </View>
+              </View>
 
-          {/* Tools Required */}
-          {data.toolsrequired && (
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>🛠️ Tools Required:</Text>
-              <Text style={styles.infoValue}>{data.toolsrequired}</Text>
-            </View>
-          )}
+              {/* Location Section */}
+              <View style={styles.sectionCard}>
+                <View style={styles.sectionHeader}>
+                  <Ionicons name="location" size={20} color="#4CAF50" />
+                  <Text style={styles.sectionTitle}>Location Details</Text>
+                </View>
+                <View style={styles.locationDetails}>
+                  <Text style={styles.addressText}>
+                    {selectedJob.village_name}, {selectedJob.mandalname}
+                  </Text>
+                  <Text style={styles.addressText}>
+                    {selectedJob.districtname} - {selectedJob.pincode}
+                  </Text>
+                  {selectedJob.landmark && (
+                    <Text style={styles.landmarkText}>
+                      Landmark: {selectedJob.landmark}
+                    </Text>
+                  )}
+                </View>
+              </View>
 
-          {/* Coordinates (optional) */}
-          {data.latitude && data.longitude && (
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>📍 Coordinates:</Text>
-              <Text style={styles.infoValue}>
-                {data.latitude}, {data.longitude}
-              </Text>
-            </View>
-          )}
+              {/* Date Range Section */}
+              <View style={styles.sectionCard}>
+                <View style={styles.sectionHeader}>
+                  <Ionicons name="calendar" size={20} color="#4CAF50" />
+                  <Text style={styles.sectionTitle}>Duration</Text>
+                </View>
+                <View style={styles.dateRange}>
+                  <View style={styles.dateItem}>
+                    <Text style={styles.dateLabel}>Start Date</Text>
+                    <Text style={styles.dateValue}>{formatDate(selectedJob.startdate)}</Text>
+                  </View>
+                  <View style={styles.dateDivider} />
+                  <View style={styles.dateItem}>
+                    <Text style={styles.dateLabel}>End Date</Text>
+                    <Text style={styles.dateValue}>{formatDate(selectedJob.enddate)}</Text>
+                  </View>
+                </View>
+                <View style={styles.workTimeContainer}>
+                  <Ionicons name="time-outline" size={16} color="#666" />
+                  <Text style={styles.workTimeText}>
+                    Work Time: {getWorkTimeDisplay(selectedJob.worktime)}
+                  </Text>
+                </View>
+              </View>
 
-          {/* Close Button */}
-          <TouchableOpacity 
-            style={styles.closeModalButton} 
-            onPress={() => {
-              // Close modal - implement based on your modal close logic
-              dispatch(showModal(null, false));
-            }}
-          >
-            <Text style={styles.closeModalButtonText}>Close</Text>
-          </TouchableOpacity>
+              {/* Job Categories */}
+              {selectedJob.jobcategories && selectedJob.jobcategories.length > 0 && (
+                <View style={styles.sectionCard}>
+                  <View style={styles.sectionHeader}>
+                    <Ionicons name="briefcase" size={20} color="#4CAF50" />
+                    <Text style={styles.sectionTitle}>Job Categories</Text>
+                  </View>
+                  <View style={styles.tagsContainer}>
+                    {selectedJob.jobcategories.map((cat, index) => (
+                      <View key={index} style={styles.categoryTag}>
+                        <Text style={styles.categoryTagText}>{cat.jobCategoryName}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {/* Facilities */}
+              {selectedJob.facilities && selectedJob.facilities.length > 0 && (
+                <View style={styles.sectionCard}>
+                  <View style={styles.sectionHeader}>
+                    <Ionicons name="gift" size={20} color="#4CAF50" />
+                    <Text style={styles.sectionTitle}>Facilities Provided</Text>
+                  </View>
+                  <View style={styles.tagsContainer}>
+                    {selectedJob.facilities.map((fac, index) => (
+                      <View key={index} style={styles.facilityTag}>
+                        <Ionicons name="checkmark-circle" size={14} color="#7b1fa2" />
+                        <Text style={styles.facilityTagText}>{fac.facilityName}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {/* Job Description */}
+              {selectedJob.jobdescription && (
+                <View style={styles.sectionCard}>
+                  <View style={styles.sectionHeader}>
+                    <Ionicons name="document-text" size={20} color="#4CAF50" />
+                    <Text style={styles.sectionTitle}>Job Description</Text>
+                  </View>
+                  <Text style={styles.descriptionText}>
+                    {selectedJob.jobdescription}
+                  </Text>
+                </View>
+              )}
+
+              {/* Tools Required */}
+              {selectedJob.toolsrequired && (
+                <View style={styles.sectionCard}>
+                  <View style={styles.sectionHeader}>
+                    <Ionicons name="construct" size={20} color="#4CAF50" />
+                    <Text style={styles.sectionTitle}>Tools Required</Text>
+                  </View>
+                  <Text style={styles.toolsText}>{selectedJob.toolsrequired}</Text>
+                </View>
+              )}
+            </ScrollView>
+
+            {/* Action Buttons */}
+            <View style={styles.modalFooter}>
+              <TouchableOpacity style={styles.closeModalButton} onPress={closeModal}>
+                <Text style={styles.closeModalButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-      </ScrollView>
+      </Modal>
     );
   };
 
@@ -292,95 +357,104 @@ const Workerposetdjobs = () => {
   if (error) {
     return (
       <View style={styles.centerContainer}>
+        <Ionicons name="alert-circle" size={48} color="#f44336" />
         <Text style={styles.errorText}>{error}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={getWorkerJobs}>
-          <Text style={styles.retryButtonText}>Retry</Text>
+          <Text style={styles.retryButtonText}>Try Again</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={["#4CAF50"]}
-        />
-      }
-    >
-      {jobs.length === 0 ? (
-        <View style={styles.centerContainer}>
-          <Text style={styles.noJobsText}>No jobs found</Text>
-          <Text style={styles.noJobsSubText}>Pull down to refresh</Text>
-        </View>
-      ) : (
-        <>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>My Job Postings</Text>
-            <Text style={styles.headerCount}>
-              {jobs.length} job{jobs.length !== 1 ? "s" : ""}
-            </Text>
+    <View style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#4CAF50"]}
+            tintColor="#4CAF50"
+          />
+        }
+      >
+        {jobs.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="briefcase-outline" size={64} color="#ccc" />
+            <Text style={styles.noJobsText}>No jobs found</Text>
+            <Text style={styles.noJobsSubText}>Pull down to refresh</Text>
           </View>
-          {jobs.map((job) => (
-            <MinimalJobCard
-              key={job.jobpostingid}
-              job={job}
-              onPress={() => {
-                dispatch(
-                  showModal(
-                    <JobDetailsCard data={job} />,
-                    true,
-                    true,
-                  ),
-                );
-              }}
-            />
-          ))}
-        </>
-      )}
-    </ScrollView>
+        ) : (
+          <>
+            <View style={styles.header}>
+              <Text style={styles.headerTitle}>My Job Postings</Text>
+              <View style={styles.headerCount}>
+                <Text style={styles.headerCountText}>
+                  {jobs.length} {jobs.length === 1 ? "Job" : "Jobs"}
+                </Text>
+              </View>
+            </View>
+            {jobs.map((job) => (
+              <ModernJobCard key={job.jobpostingid} job={job} />
+            ))}
+          </>
+        )}
+      </ScrollView>
+      <JobDetailsModal />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#f8f9fa",
+  },
+  scrollContent: {
+    paddingBottom: 20,
   },
   centerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+    backgroundColor: "#f8f9fa",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 100,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 16,
     backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
+    borderBottomColor: "#e9ecef",
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
-    color: "#333",
+    color: "#212529",
   },
   headerCount: {
-    fontSize: 14,
-    color: "#666",
-    backgroundColor: "#f0f0f0",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    backgroundColor: "#e9ecef",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
-  // Minimal Card Styles
-  minimalCard: {
+  headerCountText: {
+    fontSize: 14,
+    color: "#495057",
+    fontWeight: "600",
+  },
+  // Modern Card Styles
+  card: {
     backgroundColor: "#fff",
     borderRadius: 12,
     marginHorizontal: 16,
@@ -388,206 +462,333 @@ const styles = StyleSheet.create({
     padding: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "#e9ecef",
   },
-  minimalCardHeader: {
+  cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBottom: 12,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
   },
-  minimalTitleContainer: {
-    flex: 1,
+  cardHeaderLeft: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginRight: 8,
-  },
-  minimalJobTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
     flex: 1,
   },
-  minimalDetails: {
-    marginTop: 4,
-  },
-  minimalInfoRow: {
-    flexDirection: "row",
-    marginBottom: 8,
-  },
-  minimalInfoLabel: {
-    width: 80,
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#666",
-  },
-  minimalInfoValue: {
-    flex: 1,
-    fontSize: 13,
-    color: "#333",
-  },
-  minimalFooter: {
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
-  },
-  minimalDate: {
-    fontSize: 12,
-    color: "#4CAF50",
-    fontWeight: "500",
-  },
-  // Modal Styles
-  modalContainer: {
-    backgroundColor: "#f5f5f5",
-    maxHeight: "90%",
-  },
-  modalCard: {
-    backgroundColor: "#fff",
+  companyIcon: {
+    width: 48,
+    height: 48,
     borderRadius: 12,
-    margin: 16,
-    padding: 20,
-  },
-  modalTitleContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    backgroundColor: "#e8f5e9",
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    marginRight: 12,
   },
-  titleWrapper: {
+  companyIconText: {
+    fontSize: 24,
+  },
+  cardTitleContainer: {
     flex: 1,
   },
-  modalJobTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
+  jobTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#212529",
     marginBottom: 4,
   },
-  jobId: {
-    fontSize: 12,
-    color: "#999",
+  locationContainer: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-  workTypeBadge: {
-    backgroundColor: "#4CAF50",
-    paddingHorizontal: 10,
+  locationText: {
+    fontSize: 12,
+    color: "#6c757d",
+    marginLeft: 4,
+  },
+  workTypeBadgeModern: {
+    backgroundColor: "#e8f5e9",
+    paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
   },
-  workTypeText: {
-    color: "#fff",
-    fontSize: 12,
+  workTypeTextModern: {
+    fontSize: 11,
+    color: "#4CAF50",
     fontWeight: "600",
   },
-  infoRow: {
+  cardDetails: {
     flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 12,
-    flexWrap: "wrap",
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#f1f3f5",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f3f5",
   },
-  infoLabel: {
-    width: 110,
-    fontSize: 14,
+  detailItemModern: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  detailValueModern: {
+    fontSize: 13,
+    color: "#495057",
+    marginLeft: 6,
+    fontWeight: "500",
+  },
+  cardFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  dateRangeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  dateRangeText: {
+    fontSize: 11,
+    color: "#868e96",
+    marginLeft: 4,
+  },
+  viewDetailsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  viewDetailsText: {
+    fontSize: 12,
+    color: "#4CAF50",
     fontWeight: "600",
-    color: "#666",
+    marginRight: 4,
   },
-  infoValue: {
+  // Modal Styles
+  modalOverlay: {
     flex: 1,
-    fontSize: 14,
-    color: "#333",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
-  section: {
-    marginTop: 16,
+  modalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: height * 0.9,
+    overflow: "hidden",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e9ecef",
+    backgroundColor: "#fff",
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#f1f3f5",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalHeaderTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#212529",
+  },
+  modalScrollContent: {
+    paddingBottom: 20,
+  },
+  jobTitleSection: {
+    padding: 20,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e9ecef",
+  },
+  modalJobTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#212529",
     marginBottom: 12,
+  },
+  badgeContainer: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  badge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  workTypeBadgeModal: {
+    backgroundColor: "#e8f5e9",
+  },
+  jobIdBadge: {
+    backgroundColor: "#f1f3f5",
+  },
+  badgeText: {
+    fontSize: 12,
+    color: "#4CAF50",
+    fontWeight: "600",
+  },
+  jobIdText: {
+    fontSize: 12,
+    color: "#6c757d",
+    fontWeight: "500",
+  },
+  metricsContainer: {
+    flexDirection: "row",
+    padding: 20,
+    gap: 12,
+  },
+  metricCard: {
+    flex: 1,
+    backgroundColor: "#f8f9fa",
+    borderRadius: 12,
+    padding: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+  },
+  metricValue: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#212529",
+    marginTop: 8,
+  },
+  metricLabel: {
+    fontSize: 11,
+    color: "#6c757d",
+    marginTop: 4,
+  },
+  sectionCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 16,
+    marginVertical: 8,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e9ecef",
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#666",
-    marginBottom: 10,
-    textTransform: "uppercase",
-  },
-  detailsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginHorizontal: -4,
-  },
-  detailItem: {
-    width: "50%",
-    paddingHorizontal: 4,
-    marginBottom: 12,
-  },
-  detailLabel: {
-    fontSize: 12,
-    color: "#999",
-    marginBottom: 4,
-  },
-  detailValue: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
+    color: "#212529",
+    marginLeft: 8,
   },
-  dateContainer: {
+  locationDetails: {
+    gap: 6,
+  },
+  addressText: {
+    fontSize: 14,
+    color: "#495057",
+    lineHeight: 20,
+  },
+  landmarkText: {
+    fontSize: 14,
+    color: "#6c757d",
+    fontStyle: "italic",
+    marginTop: 4,
+  },
+  dateRange: {
     flexDirection: "row",
-    backgroundColor: "#f8f8f8",
-    borderRadius: 8,
-    padding: 12,
-    marginVertical: 12,
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
   },
-  dateBox: {
+  dateItem: {
     flex: 1,
     alignItems: "center",
   },
   dateLabel: {
     fontSize: 12,
-    color: "#999",
+    color: "#6c757d",
     marginBottom: 4,
   },
   dateValue: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#4CAF50",
+    color: "#212529",
+  },
+  dateDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: "#e9ecef",
+    marginHorizontal: 16,
+  },
+  workTimeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#e9ecef",
+  },
+  workTimeText: {
+    fontSize: 13,
+    color: "#495057",
+    marginLeft: 8,
   },
   tagsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
+    gap: 8,
   },
-  tag: {
+  categoryTag: {
     backgroundColor: "#e3f2fd",
-    borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    marginRight: 8,
-    marginBottom: 8,
+    borderRadius: 20,
   },
-  facilityTag: {
-    backgroundColor: "#f3e5f5",
-  },
-  tagText: {
+  categoryTagText: {
     fontSize: 12,
     color: "#1976d2",
+    fontWeight: "500",
+  },
+  facilityTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f3e5f5",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 4,
   },
   facilityTagText: {
     fontSize: 12,
     color: "#7b1fa2",
+    fontWeight: "500",
   },
-  description: {
+  descriptionText: {
     fontSize: 14,
-    color: "#555",
+    color: "#495057",
+    lineHeight: 22,
+  },
+  toolsText: {
+    fontSize: 14,
+    color: "#495057",
     lineHeight: 20,
+  },
+  modalFooter: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#e9ecef",
+    backgroundColor: "#fff",
   },
   closeModalButton: {
     backgroundColor: "#4CAF50",
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginTop: 20,
+    paddingVertical: 14,
+    borderRadius: 12,
     alignItems: "center",
   },
   closeModalButtonText: {
@@ -598,18 +799,19 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: "#666",
+    color: "#6c757d",
   },
   errorText: {
     fontSize: 16,
     color: "#f44336",
+    marginTop: 12,
     marginBottom: 16,
     textAlign: "center",
   },
   retryButton: {
     backgroundColor: "#4CAF50",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
     borderRadius: 8,
   },
   retryButtonText: {
@@ -618,13 +820,15 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   noJobsText: {
-    fontSize: 16,
-    color: "#666",
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#6c757d",
+    marginTop: 16,
     marginBottom: 8,
   },
   noJobsSubText: {
     fontSize: 14,
-    color: "#999",
+    color: "#adb5bd",
   },
 });
 
