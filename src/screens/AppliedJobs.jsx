@@ -58,7 +58,7 @@ const AppliedJobs = ({ navigation }) => {
   const formatSalary = (value) => {
     if (value === null || value === undefined || value === "")
       return "Not mentioned";
-    return `₹ ${value}/month`;
+    return `${value}/month`;
   };
 
   const getStatusColor = (status) => {
