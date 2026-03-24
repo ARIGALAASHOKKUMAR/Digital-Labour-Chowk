@@ -15,6 +15,7 @@ import { hideModal } from "../actions";
 
 const JobDetailsCard = ({ data, handleSearch }) => {
   const dispatch = useDispatch();
+  
   const ApplyJob = async (id) => {
     const response = await commonAPICall(
       JOBAPPLY,
@@ -97,6 +98,26 @@ const JobDetailsCard = ({ data, handleSearch }) => {
     });
   };
 
+  // Get status details
+  const getStatusDetails = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return { color: '#FF9800', icon: 'access-time', text: 'Application Pending' };
+      case 'reviewed':
+        return { color: '#2196F3', icon: 'visibility', text: 'Application Reviewed' };
+      case 'shortlisted':
+        return { color: '#4CAF50', icon: 'star', text: 'Shortlisted' };
+      case 'rejected':
+        return { color: '#F44336', icon: 'cancel', text: 'Not Selected' };
+      case 'hired':
+        return { color: '#9C27B0', icon: 'check-circle', text: 'Hired' };
+      default:
+        return { color: '#666', icon: 'pending', text: 'Application Submitted' };
+    }
+  };
+
+  const statusDetails = getStatusDetails(data.applicationStatus);
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -121,6 +142,21 @@ const JobDetailsCard = ({ data, handleSearch }) => {
             {data.preferredworktype || "Daily Wages"}
           </Text>
         </View>
+
+        {/* Application Status Card - Only show if applied */}
+        {data.isapplied && (
+          <View style={[styles.statusCard, { backgroundColor: statusDetails.color + '10', borderColor: statusDetails.color + '30' }]}>
+            <Icon name={statusDetails.icon} size={28} color={statusDetails.color} />
+            <View style={styles.statusContent}>
+              <Text style={[styles.statusTitle, { color: statusDetails.color }]}>
+                Application Status
+              </Text>
+              <Text style={[styles.statusValue, { color: statusDetails.color }]}>
+                {statusDetails.text}
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* Quick Info Grid */}
         <View style={styles.gridContainer}>
@@ -264,21 +300,13 @@ const JobDetailsCard = ({ data, handleSearch }) => {
           </View>
         </View>
 
-        {/* Application Status */}
-        <View style={styles.statusCard}>
-          <Icon
-            name={data.isapplied ? "check-circle" : "pending"}
-            size={24}
-            color={data.isapplied ? "#4CAF50" : "#FF9800"}
-          />
-          {!data.isapplied ? (
-            <TouchableOpacity onPress={() => ApplyJob(data.ApplyJob)}>
-              <Text style={styles.statusText}>Apply</Text>
-            </TouchableOpacity>
-          ) : (
-            <Text style={styles.statusText}>Applied for this Job</Text>
-          )}
-        </View>
+        {/* Action Button */}
+        {!data.isapplied && (
+          <TouchableOpacity style={styles.applyButton} onPress={() => ApplyJob(data.ApplyJob)}>
+            <Icon name="send" size={20} color="#fff" />
+            <Text style={styles.applyButtonText}>Apply Now</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -343,6 +371,28 @@ const styles = StyleSheet.create({
     color: "#666",
     marginTop: 4,
     textTransform: "capitalize",
+  },
+  statusCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  statusContent: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  statusTitle: {
+    fontSize: 12,
+    fontWeight: "500",
+    marginBottom: 4,
+  },
+  statusValue: {
+    fontSize: 16,
+    fontWeight: "bold",
   },
   gridContainer: {
     flexDirection: "row",
@@ -468,22 +518,22 @@ const styles = StyleSheet.create({
     color: "#666",
     lineHeight: 20,
   },
-  statusCard: {
+  applyButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    margin: 16,
+    backgroundColor: "#4A90E2",
+    marginHorizontal: 16,
+    marginVertical: 20,
     padding: 16,
-    backgroundColor: "#FFF3E0",
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#FFE0B2",
+    elevation: 2,
   },
-  statusText: {
+  applyButtonText: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#FF9800",
-    marginLeft: 12,
+    fontWeight: "bold",
+    color: "#fff",
+    marginLeft: 8,
   },
 });
 

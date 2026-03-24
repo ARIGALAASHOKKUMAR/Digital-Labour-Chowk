@@ -11,9 +11,14 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from '@react-navigation/native';
+
 
 const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
-  console.log("workerData", workerData);
+
+
+    const navigation = useNavigation();
+
 
   const calculateAge = (dob) => {
     if (!dob) return "";
@@ -86,47 +91,11 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
     };
   }, [workerData]);
 
-  const staticWorkHistory = [
-    {
-      projectName: "RCC Building Construction – Block A, Smart City Project",
-      employerName: "L&T Construction Ltd.",
-      taskDescription:
-        "Worked as a Site Supervisor responsible for RCC slab work, shuttering supervision, bar bending schedule verification, and quality inspection as per IS standards.",
-      skills: ["RCC Work", "Bar Bending", "Site Supervision", "AutoCAD"],
-      paymentStatus: "Completed",
-      totalAmount: "42,000/month",
-      rating: "4.7",
-      startDate: "2022-01-10",
-      endDate: "2022-12-20",
-    },
-    {
-      projectName: "Road Widening & Drainage Work – NH-58, Haridwar Section",
-      employerName: "Shapoorji Pallonji Infra Pvt. Ltd.",
-      taskDescription:
-        "Engaged in road widening, subgrade preparation, concrete drainage system installation, and onsite coordination with NHAI engineers for progress verification.",
-      skills: [
-        "Road Construction",
-        "Drainage Work",
-        "Leveling & Surveying",
-        "Safety Compliance",
-      ],
-      paymentStatus: "Completed",
-      totalAmount: "38,500/month",
-      rating: "4.6",
-      startDate: "2023-03-05",
-      endDate: "2023-09-30",
-    },
-  ];
-
-  const staticSkills = [
-    { skillName: "Helper Mason" },
-    { skillName: "Assistant Shuttering Carpenter" },
-  ];
 
   const displayWorkHistory =
-    workHistory && workHistory.length > 0 ? workHistory : staticWorkHistory;
+    workHistory && workHistory.length > 0 ? workHistory : [];
 
-  const displaySkills = skills && skills.length > 0 ? skills : staticSkills;
+  const displaySkills = skills && skills.length > 0 ? skills : [];
 
   if (loading) {
     return (
@@ -196,7 +165,7 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
             style={[styles.topTile, styles.blueTile]}
           >
             <Icon name="work" size={22} color="#2a7fd1" />
-            <Text style={styles.blueTileText}>Work / Job{"\n"}Applied</Text>
+            <Text style={styles.blueTileText}  onPress={() => navigation.navigate("AppliedJob")}>Work / Job{"\n"}Applied</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

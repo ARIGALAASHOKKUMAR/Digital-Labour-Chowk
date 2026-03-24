@@ -7,6 +7,8 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { FontAwesome5 } from "@expo/vector-icons";
@@ -15,18 +17,38 @@ import JobDetailsCard from "./JobDetailsScreen";
 
 const AppliedJobs = ({ navigation }) => {
   const [jobsList, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const dispatch = useDispatch();
 
   const getjobs = async () => {
-    const response = await commonAPICall(JOBSEARCH, {}, "get", dispatch);
-    if (response.status === 200) {
-      setJobs(response.data.DigitalLabourChowkJobPosting_SearchResults);
+    try {
+      const response = await commonAPICall(JOBSEARCH, {}, "get", dispatch);
+
+      if (response.status === 200) {
+        console.log(
+          "response.data",
+          response.data.DigitalLabourChowkJobPosting_SearchResults,
+        );
+
+        setJobs(response.data.DigitalLabourChowkJobPosting_SearchResults);
+      }
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
     getjobs();
   }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    getjobs();
+  };
 
   const formatTimeAgo = (value) => {
     if (!value) return "Recently posted";
@@ -39,12 +61,85 @@ const AppliedJobs = ({ navigation }) => {
     return `₹ ${value}/month`;
   };
 
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return '#FF9800';
+      case 'reviewed':
+        return '#2196F3';
+      case 'shortlisted':
+        return '#4CAF50';
+      case 'rejected':
+        return '#F44336';
+      case 'hired':
+        return '#9C27B0';
+      default:
+        return '#666';
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return 'time-outline';
+      case 'reviewed':
+        return 'eye-outline';
+      case 'shortlisted':
+        return 'star-outline';
+      case 'rejected':
+        return 'close-circle-outline';
+      case 'hired':
+        return 'checkmark-circle-outline';
+      default:
+        return 'document-text-outline';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'PENDING':
+        return 'Application Under Review';
+      case 'ACCEPTED':
+        return 'Application Reviewed';
+      case 'shortlisted':
+        return 'Shortlisted';
+      case 'REJECTED':
+        return 'Not Selected';
+      case 'hired':
+        return 'Hired';
+      default:
+        return status || 'Application Submitted';
+    }
+  };
+
+  const appliedJobs = jobsList?.filter(item => item.isapplied === true) || [];
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2d7fd3" />
+        <Text style={styles.loadingText}>Loading your applications...</Text>
+      </View>
+    );
+  }
+
   return (
-    <ScrollView>
-      {jobsList?.length > 0 ? (
-        jobsList
-          .filter((item) => item.isapplied === true)
-          .map((item, index) => (
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#2d7fd3"]} />
+      }
+    >
+      {appliedJobs.length > 0 ? (
+        <>
+          <View style={styles.headerSection}>
+            <Text style={styles.headerTitle}>My Applications</Text>
+            <Text style={styles.headerSubtitle}>
+              You have applied for {appliedJobs.length} job{appliedJobs.length !== 1 ? 's' : ''}
+            </Text>
+          </View>
+
+          {appliedJobs.map((item, index) => (
             <TouchableOpacity
               key={item?.id ? String(item.id) : String(index)}
               style={styles.jobCard}
@@ -57,7 +152,7 @@ const AppliedJobs = ({ navigation }) => {
             >
               <View style={styles.jobLeftIconWrap}>
                 <View style={styles.jobLeftIconCircle}>
-                  <MaterialIcons name="work" size={22} color="#000" />
+                  <MaterialIcons name="work" size={22} color="#2d7fd3" />
                 </View>
               </View>
 
@@ -69,7 +164,7 @@ const AppliedJobs = ({ navigation }) => {
                 <View style={styles.jobMetaRow}>
                   <Ionicons name="location-sharp" size={13} color="#e75480" />
                   <Text style={styles.jobMetaText} numberOfLines={1}>
-                    {item.address}
+                    {item.address || "Location not specified"}
                   </Text>
                 </View>
 
@@ -86,6 +181,20 @@ const AppliedJobs = ({ navigation }) => {
                     {formatSalary(item.workrateperday)}
                   </Text>
                 </View>
+
+                {/* Application Status Badge */}
+                <View style={styles.statusBadgeContainer}>
+                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.applicationStatus) + '15' }]}>
+                    <Ionicons 
+                      name={getStatusIcon(item.applicationStatus)} 
+                      size={12} 
+                      color={getStatusColor(item.applicationStatus)} 
+                    />
+                    <Text style={[styles.statusText, { color: getStatusColor(item.applicationStatus) }]}>
+                      {getStatusText(item.applicationstatus)}
+                    </Text>
+                  </View>
+                </View>
               </View>
 
               <View style={styles.jobArrowWrap}>
@@ -93,13 +202,7 @@ const AppliedJobs = ({ navigation }) => {
                   style={styles.arrowButton}
                   onPress={() => {
                     dispatch(
-                      showModal(
-                        <JobDetailsCard
-                          data={item}
-                        />,
-                        true,
-                        true,
-                      ),
+                      showModal(<JobDetailsCard data={item} />, true, true),
                     );
                   }}
                 >
@@ -107,10 +210,15 @@ const AppliedJobs = ({ navigation }) => {
                 </TouchableOpacity>
               </View>
             </TouchableOpacity>
-          ))
+          ))}
+        </>
       ) : (
         <View style={styles.noDataCard}>
-          <Text style={styles.noDataText}>No jobs found</Text>
+          <MaterialIcons name="work-off" size={60} color="#ccc" />
+          <Text style={styles.noDataText}>No applications found</Text>
+          <Text style={styles.noDataSubText}>
+            You haven't applied for any jobs yet. Start exploring and apply now!
+          </Text>
         </View>
       )}
     </ScrollView>
@@ -120,28 +228,63 @@ const AppliedJobs = ({ navigation }) => {
 export default AppliedJobs;
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: "#666",
+  },
+  headerSection: {
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 12,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 4,
+  },
   jobCard: {
     backgroundColor: "#fff",
-    borderRadius: 10,
+    borderRadius: 12,
     paddingVertical: 14,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     marginBottom: 12,
+    marginHorizontal: 16,
+    marginTop: 8,
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    elevation: 3,
   },
   jobLeftIconWrap: {
-    marginRight: 10,
+    marginRight: 12,
   },
   jobLeftIconCircle: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#d9efff",
+    backgroundColor: "#E3F2FD",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -149,23 +292,40 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   jobTitle: {
-    fontSize: 18,
-    fontWeight: "500",
+    fontSize: 16,
+    fontWeight: "600",
     color: "#333",
     marginBottom: 6,
   },
   jobMetaRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 3,
+    marginBottom: 4,
   },
   jobMetaText: {
     marginLeft: 6,
-    fontSize: 13,
+    fontSize: 12,
     color: "#666",
+  },
+  statusBadgeContainer: {
+    marginTop: 8,
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: "flex-start",
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: "500",
+    marginLeft: 4,
   },
   jobArrowWrap: {
     marginLeft: 10,
+    alignSelf: "center",
   },
   arrowButton: {
     width: 34,
@@ -177,15 +337,24 @@ const styles = StyleSheet.create({
   },
   noDataCard: {
     backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 18,
+    borderRadius: 12,
+    padding: 32,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 6,
+    marginTop: 40,
+    marginHorizontal: 16,
   },
   noDataText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    marginTop: 16,
+  },
+  noDataSubText: {
     fontSize: 14,
-    color: "#666",
-    fontWeight: "500",
+    color: "#999",
+    textAlign: "center",
+    marginTop: 8,
+    lineHeight: 20,
   },
 });
