@@ -136,31 +136,23 @@ const Workerposetdjobs = () => {
     setSelectedApplicant(null);
   };
 
-  const handleCall = (phoneNumber) => {
-    const url = `tel:${phoneNumber}`;
-    Linking.canOpenURL(url)
-      .then((supported) => {
-        if (supported) {
-          Linking.openURL(url);
-        } else {
-          Alert.alert("Error", "Phone calling is not supported on this device");
-        }
-      })
-      .catch((err) => console.error("An error occurred", err));
-  };
+ const handleCall = async (phoneNumber) => {
+  try {
+    await Linking.openURL(`tel:${phoneNumber}`);
+  } catch (e) {
+    Alert.alert("Error", "Unable to open phone dialer");
+    console.log("Call error:", e);
+  }
+};
 
-  const handleEmail = (email) => {
-    const url = `mailto:${email}`;
-    Linking.canOpenURL(url)
-      .then((supported) => {
-        if (supported) {
-          Linking.openURL(url);
-        } else {
-          Alert.alert("Error", "Email is not supported on this device");
-        }
-      })
-      .catch((err) => console.error("An error occurred", err));
-  };
+const handleEmail = async (email) => {
+  try {
+    await Linking.openURL(`mailto:${email}`);
+  } catch (e) {
+    Alert.alert("Error", "Unable to open email app");
+    console.log("Email error:", e);
+  }
+};
 
   const handleJobAcceptReject = async (mobile, status, jobid) => {
     const payload = {
