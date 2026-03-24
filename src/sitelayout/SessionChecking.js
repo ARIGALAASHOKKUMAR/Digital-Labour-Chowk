@@ -1,6 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
 import { useSelector } from "react-redux";
+import { useRoute } from "@react-navigation/native";
 
 const SessionChecking = ({ navigation, children }) => {
   const state = useSelector((state) => state.LoginReducer);
@@ -12,79 +13,69 @@ const SessionChecking = ({ navigation, children }) => {
     passwordSinceUpdated,
   } = state;
 
-  useEffect(() => {
-    const passwordDays = parseInt(passwordSinceUpdated || 0, 10);
-    const isPasswordExpired = passwordDays >= 90;
+  const route = useRoute();
+  const currentScreen = route.name;
+  const hasRedirected = useRef(false);
 
-    let changePasswordMsg =
-      "For your security, please update your password. It was initially set by the system and should be personalized to ensure the safety of your account.";
+  let targetScreen = null;
+  let alertMessage = "";
 
-    if (isPasswordExpired) {
-      changePasswordMsg =
-        "Your password has expired. Please change it immediately to continue accessing your account.";
-    }
+  const passwordDays = parseInt(passwordSinceUpdated || 0, 10);
+  const isPasswordExpired = passwordDays >= 90;
 
-    if (!isLoggedIn) {
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Login" }],
-      });
-      return;
-    }
+  let changePasswordMsg =
+    "For your security, please update your password. It was initially set by the system and should be personalized to ensure the safety of your account.";
 
-    if (
-      (typeof isDefaultPassword === "string" &&
-        isDefaultPassword.toUpperCase() === "Y") ||
-      isPasswordExpired
-    ) {
-      Alert.alert("Password Update Required", changePasswordMsg, [
-        {
-          text: "OK",
-          onPress: () => {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: "ChangePassword" }],
-            });
-          },
-        },
-      ]);
-      return;
-    }
-
-    if (
-      typeof isProfileUpdated === "string" &&
-      isProfileUpdated.toUpperCase() === "N"
-    ) {
-      Alert.alert("Profile Update Required", "Please Update Profile", [
-        {
-          text: "OK",
-          onPress: () => {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: "ProfileUpdate" }],
-            });
-          },
-        },
-      ]);
-      return;
-    }
-  }, [
-    isLoggedIn,
-    isDefaultPassword,
-    isProfileUpdated,
-    passwordSinceUpdated,
-    navigation,
-  ]);
-
-  console.log(
-    "passwordSinceUpdated",
-    isLoggedIn,
-    isDefaultPassword,
-    isProfileUpdated,
-    passwordSinceUpdated,
-  );
+  if (isPasswordExpired) {
+    changePasswordMsg =
+      "Your password has expired. Please change it immediately to continue accessing your account.";
+  }
 
   if (!isLoggedIn) {
+    if (currentScreen !== "Login") {
+      targetScreen = "Login";
+      alertMessage = "Your session has expired. Please login again.";
+    }
+  } else if (
+    ((typeof isDefaultPassword === "string" &&
+      isDefaultPassword.trim().toUpperCase() === "Y") ||
+      isPasswordExpired) &&
+    currentScreen !== "ChangePassword"
+  ) {
+    targetScreen = "ChangePassword";
+    alertMessage = changePasswordMsg;
+  } else if (
+    typeof isProfileUpdated === "string" &&
+    isProfileUpdated.trim().toUpperCase() === "N" &&
+    currentScreen !== "ProfileUpdate"
+  ) {
+    targetScreen = "ProfileUpdate";
+    alertMessage = "Please update your profile before proceeding.";
+  }
+
+  useEffect(() => {
+    if (targetScreen && !hasRedirected.current) {
+      hasRedirected.current = true;
+
+      Alert.alert("Notice", alertMessage, [
+        {
+          text: "OK",
+          onPress: () => {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: targetScreen }],
+            });
+          },
+        },
+      ]);
+    }
+
+    if (!targetScreen) {
+      hasRedirected.current = false;
+    }
+  }, [targetScreen, alertMessage, navigation]);
+
+  if (targetScreen) {
     return (
       <View style={styles.loaderContainer}>
         <ActivityIndicator size="large" color="#4a6cf7" />

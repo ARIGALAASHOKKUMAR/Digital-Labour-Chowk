@@ -51,120 +51,128 @@ export default function App() {
                 name="IncidentReporting"
                 component={IncidentReporting}
               />
-              {/* <Stack.Screen name="ProfileUpdate" component={ProfileUpdate} /> */}
 
               <Stack.Screen name="ProfileUpdate">
                 {(props) => (
-                  <SiteLayout
-                    navigation={props.navigation}
-                    currentScreenName="ProfileUpdate"
-                  >
-                    <ProfileUpdate {...props} />
-                  </SiteLayout>
+                  <SessionChecking navigation={props.navigation}>
+                    <SiteLayout
+                      navigation={props.navigation}
+                      currentScreenName="ProfileUpdate"
+                    >
+                      <ProfileUpdate {...props} />
+                    </SiteLayout>
+                  </SessionChecking>
                 )}
               </Stack.Screen>
+
               <Stack.Screen name="ChangePassword">
                 {(props) => (
-                  <SiteLayout
-                    navigation={props.navigation}
-                    currentScreenName="ChangePassword"
-                  >
-                    <ChangePassword {...props} />
-                  </SiteLayout>
+                  <SessionChecking navigation={props.navigation}>
+                    <SiteLayout
+                      navigation={props.navigation}
+                      currentScreenName="ChangePassword"
+                    >
+                      <ChangePassword {...props} />
+                    </SiteLayout>
+                  </SessionChecking>
                 )}
               </Stack.Screen>
-              {/* Protected HOME Screen */}
+
               <Stack.Screen name="HOME">
                 {(props) => (
-                  <SiteLayout
-                    navigation={props.navigation}
-                    currentScreenName="HOME"
-                    scrollEnabled={false}
-                  >
-                    <SessionChecking navigation={props.navigation}>
+                  <SessionChecking navigation={props.navigation}>
+                    <SiteLayout
+                      navigation={props.navigation}
+                      currentScreenName="HOME"
+                      scrollEnabled={false}
+                    >
                       <HomeScreen {...props} />
-                    </SessionChecking>
-                  </SiteLayout>
+                    </SiteLayout>
+                  </SessionChecking>
                 )}
               </Stack.Screen>
+
               <Stack.Screen name="FindJob">
                 {(props) => (
-                  <SiteLayout
-                    navigation={props.navigation}
-                    currentScreenName="FindJob"
-                    scrollEnabled={false}
-                  >
-                    <SessionChecking navigation={props.navigation}>
+                  <SessionChecking navigation={props.navigation}>
+                    <SiteLayout
+                      navigation={props.navigation}
+                      currentScreenName="FindJob"
+                      scrollEnabled={false}
+                    >
                       <JobSearchScreen {...props} />
-                    </SessionChecking>
-                  </SiteLayout>
+                    </SiteLayout>
+                  </SessionChecking>
                 )}
               </Stack.Screen>
 
               <Stack.Screen name="WorkerSearch">
                 {(props) => (
-                  <SiteLayout
-                    navigation={props.navigation}
-                    currentScreenName="WorkerSearch"
-                    scrollEnabled={false}
-                  >
-                    <SessionChecking navigation={props.navigation}>
+                  <SessionChecking navigation={props.navigation}>
+                    <SiteLayout
+                      navigation={props.navigation}
+                      currentScreenName="WorkerSearch"
+                      scrollEnabled={false}
+                    >
                       <JobSearchScreen {...props} />
-                    </SessionChecking>
-                  </SiteLayout>
+                    </SiteLayout>
+                  </SessionChecking>
                 )}
               </Stack.Screen>
+
               <Stack.Screen name="AppliedJob">
                 {(props) => (
-                  <SiteLayout
-                    navigation={props.navigation}
-                    currentScreenName="AppliedJob"
-                    scrollEnabled={false}
-                  >
-                    <SessionChecking navigation={props.navigation}>
+                  <SessionChecking navigation={props.navigation}>
+                    <SiteLayout
+                      navigation={props.navigation}
+                      currentScreenName="AppliedJob"
+                      scrollEnabled={false}
+                    >
                       <AppliedJobs {...props} />
-                    </SessionChecking>
-                  </SiteLayout>
+                    </SiteLayout>
+                  </SessionChecking>
                 )}
               </Stack.Screen>
+
               <Stack.Screen name="JobPosting">
                 {(props) => (
-                  <SiteLayout
-                    navigation={props.navigation}
-                    currentScreenName="JobPosting"
-                    scrollEnabled={false}
-                  >
-                    <SessionChecking navigation={props.navigation}>
+                  <SessionChecking navigation={props.navigation}>
+                    <SiteLayout
+                      navigation={props.navigation}
+                      currentScreenName="JobPosting"
+                      scrollEnabled={false}
+                    >
                       <PostJob {...props} />
-                    </SessionChecking>
-                  </SiteLayout>
+                    </SiteLayout>
+                  </SessionChecking>
                 )}
               </Stack.Screen>
 
               <Stack.Screen name="EmployerJob">
                 {(props) => (
-                  <SiteLayout
-                    navigation={props.navigation}
-                    currentScreenName="EmployerJob"
-                    scrollEnabled={false}
-                  >
-                    <SessionChecking navigation={props.navigation}>
+                  <SessionChecking navigation={props.navigation}>
+                    <SiteLayout
+                      navigation={props.navigation}
+                      currentScreenName="EmployerJob"
+                      scrollEnabled={false}
+                    >
                       <Workerposetdjobs {...props} />
-                    </SessionChecking>
-                  </SiteLayout>
+                    </SiteLayout>
+                  </SessionChecking>
                 )}
               </Stack.Screen>
+
               <Stack.Screen name="EmploJobDetailsyerJob">
                 {(props) => (
-                  <SiteLayout
-                    navigation={props.navigation}
-                    currentScreenName="JobDetails"
-                    scrollEnabled={false}
-                  >
-                    <SessionChecking navigation={props.navigation}>
+                  <SessionChecking navigation={props.navigation}>
+                    <SiteLayout
+                      navigation={props.navigation}
+                      currentScreenName="JobDetails"
+                      scrollEnabled={false}
+                    >
                       <JobDetailsScreen {...props} />
-                    </SessionChecking>
-                  </SiteLayout>
+                    </SiteLayout>
+                  </SessionChecking>
                 )}
               </Stack.Screen>
             </Stack.Navigator>
