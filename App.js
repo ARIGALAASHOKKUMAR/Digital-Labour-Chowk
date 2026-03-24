@@ -54,27 +54,27 @@ export default function App() {
 
               <Stack.Screen name="ProfileUpdate">
                 {(props) => (
-                  <SessionChecking navigation={props.navigation}>
+                  // <SessionChecking navigation={props.navigation}>
                     <SiteLayout
                       navigation={props.navigation}
                       currentScreenName="ProfileUpdate"
                     >
                       <ProfileUpdate {...props} />
                     </SiteLayout>
-                  </SessionChecking>
+                  // </SessionChecking>
                 )}
               </Stack.Screen>
 
               <Stack.Screen name="ChangePassword">
                 {(props) => (
-                  <SessionChecking navigation={props.navigation}>
+                  // <SessionChecking navigation={props.navigation}>
                     <SiteLayout
                       navigation={props.navigation}
                       currentScreenName="ChangePassword"
                     >
                       <ChangePassword {...props} />
                     </SiteLayout>
-                  </SessionChecking>
+                  // </SessionChecking>
                 )}
               </Stack.Screen>
 
