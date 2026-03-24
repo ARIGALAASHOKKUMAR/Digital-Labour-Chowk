@@ -49,7 +49,28 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
     fullName: Yup.string().required("Required"),
     mobileNumber: Yup.string().required("Required"),
     email: Yup.string().required("Required"),
-    dateOfBirth: Yup.string().required("Required"),
+    dateOfBirth: Yup.string()
+      .required("Required")
+      .test("age-18", "You must be at least 18 years old", function (value) {
+        if (!value) return false;
+
+        const [day, month, year] = value.split("-");
+        const dob = new Date(`${year}-${month}-${day}`);
+        const today = new Date();
+
+        let age = today.getFullYear() - dob.getFullYear();
+        const monthDiff = today.getMonth() - dob.getMonth();
+
+        // adjust age if birthday not yet occurred this year
+        if (
+          monthDiff < 0 ||
+          (monthDiff === 0 && today.getDate() < dob.getDate())
+        ) {
+          age--;
+        }
+
+        return age >= 18;
+      }),
     gender: Yup.string().required("Required"),
     employerTypeId: Yup.string().when([], {
       is: () => state.roleName === "DLC Employer",
