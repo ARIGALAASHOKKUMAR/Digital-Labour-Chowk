@@ -28,8 +28,10 @@ import {
 import { showModal } from "../actions";
 import JobDetailsCard from "./JobDetailsScreen";
 import UserInfoDisplay from "./UserInfoDisplay";
+import MapScreen from "./MapScreen";
 
 const JobSearchScreen = ({ navigation }) => {
+  const [showMap, setShowMap] = useState(false);
   const dispatch = useDispatch();
   const state = useSelector((state) => state.LoginReducer);
 
@@ -312,97 +314,99 @@ const JobSearchScreen = ({ navigation }) => {
   );
 
   // Render worker card for employers
- const getWorkerSkills = (skills) => {
-  try {
-    const parsed = JSON.parse(skills || "[]");
-    return parsed.slice(0, 2).map((s) => s.skillName).join(", ");
-  } catch {
-    return "";
-  }
-};
+  const getWorkerSkills = (skills) => {
+    try {
+      const parsed = JSON.parse(skills || "[]");
+      return parsed
+        .slice(0, 2)
+        .map((s) => s.skillName)
+        .join(", ");
+    } catch {
+      return "";
+    }
+  };
 
-const renderWorkerCard = (worker, index) => (
-  <TouchableOpacity
-    key={worker?.labour_id ? String(worker.labour_id) : String(index)}
-    style={styles.jobCard}
-    activeOpacity={0.85}
-  >
-    {/* Left Icon */}
-    <View style={styles.jobLeftIconWrap}>
-      <View style={styles.jobLeftIconCircle}>
-        <MaterialIcons name="person" size={22} color="#000" />
+  const renderWorkerCard = (worker, index) => (
+    <TouchableOpacity
+      key={worker?.labour_id ? String(worker.labour_id) : String(index)}
+      style={styles.jobCard}
+      activeOpacity={0.85}
+    >
+      {/* Left Icon */}
+      <View style={styles.jobLeftIconWrap}>
+        <View style={styles.jobLeftIconCircle}>
+          <MaterialIcons name="person" size={22} color="#000" />
+        </View>
       </View>
-    </View>
 
-    {/* Content */}
-    <View style={styles.jobContent}>
-      
-      {/* Name */}
-      <Text style={styles.jobTitle} numberOfLines={1}>
-        {worker.full_name}
-      </Text>
-
-      {/* Location */}
-      <View style={styles.jobMetaRow}>
-        <Ionicons name="location-sharp" size={13} color="#e75480" />
-        <Text style={styles.jobMetaText} numberOfLines={1}>
-          {worker.village_name}, {worker.mandal_name}, {worker.dist_name}
+      {/* Content */}
+      <View style={styles.jobContent}>
+        {/* Name */}
+        <Text style={styles.jobTitle} numberOfLines={1}>
+          {worker.full_name}
         </Text>
-      </View>
 
-      {/* Experience */}
-      <View style={styles.jobMetaRow}>
-        <MaterialIcons name="work-outline" size={13} color="#666" />
-        <Text style={styles.jobMetaText}>
-          {worker.skill_experience_years || 0} yrs experience
-        </Text>
-      </View>
-
-      {/* Wage */}
-      <View style={styles.jobMetaRow}>
-        <FontAwesome5 name="rupee-sign" size={11} color="#c58543" />
-        <Text style={styles.jobMetaText}>
-          ₹ {worker.skill_daily_rate || 0}/day
-        </Text>
-      </View>
-
-      {/* Skills (optional short) */}
-      {worker.skills && (
+        {/* Location */}
         <View style={styles.jobMetaRow}>
-          <Ionicons name="star" size={13} color="#ffc107" />
+          <Ionicons name="location-sharp" size={13} color="#e75480" />
           <Text style={styles.jobMetaText} numberOfLines={1}>
-            {getWorkerSkills(worker.skills)}
+            {worker.village_name}, {worker.mandal_name}, {worker.dist_name}
           </Text>
         </View>
-      )}
 
-      {/* Button */}
-      <View style={styles.jobActionRow}>
-        <TouchableOpacity
-          style={styles.contactButton}
-          onPress={() => handleContactWorker(worker)}
-        >
-          <Ionicons name="call-outline" size={16} color="#fff" />
-          <Text style={styles.applyJobButtonText}>Contact</Text>
+        {/* Experience */}
+        <View style={styles.jobMetaRow}>
+          <MaterialIcons name="work-outline" size={13} color="#666" />
+          <Text style={styles.jobMetaText}>
+            {worker.skill_experience_years || 0} yrs experience
+          </Text>
+        </View>
+
+        {/* Wage */}
+        <View style={styles.jobMetaRow}>
+          <FontAwesome5 name="rupee-sign" size={11} color="#c58543" />
+          <Text style={styles.jobMetaText}>
+            ₹ {worker.skill_daily_rate || 0}/day
+          </Text>
+        </View>
+
+        {/* Skills (optional short) */}
+        {worker.skills && (
+          <View style={styles.jobMetaRow}>
+            <Ionicons name="star" size={13} color="#ffc107" />
+            <Text style={styles.jobMetaText} numberOfLines={1}>
+              {getWorkerSkills(worker.skills)}
+            </Text>
+          </View>
+        )}
+
+        {/* Button */}
+        <View style={styles.jobActionRow}>
+          <TouchableOpacity
+            style={styles.contactButton}
+            onPress={() => handleContactWorker(worker)}
+          >
+            <Ionicons name="call-outline" size={16} color="#fff" />
+            <Text style={styles.applyJobButtonText}>Contact</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Arrow */}
+      <View style={styles.jobArrowWrap}>
+        <TouchableOpacity style={styles.arrowButton}>
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color="#fff"
+            onPress={() =>
+              dispatch(showModal(<UserInfoDisplay data={worker} />, true, true))
+            }
+          />
         </TouchableOpacity>
       </View>
-    </View>
-
-    {/* Arrow */}
-    <View style={styles.jobArrowWrap}>
-      <TouchableOpacity style={styles.arrowButton}>
-        <Ionicons
-          name="chevron-forward"
-          size={18}
-          color="#fff"
-          onPress={() =>
-            dispatch(showModal(<UserInfoDisplay data={worker} />, true, true))
-          }
-        />
-      </TouchableOpacity>
-    </View>
-  </TouchableOpacity>
-);
+    </TouchableOpacity>
+  );
 
   // Helper function to get worker skills summary
   // const getWorkerSkills = (skillsString) => {
@@ -634,9 +638,20 @@ const renderWorkerCard = (worker, index) => (
               )}
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.mapButton}>
+            <TouchableOpacity
+              style={styles.mapButton}
+              onPress={() => {
+                if (resultsList && resultsList.length > 0) {
+                  setShowMap(!showMap);
+                } else {
+                  Alert.alert("No data", "No results to display on the map.");
+                }
+              }}
+            >
               <Ionicons name="map-outline" size={16} color="#2d7fd3" />
-              <Text style={styles.mapButtonText}>MAP VIEW</Text>
+              <Text style={styles.mapButtonText}>
+                {showMap ? "LIST VIEW" : "MAP VIEW"}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -651,12 +666,14 @@ const renderWorkerCard = (worker, index) => (
             color="#2d7fd3"
             style={{ marginTop: 20 }}
           />
+        ) : showMap ? (
+          <MapScreen results={resultsList} />
         ) : resultsList?.length > 0 ? (
           isEmployer ? (
             resultsList.map((item, index) => renderWorkerCard(item, index))
           ) : (
             resultsList
-              .filter((job) => !job.isapplied) // Show only jobs not applied
+              .filter((job) => !job.isapplied)
               .map((item, index) => renderJobCard(item, index))
           )
         ) : (
