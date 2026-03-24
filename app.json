@@ -37,6 +37,14 @@
       "@react-native-community/datetimepicker",
       "expo-font",
       [
+        "expo-splash-screen",
+        {
+          "image": "./assets/new_splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
