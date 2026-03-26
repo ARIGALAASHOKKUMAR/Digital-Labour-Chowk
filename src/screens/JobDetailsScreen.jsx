@@ -13,7 +13,7 @@ import { useDispatch } from "react-redux";
 import { commonAPICall, JOBAPPLY } from "../utils/utils";
 import { hideModal } from "../actions";
 
-const JobDetailsCard = ({ data, handleSearch }) => {
+const JobDetailsCard = ({ data, handleSearch,from }) => {
   const dispatch = useDispatch();
   
   const ApplyJob = async (id) => {
@@ -218,30 +218,30 @@ const JobDetailsCard = ({ data, handleSearch }) => {
               <View style={styles.locationRow}>
                 <Icon name="home" size={20} color="#FF6B6B" />
                 <Text style={styles.locationText}>
-                  Door No: {addressParts.doorNo}
+                  Door No: {addressParts.doorNo || data.doorno}
                 </Text>
               </View>
             )}
             <View style={styles.locationRow}>
               <Icon name="location-on" size={20} color="#FF6B6B" />
               <Text style={styles.locationText}>
-                {addressParts.village}, {addressParts.mandal},{" "}
-                {addressParts.district}
+                {addressParts.village || data.village_name}, {addressParts.mandal || data.mandalname},{" "}
+                {addressParts.district || data.districtname}
               </Text>
             </View>
-            {addressParts.landmark && addressParts.landmark !== "He" && (
+            {addressParts.landmark && addressParts.landmark !== "He" || data.landmark&& (
               <View style={styles.locationRow}>
                 <Icon name="flag" size={20} color="#FF6B6B" />
                 <Text style={styles.locationText}>
-                  Near: {addressParts.landmark}
+                  Near: {addressParts.landmark || data.landmark}
                 </Text>
               </View>
             )}
-            {addressParts.pincode && (
+            {addressParts.pincode || data.pincode&& (
               <View style={styles.locationRow}>
                 <Icon name="pin-drop" size={20} color="#FF6B6B" />
                 <Text style={styles.locationText}>
-                  Pincode: {addressParts.pincode}
+                  Pincode: {addressParts.pincode || data.pincode}
                 </Text>
               </View>
             )}
@@ -301,7 +301,7 @@ const JobDetailsCard = ({ data, handleSearch }) => {
         </View>
 
         {/* Action Button */}
-        {!data.isapplied && (
+        {(!data.isapplied && from!=="appliedjobs")&&(
           <TouchableOpacity style={styles.applyButton} onPress={() => ApplyJob(data.ApplyJob)}>
             <Icon name="send" size={20} color="#fff" />
             <Text style={styles.applyButtonText}>Apply Now</Text>

@@ -300,7 +300,7 @@ const JobSearchScreen = ({ navigation }) => {
           onPress={() => {
             dispatch(
               showModal(
-                <JobDetailsCard data={item} handleSearch={handleSearch} />,
+                <JobDetailsCard data={item} handleSearch={handleSearch}/>,
                 true,
                 true,
               ),

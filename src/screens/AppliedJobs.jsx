@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { commonAPICall, JOBSEARCH } from "../utils/utils";
+import { commonAPICall, JOBSEARCH, MYJOBSOFWORKER } from "../utils/utils";
 import { useDispatch } from "react-redux";
 import {
   ScrollView,
@@ -21,17 +21,22 @@ const AppliedJobs = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const dispatch = useDispatch();
 
+  console.log("jobsListjobsList",jobsList);
+  
+
   const getjobs = async () => {
     try {
-      const response = await commonAPICall(JOBSEARCH, {}, "get", dispatch);
+      const response = await commonAPICall(MYJOBSOFWORKER, {}, "get", dispatch);
+      console.log("reeeworker",response.data);
+      
 
       if (response.status === 200) {
         console.log(
           "response.data",
-          response.data.DigitalLabourChowkJobPosting_SearchResults,
+          response.data.DigitalLabourChowkJobPosting_Details,
         );
 
-        setJobs(response.data.DigitalLabourChowkJobPosting_SearchResults);
+        setJobs(response.data.DigitalLabourChowkJobPosting_Details);
       }
     } catch (error) {
       console.error("Error fetching jobs:", error);
@@ -112,7 +117,7 @@ const AppliedJobs = ({ navigation }) => {
     }
   };
 
-  const appliedJobs = jobsList?.filter(item => item.isapplied === true) || [];
+  const appliedJobs = jobsList || [];
 
   if (loading) {
     return (
@@ -202,7 +207,7 @@ const AppliedJobs = ({ navigation }) => {
                   style={styles.arrowButton}
                   onPress={() => {
                     dispatch(
-                      showModal(<JobDetailsCard data={item} />, true, true),
+                      showModal(<JobDetailsCard data={item} from="appliedjobs"/>, true, true),
                     );
                   }}
                 >
