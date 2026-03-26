@@ -119,6 +119,9 @@ const AppliedJobs = ({ navigation }) => {
 
   const appliedJobs = jobsList || [];
 
+  console.log("showInfoToast",appliedJobs);
+  
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -169,7 +172,7 @@ const AppliedJobs = ({ navigation }) => {
                 <View style={styles.jobMetaRow}>
                   <Ionicons name="location-sharp" size={13} color="#e75480" />
                   <Text style={styles.jobMetaText} numberOfLines={1}>
-                    {item.address || "Location not specified"}
+                    {item.village_name}-{item.mandalname}-{item.districtname}
                   </Text>
                 </View>
 
