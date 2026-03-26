@@ -724,9 +724,6 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
 
       if (res?.status === 200 || res?.status === 201) {
         setShowOtpModal(false);
-        showSuccessToast(
-          `${isWorker ? "Worker" : "Employer"} registered successfully`,
-        );
         navigation.goBack();
         resetForm();
       } else {
@@ -816,7 +813,6 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
           setOtpSent(true);
           setOtpTimer(60);
           setShowOtpModal(true);
-          showSuccessToast("OTP sent successfully");
 
           const timer = setInterval(() => {
             setOtpTimer((prev) => {
@@ -856,7 +852,6 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
 
       if (getotp?.status === 200 || getotp?.status === 201) {
         setOtpTimer(60);
-        showSuccessToast("OTP resent successfully");
 
         const timer = setInterval(() => {
           setOtpTimer((prev) => {
