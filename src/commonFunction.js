@@ -78,52 +78,60 @@ export const new_dist = [
 ];
 
 export const profileMenu = [
-    {
-      id: 1,
-      title: "Basic Details",
-      icon: "person-outline",
-      value: "basic_details",
-    },
-    {
-      id: 2,
-      title: "Identity & Verification",
-      icon: "card-outline",
-      value: "identity_verification",
-    },
-    {
-      id: 3,
-      title: "Location Information",
-      icon: "location-outline",
-      value: "location_information",
-    },
-    {
-      id: 4,
-      title: "Skill Details",
-      icon: "construct-outline",
-      value: "skill_details",
-    },
-    {
-      id: 5,
-      title: "Experience / Work Experience",
-      icon: "briefcase-outline",
-      value: "work_experience",
-    },
-    {
-      id: 99,
-      title: "Work Details",
-      icon: "briefcase-outline",
-      value: "work_details",
-    },
-    {
-      id: 6,
-      title: "Education",
-      icon: "school-outline",
-      value: "education",
-    },
-    {
-      id: 7,
-      title: "Help",
-      icon: "help-circle-outline",
-      value: "help",
-    },
-  ];
+  {
+    id: 1,
+    title: "Basic Details",
+    icon: "person-outline",
+    value: "basic_details",
+    key: "basic_details_completed",
+  },
+  {
+    id: 2,
+    title: "Identity & Verification",
+    icon: "card-outline",
+    value: "identity_verification",
+    key: "verification_status", // ✅ from API
+  },
+  {
+    id: 3,
+    title: "Location Information",
+    icon: "location-outline",
+    value: "location_information",
+    key: "location_info_completed", // ✅
+  },
+  {
+    id: 4,
+    title: "Skill Details",
+    icon: "construct-outline",
+    value: "skill_details",
+    key: "skill_info_completed", // ✅
+  },
+  {
+    id: 5,
+    title: "Experience / Work Experience",
+    icon: "briefcase-outline",
+    value: "work_experience",
+    key: "work_history", // ✅ (check array length)
+  },
+  {
+    id: 99,
+    title: "Work Details",
+    icon: "briefcase-outline",
+    value: "work_details",
+    key: "employer_work_details_completed", // ✅
+  },
+  {
+    id: 6,
+    title: "Education",
+    icon: "school-outline",
+    value: "education",
+    key: "education", // ✅ (check parsed array)
+  },
+  {
+    id: 7,
+    title: "Help",
+    icon: "help-circle-outline",
+    value: "help",
+    key: null, // no API dependency
+  },
+];

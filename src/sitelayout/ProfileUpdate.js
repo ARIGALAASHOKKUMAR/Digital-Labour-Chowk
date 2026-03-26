@@ -2953,7 +2953,7 @@ const ProfileUpdate = () => {
         DIGITALLABOURCHOWKDETAILS,
         {},
         "get",
-        dispatch,
+        dispatch
       );
 
       if (res?.status === 200) {
@@ -2966,7 +2966,7 @@ const ProfileUpdate = () => {
 
   useEffect(() => {
     overalldetails();
-  }, [refreshKey]); // only mount + manual refresh
+  }, [refreshKey]);
 
   const handleRefreshProfile = () => {
     setRefreshKey((prev) => prev + 1);
@@ -2983,6 +2983,7 @@ const ProfileUpdate = () => {
             onUpdateSuccess={handleRefreshProfile}
           />
         );
+
       case "identity_verification":
         return (
           <IdentityVerification
@@ -2990,6 +2991,7 @@ const ProfileUpdate = () => {
             onUpdateSuccess={handleRefreshProfile}
           />
         );
+
       case "location_information":
         return (
           <LocationInformation
@@ -2997,6 +2999,7 @@ const ProfileUpdate = () => {
             onUpdateSuccess={handleRefreshProfile}
           />
         );
+
       case "skill_details":
         return (
           <SkillDetails
@@ -3004,6 +3007,7 @@ const ProfileUpdate = () => {
             onUpdateSuccess={handleRefreshProfile}
           />
         );
+
       case "work_experience":
         return (
           <WorkExperience
@@ -3011,6 +3015,7 @@ const ProfileUpdate = () => {
             onUpdateSuccess={handleRefreshProfile}
           />
         );
+
       case "education":
         return (
           <Education
@@ -3018,6 +3023,7 @@ const ProfileUpdate = () => {
             onUpdateSuccess={handleRefreshProfile}
           />
         );
+
       case "change_password":
         return (
           <ChangePassword
@@ -3025,6 +3031,7 @@ const ProfileUpdate = () => {
             onUpdateSuccess={handleRefreshProfile}
           />
         );
+
       case "work_details":
         return (
           <EmployerWorkDetails
@@ -3032,14 +3039,35 @@ const ProfileUpdate = () => {
             onUpdateSuccess={handleRefreshProfile}
           />
         );
+
       case "help":
         return <Help userData={userData} />;
+
       default:
         return null;
     }
   };
 
   if (!isLoggedIn) return null;
+
+  const userData = overalldata[0] || {};
+
+  const isCompleted = (key) => {
+    if (!key) return false;
+
+    const value = userData?.[key];
+
+    if (key === "education" || key === "work_history" || key === "skills") {
+      try {
+        const parsed = JSON.parse(value || "[]");
+        return Array.isArray(parsed) && parsed.length > 0;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    return !!value;
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -3049,6 +3077,7 @@ const ProfileUpdate = () => {
             ? selectedSection.replace(/_/g, " ").toUpperCase()
             : "My Profile"}
         </Text>
+
         <View style={styles.panel}>
           {!selectedSection ? (
             <View>
@@ -3065,30 +3094,61 @@ const ProfileUpdate = () => {
                   }
                   return true;
                 })
-                .map((item) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={styles.menuItem}
-                    onPress={() => setSelectedSection(item.value)}
-                    activeOpacity={0.8}
-                  >
-                    <View style={styles.menuLeft}>
+                .map((item) => {
+                  const completed = isCompleted(item.key);
+
+                  return (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={styles.menuItem}
+                      onPress={() => setSelectedSection(item.value)}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.menuLeft}>
+                        <Ionicons
+                          name={item.icon}
+                          size={22}
+                          color="#1e3a5f"
+                          style={styles.menuIcon}
+                        />
+                        <Text style={styles.menuTitle}>{item.title}</Text>
+                      </View>
+
+                      {item.value !== "help" && (
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 5,
+                          }}
+                        >
+                          {completed ? (
+                            <Ionicons
+                              name="checkmark-circle"
+                              size={16}
+                              color="green"
+                            />
+                          ) : (
+                            <Ionicons
+                              name="close-circle"
+                              size={16}
+                              color="red"
+                            />
+                          )}
+                          <Text>
+                            {completed ? "Completed" : "Not Completed"}
+                          </Text>
+                        </View>
+                      )}
+
                       <Ionicons
-                        name={item.icon}
+                        name="chevron-forward"
                         size={22}
                         color="#1e3a5f"
-                        style={styles.menuIcon}
                       />
-                      <Text style={styles.menuTitle}>{item.title}</Text>
-                    </View>
-
-                    <Ionicons
-                      name="chevron-forward"
-                      size={22}
-                      color="#1e3a5f"
-                    />
-                  </TouchableOpacity>
-                ))}
+                    </TouchableOpacity>
+                  );
+                })}
             </View>
           ) : (
             <View>
@@ -3108,7 +3168,6 @@ const ProfileUpdate = () => {
     </ScrollView>
   );
 };
-
 export default ProfileUpdate;
 
 const styles = StyleSheet.create({
