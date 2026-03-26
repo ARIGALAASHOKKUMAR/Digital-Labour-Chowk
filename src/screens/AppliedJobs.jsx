@@ -21,14 +21,12 @@ const AppliedJobs = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const dispatch = useDispatch();
 
-  console.log("jobsListjobsList",jobsList);
-  
+  console.log("jobsListjobsList", jobsList);
 
   const getjobs = async () => {
     try {
       const response = await commonAPICall(MYJOBSOFWORKER, {}, "get", dispatch);
-      console.log("reeeworker",response.data);
-      
+      console.log("reeeworker", response.data);
 
       if (response.status === 200) {
         console.log(
@@ -68,59 +66,58 @@ const AppliedJobs = ({ navigation }) => {
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'pending':
-        return '#FF9800';
-      case 'reviewed':
-        return '#2196F3';
-      case 'shortlisted':
-        return '#4CAF50';
-      case 'rejected':
-        return '#F44336';
-      case 'hired':
-        return '#9C27B0';
+      case "pending":
+        return "#FF9800";
+      case "reviewed":
+        return "#2196F3";
+      case "accepted":
+        return "#4CAF50";
+      case "rejected":
+        return "#F44336";
+      case "hired":
+        return "#9C27B0";
       default:
-        return '#666';
+        return "#666";
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status?.toLowerCase()) {
-      case 'pending':
-        return 'time-outline';
-      case 'reviewed':
-        return 'eye-outline';
-      case 'shortlisted':
-        return 'star-outline';
-      case 'rejected':
-        return 'close-circle-outline';
-      case 'hired':
-        return 'checkmark-circle-outline';
+      case "pending":
+        return "time-outline";
+      case "reviewed":
+        return "eye-outline";
+      case "accepted":
+        return "star-outline";
+      case "rejected":
+        return "close-circle-outline";
+      case "hired":
+        return "checkmark-circle-outline";
       default:
-        return 'document-text-outline';
+        return "document-text-outline";
     }
   };
 
   const getStatusText = (status) => {
     switch (status?.toLowerCase()) {
-      case 'PENDING':
-        return 'Application Under Review';
-      case 'ACCEPTED':
-        return 'Application Reviewed';
-      case 'shortlisted':
-        return 'Shortlisted';
-      case 'REJECTED':
-        return 'Not Selected';
-      case 'hired':
-        return 'Hired';
+      case "PENDING":
+        return "Application Under Review";
+      case "ACCEPTED":
+        return "Application Reviewed";
+      case "shortlisted":
+        return "Shortlisted";
+      case "REJECTED":
+        return "Not Selected";
+      case "hired":
+        return "Hired";
       default:
-        return status || 'Application Submitted';
+        return status || "Application Submitted";
     }
   };
 
   const appliedJobs = jobsList || [];
 
-  console.log("showInfoToast",appliedJobs);
-  
+  console.log("showInfoToast", appliedJobs);
 
   if (loading) {
     return (
@@ -135,7 +132,11 @@ const AppliedJobs = ({ navigation }) => {
     <ScrollView
       style={styles.container}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#2d7fd3"]} />
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={["#2d7fd3"]}
+        />
       }
     >
       {appliedJobs.length > 0 ? (
@@ -143,82 +144,109 @@ const AppliedJobs = ({ navigation }) => {
           <View style={styles.headerSection}>
             <Text style={styles.headerTitle}>My Applications</Text>
             <Text style={styles.headerSubtitle}>
-              You have applied for {appliedJobs.length} job{appliedJobs.length !== 1 ? 's' : ''}
+              You have applied for {appliedJobs.length} job
+              {appliedJobs.length !== 1 ? "s" : ""}
             </Text>
           </View>
 
-          {appliedJobs.map((item, index) => (
-            <TouchableOpacity
-              key={item?.id ? String(item.id) : String(index)}
-              style={styles.jobCard}
-              activeOpacity={0.85}
-              onPress={() => {
-                if (navigation) {
-                  navigation.navigate("JobDetails", { jobData: item });
-                }
-              }}
-            >
-              <View style={styles.jobLeftIconWrap}>
-                <View style={styles.jobLeftIconCircle}>
-                  <MaterialIcons name="work" size={22} color="#2d7fd3" />
-                </View>
-              </View>
+          {appliedJobs.map((item, index) => {
+            const workerDetails =
+              typeof item?.worker_details === "string"
+                ? JSON.parse(item.worker_details || "[]")
+                : item?.worker_details || [];
 
-              <View style={styles.jobContent}>
-                <Text style={styles.jobTitle} numberOfLines={1}>
-                  {item.jobtitle}
-                </Text>
+            const applicationStatus =
+              workerDetails?.[0]?.applicationStatus || "";
 
-                <View style={styles.jobMetaRow}>
-                  <Ionicons name="location-sharp" size={13} color="#e75480" />
-                  <Text style={styles.jobMetaText} numberOfLines={1}>
-                    {item.village_name}-{item.mandalname}-{item.districtname}
-                  </Text>
-                </View>
-
-                <View style={styles.jobMetaRow}>
-                  <Ionicons name="calendar-outline" size={13} color="#666" />
-                  <Text style={styles.jobMetaText}>
-                    {formatTimeAgo(item.jobpostedtime)}
-                  </Text>
-                </View>
-
-                <View style={styles.jobMetaRow}>
-                  <FontAwesome5 name="rupee-sign" size={11} color="#c58543" />
-                  <Text style={styles.jobMetaText}>
-                    {formatSalary(item.workrateperday)}
-                  </Text>
-                </View>
-
-                {/* Application Status Badge */}
-                <View style={styles.statusBadgeContainer}>
-                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.applicationStatus) + '15' }]}>
-                    <Ionicons 
-                      name={getStatusIcon(item.applicationStatus)} 
-                      size={12} 
-                      color={getStatusColor(item.applicationStatus)} 
-                    />
-                    <Text style={[styles.statusText, { color: getStatusColor(item.applicationStatus) }]}>
-                      {getStatusText(item.applicationstatus)}
-                    </Text>
+            return (
+              <TouchableOpacity
+                key={item?.id ? String(item.id) : String(index)}
+                style={styles.jobCard}
+                activeOpacity={0.85}
+                onPress={() => {
+                  if (navigation) {
+                    navigation.navigate("JobDetails", { jobData: item });
+                  }
+                }}
+              >
+                <View style={styles.jobLeftIconWrap}>
+                  <View style={styles.jobLeftIconCircle}>
+                    <MaterialIcons name="work" size={22} color="#2d7fd3" />
                   </View>
                 </View>
-              </View>
 
-              <View style={styles.jobArrowWrap}>
-                <TouchableOpacity
-                  style={styles.arrowButton}
-                  onPress={() => {
-                    dispatch(
-                      showModal(<JobDetailsCard data={item} from="appliedjobs"/>, true, true),
-                    );
-                  }}
-                >
-                  <Ionicons name="chevron-forward" size={18} color="#fff" />
-                </TouchableOpacity>
-              </View>
-            </TouchableOpacity>
-          ))}
+                <View style={styles.jobContent}>
+                  <Text style={styles.jobTitle} numberOfLines={1}>
+                    {item.jobtitle}
+                  </Text>
+
+                  <View style={styles.jobMetaRow}>
+                    <Ionicons name="location-sharp" size={13} color="#e75480" />
+                    <Text style={styles.jobMetaText} numberOfLines={1}>
+                      {item.village_name}-{item.mandalname}-{item.districtname}
+                    </Text>
+                  </View>
+
+                  <View style={styles.jobMetaRow}>
+                    <Ionicons name="calendar-outline" size={13} color="#666" />
+                    <Text style={styles.jobMetaText}>
+                      {formatTimeAgo(item.jobpostedtime)}
+                    </Text>
+                  </View>
+
+                  <View style={styles.jobMetaRow}>
+                    <FontAwesome5 name="rupee-sign" size={11} color="#c58543" />
+                    <Text style={styles.jobMetaText}>
+                      {formatSalary(item.workrateperday)}
+                    </Text>
+                  </View>
+
+                  <View style={styles.statusBadgeContainer}>
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        {
+                          backgroundColor:
+                            getStatusColor(applicationStatus) + "15",
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        name={getStatusIcon(applicationStatus)}
+                        size={12}
+                        color={getStatusColor(applicationStatus)}
+                      />
+                      <Text
+                        style={[
+                          styles.statusText,
+                          { color: getStatusColor(applicationStatus) },
+                        ]}
+                      >
+                        {getStatusText(applicationStatus)}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.jobArrowWrap}>
+                  <TouchableOpacity
+                    style={styles.arrowButton}
+                    onPress={() => {
+                      dispatch(
+                        showModal(
+                          <JobDetailsCard data={item} from="appliedjobs" />,
+                          true,
+                          true,
+                        ),
+                      );
+                    }}
+                  >
+                    <Ionicons name="chevron-forward" size={18} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </>
       ) : (
         <View style={styles.noDataCard}>
