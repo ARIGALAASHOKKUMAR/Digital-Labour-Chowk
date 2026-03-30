@@ -26,6 +26,7 @@ import PostJob from "./src/screens/PostJob";
 import Workerposetdjobs from "./src/screens/Workerposetdjobs";
 import JobDetailsScreen from "./src/screens/JobDetailsScreen";
 import MapScreen from "./src/screens/MapScreen";
+import WelfareScreens from "./src/screens/WelfareScreens";
 
 const Stack = createNativeStackNavigator();
 
@@ -185,6 +186,19 @@ export default function App() {
                       scrollEnabled={false}
                     >
                       <JobDetailsScreen {...props} />
+                    </SiteLayout>
+                  </SessionChecking>
+                )}
+              </Stack.Screen>
+              <Stack.Screen name="Welfarescreen">
+                {(props) => (
+                  <SessionChecking navigation={props.navigation}>
+                    <SiteLayout
+                      navigation={props.navigation}
+                      currentScreenName="Welfarescreen"
+                      scrollEnabled={false}
+                    >
+                      <WelfareScreens {...props} />
                     </SiteLayout>
                   </SessionChecking>
                 )}

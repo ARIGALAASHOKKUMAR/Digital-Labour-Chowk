@@ -11,14 +11,10 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from '@react-navigation/native';
-
+import { useNavigation } from "@react-navigation/native";
 
 const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
-
-
-    const navigation = useNavigation();
-
+  const navigation = useNavigation();
 
   const calculateAge = (dob) => {
     if (!dob) return "";
@@ -90,7 +86,6 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
           : null,
     };
   }, [workerData]);
-
 
   const displayWorkHistory =
     workHistory && workHistory.length > 0 ? workHistory : [];
@@ -165,7 +160,12 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
             style={[styles.topTile, styles.blueTile]}
           >
             <Icon name="work" size={22} color="#2a7fd1" />
-            <Text style={styles.blueTileText}  onPress={() => navigation.navigate("AppliedJob")}>Work / Job{"\n"}Applied</Text>
+            <Text
+              style={styles.blueTileText}
+              onPress={() => navigation.navigate("AppliedJob")}
+            >
+              Work / Job{"\n"}Applied
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -197,10 +197,13 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
           <Text style={styles.infoBoxValue}>{profile.age}</Text>
         </View>
 
-        <View style={[styles.infoBox, styles.activeSchemeBox]}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Welfarescreen")}
+          style={[styles.infoBox, styles.activeSchemeBox]}
+        >
           <Icon name="currency-rupee" size={20} color="#2a7fd1" />
           <Text style={styles.infoBoxValue}>Welfare and Schemes</Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.sectionWrap}>
