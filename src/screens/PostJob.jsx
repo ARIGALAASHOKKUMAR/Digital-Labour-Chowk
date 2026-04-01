@@ -24,8 +24,10 @@ import {
   GETVILLAGESAPP,
 } from "../utils/utils";
 
-const PostJob = () => {
+const PostJob = ({ route }) => {
   const dispatch = useDispatch();
+
+  const { job } = route.params;
 
   const [dists, setDists] = useState([]);
   const [mandal, setMandal] = useState([]);
@@ -187,37 +189,79 @@ const PostJob = () => {
     facilities: Yup.array().min(1, "Select at least one facility"),
   });
 
+  // const formik = useFormik({
+  //   enableReinitialize: true,
+  //   initialValues: {
+  //     jobTitle: "",
+  //     jobCategory: [],
+  //     startDate: "",
+  //     endDate: "",
+  //     workDuration: "",
+  //     district: "",
+  //     mandal: "",
+  //     village: "",
+  //     doorNo: "",
+  //     landmark: "",
+  //     pincode: "",
+  //     latitude: "",
+  //     longitude: "",
+  //     jobDescription: "",
+  //     toolsRequired: "",
+  //     requiredPeople: "",
+  //     workTime: "",
+  //     preferredWorkType: "",
+  //     workRatePerDay: "",
+  //     facilities: [],
+  //   },
+  //   validationSchema,
+  //   onSubmit: handleSubmit,
+  // });
+
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
-      jobTitle: "",
-      jobCategory: [],
-      startDate: "",
-      endDate: "",
-      workDuration: "",
-      district: "",
-      mandal: "",
-      village: "",
-      doorNo: "",
-      landmark: "",
-      pincode: "",
-      latitude: "",
-      longitude: "",
-      jobDescription: "",
-      toolsRequired: "",
-      requiredPeople: "",
-      workTime: "",
-      preferredWorkType: "",
-      workRatePerDay: "",
-      facilities: [],
+      jobTitle: job?.jobtitle || "",
+      jobCategory: job?.jobcategories?.map((i) => i.jobCategoryId) || [],
+      startDate: job?.startdate || "",
+      endDate: job?.enddate || "",
+      workDuration: job?.workduration ? String(job.workduration) : "",
+      district: job?.district ? String(job.district) : "",
+      mandal: job?.mandal ? String(job.mandal) : "",
+      village: job?.village ? String(job.village) : "",
+      doorNo: job?.doorno || "",
+      landmark: job?.landmark || "",
+      pincode: job?.pincode ? String(job.pincode) : "",
+      latitude: job?.latitude ? String(job.latitude) : "",
+      longitude: job?.longitude ? String(job.longitude) : "",
+      jobDescription: job?.jobdescription || "",
+      toolsRequired: job?.toolsrequired || "",
+      requiredPeople: job?.requiredpeople ? String(job.requiredpeople) : "",
+      workTime: job?.worktime || "",
+      preferredWorkType: job?.preferredworktype || "",
+      workRatePerDay: job?.workrateperday ? String(job.workrateperday) : "",
+      facilities: job?.facilities?.map((i) => i.facilityId) || [],
     },
     validationSchema,
     onSubmit: handleSubmit,
   });
 
+  useEffect(() => {
+    if (job?.district) {
+      getmandals(job.district);
+    }
+
+    if (job?.district && job?.mandal) {
+      getVillages(job.district, job.mandal);
+    }
+  }, [job]);
+
+
+  console.log("job.jobpostingid",job.jobpostingid);
+  
+
   async function handleSubmit(values, { setSubmitting, resetForm }) {
     try {
-      const payload = {
+      let payload = {
         ...values,
         workDuration: Number(values.workDuration),
         district: Number(values.district),
@@ -229,6 +273,9 @@ const PostJob = () => {
         requiredPeople: Number(values.requiredPeople),
         workRatePerDay: Number(values.workRatePerDay),
       };
+      if(job.jobpostingid!=null){
+        payload={...payload,  "jobPostingId":job.jobpostingid}
+      }
 
       console.log("Sending job post payload:", payload);
 
@@ -799,7 +846,7 @@ const PostJob = () => {
 
           <View style={styles.inputBlock}>
             <Text style={styles.label}>
-              Work Rate{" "} 
+              Work Rate{" "}
               {formik.values.preferredWorkType === "daily wages"
                 ? "Per Day"
                 : formik.values.preferredWorkType === "monthly"
@@ -879,7 +926,7 @@ const PostJob = () => {
             disabled={formik.isSubmitting}
           >
             <Text style={styles.submitButtonText}>
-              {formik.isSubmitting ? "POSTING..." : "POST JOB"}
+              {formik.isSubmitting ? "POSTING..." : job.jobpostingid!=null?"UPDATE JOB":"POST JOB"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -894,7 +941,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#eaf2f8",
-    paddingBottom:80
+    paddingBottom: 350,
+    marginBottom:400,
   },
   sectionCard: {
     backgroundColor: "#fff",
@@ -902,7 +950,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     elevation: 3,
-    paddingBottom:100
+    paddingBottom: 150,
   },
   sectionTitle: {
     fontSize: 22,

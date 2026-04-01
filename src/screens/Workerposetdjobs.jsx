@@ -20,7 +20,7 @@ import { showModal } from "../actions";
 
 const { width, height } = Dimensions.get("window");
 
-const Workerposetdjobs = () => {
+const Workerposetdjobs = ({navigation}) => {
   const dispatch = useDispatch();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +33,6 @@ const Workerposetdjobs = () => {
   const [applicantDetailsModalVisible, setApplicantDetailsModalVisible] =
     useState(false);
 
-  console.log("jobsjobsjobs", jobs);
 
   const getWorkerJobs = async () => {
     try {
@@ -136,23 +135,23 @@ const Workerposetdjobs = () => {
     setSelectedApplicant(null);
   };
 
- const handleCall = async (phoneNumber) => {
-  try {
-    await Linking.openURL(`tel:${phoneNumber}`);
-  } catch (e) {
-    Alert.alert("Error", "Unable to open phone dialer");
-    console.log("Call error:", e);
-  }
-};
+  const handleCall = async (phoneNumber) => {
+    try {
+      await Linking.openURL(`tel:${phoneNumber}`);
+    } catch (e) {
+      Alert.alert("Error", "Unable to open phone dialer");
+      console.log("Call error:", e);
+    }
+  };
 
-const handleEmail = async (email) => {
-  try {
-    await Linking.openURL(`mailto:${email}`);
-  } catch (e) {
-    Alert.alert("Error", "Unable to open email app");
-    console.log("Email error:", e);
-  }
-};
+  const handleEmail = async (email) => {
+    try {
+      await Linking.openURL(`mailto:${email}`);
+    } catch (e) {
+      Alert.alert("Error", "Unable to open email app");
+      console.log("Email error:", e);
+    }
+  };
 
   const handleJobAcceptReject = async (mobile, status, jobid) => {
     const payload = {
@@ -229,6 +228,10 @@ const handleEmail = async (email) => {
             <Text style={styles.dateRangeText}>
               {formatDate(job.startdate)} - {formatDate(job.enddate)}
             </Text>
+          </View>
+          <View style={styles.viewDetailsButton}>
+            <Text style={styles.viewDetailsText} onPress={()=>navigation.navigate("JobPosting",{job})}>Edit</Text>
+            <Ionicons name="create-outline" size={14} color="#4CAF50" />{" "}
           </View>
           <View style={styles.viewDetailsButton}>
             <Text style={styles.viewDetailsText}>View Details</Text>
