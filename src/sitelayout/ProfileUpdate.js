@@ -28,7 +28,7 @@ import {
   GETSKILLS,
   GETVILLAGESAPP,
 } from "../utils/utils";
-import { new_dist, profileMenu } from "../commonFunction";
+import { profileMenu } from "../utils/CommonFunctions";
 
 // ==================== Basic Details Component ====================
 
