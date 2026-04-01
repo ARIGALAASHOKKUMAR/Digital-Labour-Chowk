@@ -847,7 +847,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8f9fa",
   },
   scrollContent: {
-    paddingBottom: 20,
+    paddingBottom: 70,
   },
   centerContainer: {
     flex: 1,

@@ -27,8 +27,7 @@ import {
 const PostJob = ({ route }) => {
   const dispatch = useDispatch();
 
-  const { job } = route.params;
-
+  const job = route?.params?.job || null;
   const [dists, setDists] = useState([]);
   const [mandal, setMandal] = useState([]);
   const [village, setVillage] = useState([]);
@@ -255,10 +254,6 @@ const PostJob = ({ route }) => {
     }
   }, [job]);
 
-
-  console.log("job.jobpostingid",job.jobpostingid);
-  
-
   async function handleSubmit(values, { setSubmitting, resetForm }) {
     try {
       let payload = {
@@ -273,8 +268,8 @@ const PostJob = ({ route }) => {
         requiredPeople: Number(values.requiredPeople),
         workRatePerDay: Number(values.workRatePerDay),
       };
-      if(job.jobpostingid!=null){
-        payload={...payload,  "jobPostingId":job.jobpostingid}
+      if (job?.jobpostingid != null) {
+        payload = { ...payload, jobPostingId: job.jobpostingid };
       }
 
       console.log("Sending job post payload:", payload);
@@ -926,7 +921,11 @@ const PostJob = ({ route }) => {
             disabled={formik.isSubmitting}
           >
             <Text style={styles.submitButtonText}>
-              {formik.isSubmitting ? "POSTING..." : job.jobpostingid!=null?"UPDATE JOB":"POST JOB"}
+              {formik.isSubmitting
+                ? "POSTING..."
+                : job?.jobpostingid != null
+                  ? "UPDATE JOB"
+                  : "POST JOB"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -941,8 +940,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#eaf2f8",
-    paddingBottom: 350,
-    marginBottom:400,
   },
   sectionCard: {
     backgroundColor: "#fff",
