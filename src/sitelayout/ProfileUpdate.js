@@ -2385,6 +2385,8 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
           <TouchableOpacity
             style={[
               styles.selectBox,
+              styles.skillsSelectBoxNew,
+              showSkillsDropdown && styles.skillsSelectBoxOpenNew,
               formik.touched.workCategoryIds &&
                 formik.errors.workCategoryIds &&
                 styles.inputError,
@@ -2393,12 +2395,18 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
               formik.setFieldTouched("workCategoryIds", true);
               setShowSkillsDropdown(!showSkillsDropdown);
             }}
+            activeOpacity={0.8}
           >
             <Text
-              style={{ color: selectedSkillNames ? "#000" : "#999", flex: 1 }}
+              numberOfLines={2}
+              style={[
+                styles.skillsSelectedTextNew,
+                { color: selectedSkillNames ? "#000" : "#999" },
+              ]}
             >
               {selectedSkillNames || "Select Work Categories"}
             </Text>
+
             <Ionicons
               name={showSkillsDropdown ? "chevron-up" : "chevron-down"}
               size={20}
@@ -2407,8 +2415,8 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
           </TouchableOpacity>
 
           {showSkillsDropdown && (
-            <View style={styles.dropdownBox}>
-              {skillsList.map((item) => {
+            <View style={[styles.dropdownBox, styles.skillsDropdownBoxNew]}>
+              {skillsList.map((item, index) => {
                 const selected = normalizeCategoryIds(
                   formik.values.workCategoryIds,
                 ).includes(Number(item.id));
@@ -2416,10 +2424,26 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
                 return (
                   <TouchableOpacity
                     key={item.id}
-                    style={styles.skillItem}
+                    style={[
+                      styles.skillItem,
+                      styles.skillsDropdownItemNew,
+                      selected && styles.skillsDropdownItemSelectedNew,
+                      index === skillsList.length - 1 &&
+                        styles.skillsDropdownLastItemNew,
+                    ]}
                     onPress={() => toggleSkill(item.id)}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.skillText}>{item.skill_name}</Text>
+                    <Text
+                      style={[
+                        styles.skillText,
+                        styles.skillsDropdownTextNew,
+                        selected && styles.skillsDropdownTextSelectedNew,
+                      ]}
+                    >
+                      {item.skill_name}
+                    </Text>
+
                     <Ionicons
                       name={selected ? "checkbox" : "square-outline"}
                       size={22}
