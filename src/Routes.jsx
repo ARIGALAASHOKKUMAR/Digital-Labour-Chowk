@@ -1,4 +1,3 @@
-import React from "react";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { NavigationContainer } from "@react-navigation/native";
@@ -9,10 +8,8 @@ import HomeScreen from "./screens/HomeScreen";
 import { persistedStore, store } from "./reducers/allReducers";
 import SessionChecking from "./sitelayout/SessionChecking";
 import SiteLayout from "./sitelayout/SiteLayout";
-import IncidentReporting from "./hanuman/IncidentReporting";
 import ChangePassword from "./sitelayout/ChangePassword";
 import ProfileUpdate from "./sitelayout/ProfileUpdate";
-import Toast from "react-native-toast-message";
 import ModalPopup from "./sitelayout/ModalPopup";
 import Overlay from "./sitelayout/Overlay";
 import LoginCommon, {
@@ -48,10 +45,6 @@ export default function Routes() {
               <Stack.Screen
                 name="RegisterEmployer"
                 component={RegisterEmployer}
-              />
-              <Stack.Screen
-                name="IncidentReporting"
-                component={IncidentReporting}
               />
 
               <Stack.Screen name="ProfileUpdate">
