@@ -54,14 +54,14 @@ const AppliedJobs = ({ navigation }) => {
   };
 
   const formatTimeAgo = (value) => {
-    if (!value) return "Recently posted";
+    if (!value) return "Recently posted / ఇటీవల పోస్ట్ చేయబడింది";
     return value;
   };
 
   const formatSalary = (value) => {
     if (value === null || value === undefined || value === "")
-      return "Not mentioned";
-    return `${value}/month`;
+      return "Not mentioned / పేర్కొనబడలేదు";
+    return `${value}/month / నెలకు`;
   };
 
   const getStatusColor = (status) => {
@@ -100,18 +100,18 @@ const AppliedJobs = ({ navigation }) => {
 
   const getStatusText = (status) => {
     switch (status?.toLowerCase()) {
-      case "PENDING":
-        return "Application Under Review";
-      case "ACCEPTED":
-        return "Application Reviewed";
+      case "pending":
+        return "Application Under Review / దరఖాస్తు సమీక్షలో ఉంది";
+      case "accepted":
+        return "Application Reviewed / దరఖాస్తు సమీక్షించబడింది";
       case "shortlisted":
-        return "Shortlisted";
-      case "REJECTED":
-        return "Not Selected";
+        return "Shortlisted / షార్ట్లిస్ట్ చేయబడింది";
+      case "rejected":
+        return "Not Selected / ఎంచుకోబడలేదు";
       case "hired":
-        return "Hired";
+        return "Hired / నియమించబడింది";
       default:
-        return status || "Application Submitted";
+        return status || "Application Submitted / దరఖాస్తు సమర్పించబడింది";
     }
   };
 
@@ -123,7 +123,7 @@ const AppliedJobs = ({ navigation }) => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2d7fd3" />
-        <Text style={styles.loadingText}>Loading your applications...</Text>
+        <Text style={styles.loadingText}>Loading your applications... / మీ దరఖాస్తులు లోడ్ అవుతున్నాయి...</Text>
       </View>
     );
   }
@@ -142,10 +142,10 @@ const AppliedJobs = ({ navigation }) => {
       {appliedJobs.length > 0 ? (
         <>
           <View style={styles.headerSection}>
-            <Text style={styles.headerTitle}>My Applications</Text>
+            <Text style={styles.headerTitle}>My Applications / నా దరఖాస్తులు</Text>
             <Text style={styles.headerSubtitle}>
               You have applied for {appliedJobs.length} job
-              {appliedJobs.length !== 1 ? "s" : ""}
+              {appliedJobs.length !== 1 ? "s" : ""} / మీరు {appliedJobs.length} ఉద్యోగానికి దరఖాస్తు చేసుకున్నారు
             </Text>
           </View>
 
@@ -251,9 +251,10 @@ const AppliedJobs = ({ navigation }) => {
       ) : (
         <View style={styles.noDataCard}>
           <MaterialIcons name="work-off" size={60} color="#ccc" />
-          <Text style={styles.noDataText}>No applications found</Text>
+          <Text style={styles.noDataText}>No applications found / దరఖాస్తులు ఏమీ లేవు</Text>
           <Text style={styles.noDataSubText}>
-            You haven't applied for any jobs yet. Start exploring and apply now!
+            You haven't applied for any jobs yet. Start exploring and apply now! / 
+            మీరు ఇంకా ఏ ఉద్యోగానికి దరఖాస్తు చేసుకోలేదు. అన్వేషణ ప్రారంభించండి మరియు ఇప్పుడే దరఖాస్తు చేసుకోండి!
           </Text>
         </View>
       )}

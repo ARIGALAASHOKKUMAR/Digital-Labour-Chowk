@@ -51,9 +51,9 @@ const Employer = ({navigation}) => {
       ? parsedCategories.map((item) => item.categoryName)
       : [];
 
-  const fullName = employer?.full_name || "Employer Name";
-  const mobileNumber = employer?.mobile_number || "Mobile Number";
-  const employerType = employer?.employer_type_name || "Employer Type";
+  const fullName = employer?.full_name || "Employer Name / యజమాని పేరు";
+  const mobileNumber = employer?.mobile_number || "Mobile Number / మొబైల్ నంబర్";
+  const employerType = employer?.employer_type_name || "Employer Type / యజమాని రకం";
   const location = [
     employer?.village_name,
     employer?.mandal_name,
@@ -64,19 +64,19 @@ const Employer = ({navigation}) => {
 
   const menuItems = [
     {
-      title: "Post Job",
+      title: "Post Job / ఉద్యోగం పోస్ట్ చేయండి",
       icon: "briefcase-outline",
-      onPress: () => navigation.navigate("JobPosting"), // Direct navigation
+      onPress: () => navigation.navigate("JobPosting"),
     },
     {
-      title: "My Jobs",
+      title: "My Jobs / నా ఉద్యోగాలు",
       icon: "chatbox-ellipses-outline",
-      onPress: () => navigation.navigate("EmployerJob"), // Direct navigation
+      onPress: () => navigation.navigate("EmployerJob"),
     },
     {
-      title: "Find Worker",
+      title: "Find Worker / కార్మికుడిని కనుగొనండి",
       icon: "person-search-outline",
-      onPress: () => navigation.navigate("WorkerSearch"), // Direct navigation
+      onPress: () => navigation.navigate("WorkerSearch"),
       fullWidth: true,
     },
   ];
@@ -123,7 +123,7 @@ const Employer = ({navigation}) => {
                 ))
               ) : (
                 <View style={styles.skillChip}>
-                  <Text style={styles.skillText}>No Categories</Text>
+                  <Text style={styles.skillText}>No Categories / వర్గాలు లేవు</Text>
                 </View>
               )}
             </View>

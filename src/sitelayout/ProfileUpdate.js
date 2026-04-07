@@ -39,19 +39,19 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const employerTypes = [
-    { id: 1, label: "Individual" },
-    { id: 2, label: "Contractor" },
-    { id: 3, label: "Company" },
-    { id: 4, label: "Agency" },
+    { id: 1, label: "Individual / వ్యక్తిగత" },
+    { id: 2, label: "Contractor / కాంట్రాక్టర్" },
+    { id: 3, label: "Company / కంపెనీ" },
+    { id: 4, label: "Agency / ఏజెన్సీ" },
   ];
 
   const validationSchema = Yup.object().shape({
-    fullName: Yup.string().required("Required"),
-    mobileNumber: Yup.string().required("Required"),
-    email: Yup.string().required("Required"),
+    fullName: Yup.string().required("Required / అవసరం"),
+    mobileNumber: Yup.string().required("Required / అవసరం"),
+    email: Yup.string().required("Required / అవసరం"),
     dateOfBirth: Yup.string()
-      .required("Required")
-      .test("age-18", "You must be at least 18 years old", function (value) {
+      .required("Required / అవసరం")
+      .test("age-18", "You must be at least 18 years old / మీరు కనీసం 18 సంవత్సరాలు ఉండాలి", function (value) {
         if (!value) return false;
 
         const [day, month, year] = value.split("-");
@@ -71,10 +71,10 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
 
         return age >= 18;
       }),
-    gender: Yup.string().required("Required"),
+    gender: Yup.string().required("Required / అవసరం"),
     employerTypeId: Yup.string().when([], {
       is: () => state.roleName === "DLC Employer",
-      then: (schema) => schema.required("Required"),
+      then: (schema) => schema.required("Required / అవసరం"),
       otherwise: (schema) => schema.notRequired(),
     }),
   });
@@ -183,11 +183,11 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
     <FormikProvider value={formik}>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Basic Details</Text>
+          <Text style={styles.sectionTitle}>Basic Details / ప్రాథమిక వివరాలు</Text>
 
           <View style={styles.inputBlock}>
             <Text style={styles.label}>
-              Full Name <Text style={styles.requiredStar}>*</Text>
+              Full Name / పూర్తి పేరు <Text style={styles.requiredStar}>*</Text>
             </Text>
             <TextInput
               style={[
@@ -199,7 +199,7 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
               value={formik.values.fullName}
               onChangeText={formik.handleChange("fullName")}
               onBlur={formik.handleBlur("fullName")}
-              placeholder="Enter full name"
+              placeholder="Enter full name / పూర్తి పేరు నమోదు చేయండి"
             />
             {formik.errors.fullName && formik.touched.fullName && (
               <Text style={styles.errorText}>{formik.errors.fullName}</Text>
@@ -208,12 +208,12 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
 
           <View style={styles.inputBlock}>
             <Text style={styles.label}>
-              Date of Birth <Text style={styles.requiredStar}>*</Text>
+              Date of Birth / పుట్టిన తేదీ <Text style={styles.requiredStar}>*</Text>
             </Text>
 
             <TouchableOpacity
               style={[
-                styles.datePickerButton, // existing style
+                styles.datePickerButton,
                 {
                   flexDirection: "row",
                   alignItems: "center",
@@ -231,7 +231,7 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
             >
               <Text>
                 {reverseDate(formik.values.dateOfBirth) ||
-                  "Select Date of Birth"}
+                  "Select Date of Birth / పుట్టిన తేదీని ఎంచుకోండి"}
               </Text>{" "}
               <Ionicons name="calendar-outline" size={20} />
             </TouchableOpacity>
@@ -249,7 +249,7 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
                 }
                 mode="date"
                 display="default"
-                maximumDate={new Date()} // ✅ Restrict future dates
+                maximumDate={new Date()}
                 onChange={(event, selectedDate) => {
                   setShowDatePicker(false);
 
@@ -271,7 +271,7 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
 
           <View style={styles.inputBlock}>
             <Text style={styles.label}>
-              Gender <Text style={styles.requiredStar}>*</Text>
+              Gender / లింగం <Text style={styles.requiredStar}>*</Text>
             </Text>
 
             <View style={styles.radioRow}>
@@ -292,7 +292,11 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
                     }
                     size={22}
                   />
-                  <Text>{g}</Text>
+                  <Text>
+                    {g === "MALE" ? "MALE / పురుషుడు" : 
+                     g === "FEMALE" ? "FEMALE / స్త్రీ" : 
+                     "OTHER / ఇతర"}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -304,7 +308,7 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
 
           <View style={styles.inputBlock}>
             <Text style={styles.label}>
-              Mobile Number <Text style={styles.requiredStar}>*</Text>
+              Mobile Number / మొబైల్ నంబర్ <Text style={styles.requiredStar}>*</Text>
             </Text>
             <TextInput
               style={[
@@ -317,7 +321,7 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
               onChangeText={formik.handleChange("mobileNumber")}
               onBlur={formik.handleBlur("mobileNumber")}
               keyboardType="phone-pad"
-              placeholder="Enter mobile number"
+              placeholder="Enter mobile number / మొబైల్ నంబర్ నమోదు చేయండి"
               maxLength={10}
             />
             {formik.errors.mobileNumber && formik.touched.mobileNumber && (
@@ -327,7 +331,7 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
 
           <View style={styles.inputBlock}>
             <Text style={styles.label}>
-              Email <Text style={styles.requiredStar}>*</Text>
+              Email / ఇమెయిల్ <Text style={styles.requiredStar}>*</Text>
             </Text>
             <TextInput
               style={[
@@ -339,7 +343,7 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
               value={formik.values.email}
               onChangeText={formik.handleChange("email")}
               onBlur={formik.handleBlur("email")}
-              placeholder="Enter email"
+              placeholder="Enter email / ఇమెయిల్ నమోదు చేయండి"
               keyboardType="email-address"
             />
             {formik.errors.email && formik.touched.email && (
@@ -350,7 +354,7 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
           {showEmployerType && (
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
-                Employer Type <Text style={styles.requiredStar}>*</Text>
+                Employer Type / యజమాని రకం <Text style={styles.requiredStar}>*</Text>
               </Text>
               <View
                 style={[
@@ -367,7 +371,7 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
                     formik.setFieldValue("employerTypeId", String(itemValue));
                   }}
                 >
-                  <Picker.Item label="Select Employer Type" value="" />
+                  <Picker.Item label="Select Employer Type / యజమాని రకాన్ని ఎంచుకోండి" value="" />
                   {employerTypes.map((type) => (
                     <Picker.Item
                       key={type.id}
@@ -392,7 +396,7 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
             disabled={formik.isSubmitting}
           >
             <Text style={styles.submitButtonText}>
-              {formik.isSubmitting ? "UPDATING..." : "UPDATE PROFILE"}
+              {formik.isSubmitting ? "UPDATING... / అప్డేట్ చేస్తోంది..." : "UPDATE PROFILE / ప్రొఫైల్ అప్డేట్ చేయండి"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -411,14 +415,14 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
     ? "labourLicence"
     : "eshramCardNumber";
   const conditionalFieldLabel = showLabourLicence
-    ? "Labour Licence Number"
-    : "e-Shram Card Number";
+    ? "Labour Licence Number / లేబర్ లైసెన్స్ నంబర్"
+    : "e-Shram Card Number / ఇ-శ్రమ్ కార్డ్ నంబర్";
 
   const validationSchema = Yup.object().shape({
-    documentType: Yup.string().required("Required"),
-    documentNumber: Yup.string().required("Required"),
-    uploadDocument: Yup.string().required("Required"),
-    [conditionalFieldName]: Yup.string().required("Required"),
+    documentType: Yup.string().required("Required / అవసరం"),
+    documentNumber: Yup.string().required("Required / అవసరం"),
+    uploadDocument: Yup.string().required("Required / అవసరం"),
+    [conditionalFieldName]: Yup.string().required("Required / అవసరం"),
   });
 
   const formik = useFormik({
@@ -465,11 +469,11 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
   return (
     <FormikProvider value={formik}>
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Identity & Verification</Text>
+        <Text style={styles.sectionTitle}>Identity & Verification / గుర్తింపు & ధృవీకరణ</Text>
 
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
-            Document Type <Text style={styles.requiredStar}>*</Text>
+            Document Type / డాక్యుమెంట్ రకం <Text style={styles.requiredStar}>*</Text>
           </Text>
           <View
             style={[
@@ -487,10 +491,10 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
               }}
               enabled={!formik.isSubmitting}
             >
-              <Picker.Item label="Select Document Type" value="" />
-              <Picker.Item label="PAN" value="PAN" />
-              <Picker.Item label="Driving License" value="DRIVING_LICENSE" />
-              <Picker.Item label="Voter ID" value="VOTER_ID" />
+              <Picker.Item label="Select Document Type / డాక్యుమెంట్ రకాన్ని ఎంచుకోండి" value="" />
+              <Picker.Item label="PAN / పాన్" value="PAN" />
+              <Picker.Item label="Driving License / డ్రైవింగ్ లైసెన్స్" value="DRIVING_LICENSE" />
+              <Picker.Item label="Voter ID / ఓటరు ID" value="VOTER_ID" />
             </Picker>
           </View>
           {formik.errors.documentType && formik.touched.documentType && (
@@ -500,7 +504,7 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
 
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
-            Document Number <Text style={styles.requiredStar}>*</Text>
+            Document Number / డాక్యుమెంట్ నంబర్ <Text style={styles.requiredStar}>*</Text>
           </Text>
           <TextInput
             style={[
@@ -512,7 +516,7 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
             value={formik.values.documentNumber}
             onChangeText={formik.handleChange("documentNumber")}
             onBlur={formik.handleBlur("documentNumber")}
-            placeholder="Enter Document Number"
+            placeholder="Enter Document Number / డాక్యుమెంట్ నంబర్ నమోదు చేయండి"
             editable={!formik.isSubmitting}
           />
           {formik.errors.documentNumber && formik.touched.documentNumber && (
@@ -522,7 +526,7 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
 
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
-            Upload Document <Text style={styles.requiredStar}>*</Text>
+            Upload Document / డాక్యుమెంట్ అప్లోడ్ చేయండి <Text style={styles.requiredStar}>*</Text>
           </Text>
           <TouchableOpacity
             style={[
@@ -533,12 +537,12 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
             ]}
             onPress={() => {
               formik.setFieldTouched("uploadDocument", true);
-              Alert.alert("Upload", "Open Document Picker");
+              Alert.alert("Upload / అప్లోడ్", "Open Document Picker / డాక్యుమెంట్ పికర్ తెరవండి");
               formik.setFieldValue("uploadDocument", "test-document.pdf");
             }}
             disabled={formik.isSubmitting}
           >
-            <Text style={styles.uploadButtonText}>Upload Document</Text>
+            <Text style={styles.uploadButtonText}>Upload Document / డాక్యుమెంట్ అప్లోడ్ చేయండి</Text>
           </TouchableOpacity>
 
           {formik.values.uploadDocument ? (
@@ -566,7 +570,7 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
             value={formik.values[conditionalFieldName]}
             onChangeText={formik.handleChange(conditionalFieldName)}
             onBlur={formik.handleBlur(conditionalFieldName)}
-            placeholder={`Enter ${conditionalFieldLabel}`}
+            placeholder={`Enter ${conditionalFieldLabel} / ${conditionalFieldLabel} నమోదు చేయండి`}
             editable={!formik.isSubmitting}
           />
           {formik.errors[conditionalFieldName] &&
@@ -586,7 +590,7 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
           disabled={formik.isSubmitting}
         >
           <Text style={styles.submitButtonText}>
-            {formik.isSubmitting ? "SAVING..." : "SAVE"}
+            {formik.isSubmitting ? "SAVING... / సేవ్ చేస్తోంది..." : "SAVE / సేవ్ చేయండి"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -672,14 +676,14 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
   }, [userData, dists, initialDataLoaded]);
 
   const validationSchema = Yup.object().shape({
-    district: Yup.string().required("Required"),
-    mandal: Yup.string().required("Required"),
-    village: Yup.string().required("Required"),
-    plotOrHouseNumber: Yup.string().required("Required"),
-    landmark: Yup.string().required("Required"),
-    pincode: Yup.string().required("Required"),
-    latitude: Yup.string().required("Required"),
-    longitude: Yup.string().required("Required"),
+    district: Yup.string().required("Required / అవసరం"),
+    mandal: Yup.string().required("Required / అవసరం"),
+    village: Yup.string().required("Required / అవసరం"),
+    plotOrHouseNumber: Yup.string().required("Required / అవసరం"),
+    landmark: Yup.string().required("Required / అవసరం"),
+    pincode: Yup.string().required("Required / అవసరం"),
+    latitude: Yup.string().required("Required / అవసరం"),
+    longitude: Yup.string().required("Required / అవసరం"),
   });
 
   // ✅ initialValues now populated from API data
@@ -731,7 +735,7 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
       const { status } = await Location.requestForegroundPermissionsAsync();
 
       if (status !== "granted") {
-        Alert.alert("Permission denied", "Location permission is required");
+        Alert.alert("Permission denied / అనుమతి నిరాకరించబడింది", "Location permission is required / స్థాన అనుమతి అవసరం");
         return;
       }
 
@@ -754,7 +758,7 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
       }
     } catch (error) {
       console.log("Location error:", error);
-      Alert.alert("Error", "Unable to fetch location");
+      Alert.alert("Error / లోపం", "Unable to fetch location / స్థానాన్ని పొందడం సాధ్యం కాలేదు");
     }
   };
 
@@ -766,11 +770,11 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
   return (
     <FormikProvider value={formik}>
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Location Information</Text>
+        <Text style={styles.sectionTitle}>Location Information / స్థాన సమాచారం</Text>
 
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
-            District <Text style={styles.requiredStar}>*</Text>
+            District / జిల్లా <Text style={styles.requiredStar}>*</Text>
           </Text>
           <View
             style={[
@@ -795,7 +799,7 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
                 }
               }}
             >
-              <Picker.Item label="---Select District---" value="" />
+              <Picker.Item label="---Select District / జిల్లాను ఎంచుకోండి---" value="" />
               {dists.map((dist) => (
                 <Picker.Item
                   key={String(dist.dist_code)}
@@ -812,7 +816,7 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
 
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
-            Mandal <Text style={styles.requiredStar}>*</Text>
+            Mandal / మండలం <Text style={styles.requiredStar}>*</Text>
           </Text>
           <View
             style={[
@@ -836,7 +840,7 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
               }}
               enabled={!!formik.values.district}
             >
-              <Picker.Item label="---Select Mandal---" value="" />
+              <Picker.Item label="---Select Mandal / మండలాన్ని ఎంచుకోండి---" value="" />
               {mandal.map((item) => (
                 <Picker.Item
                   key={String(item.mandal_code)}
@@ -853,7 +857,7 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
 
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
-            Village <Text style={styles.requiredStar}>*</Text>
+            Village / గ్రామం <Text style={styles.requiredStar}>*</Text>
           </Text>
           <View
             style={[
@@ -871,7 +875,7 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
               }}
               enabled={!!formik.values.mandal}
             >
-              <Picker.Item label="---Select Village---" value="" />
+              <Picker.Item label="---Select Village / గ్రామాన్ని ఎంచుకోండి---" value="" />
               {village.map((item) => (
                 <Picker.Item
                   key={String(item.village_code)}
@@ -888,7 +892,7 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
 
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
-            Door No. <Text style={styles.requiredStar}>*</Text>
+            Door No. / ద్వారం నంబర్ <Text style={styles.requiredStar}>*</Text>
           </Text>
           <TextInput
             style={[
@@ -900,7 +904,7 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
             value={formik.values.plotOrHouseNumber}
             onChangeText={formik.handleChange("plotOrHouseNumber")}
             onBlur={formik.handleBlur("plotOrHouseNumber")}
-            placeholder="Enter Door No."
+            placeholder="Enter Door No. / ద్వారం నంబర్ నమోదు చేయండి"
             maxLength={20}
           />
           {formik.errors.plotOrHouseNumber &&
@@ -913,7 +917,7 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
 
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
-            Landmark <Text style={styles.requiredStar}>*</Text>
+            Landmark / ల్యాండ్మార్క్ <Text style={styles.requiredStar}>*</Text>
           </Text>
           <TextInput
             style={[
@@ -925,7 +929,7 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
             value={formik.values.landmark}
             onChangeText={formik.handleChange("landmark")}
             onBlur={formik.handleBlur("landmark")}
-            placeholder="Enter Landmark"
+            placeholder="Enter Landmark / ల్యాండ్మార్క్ నమోదు చేయండి"
             maxLength={100}
           />
           {formik.errors.landmark && formik.touched.landmark && (
@@ -935,7 +939,7 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
 
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
-            Pin Code <Text style={styles.requiredStar}>*</Text>
+            Pin Code / పిన్ కోడ్ <Text style={styles.requiredStar}>*</Text>
           </Text>
           <TextInput
             style={[
@@ -947,7 +951,7 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
             value={formik.values.pincode}
             onChangeText={formik.handleChange("pincode")}
             onBlur={formik.handleBlur("pincode")}
-            placeholder="Enter Pin Code"
+            placeholder="Enter Pin Code / పిన్ కోడ్ నమోదు చేయండి"
             keyboardType="numeric"
             maxLength={6}
           />
@@ -958,7 +962,7 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
 
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
-            Latitude <Text style={styles.requiredStar}>*</Text>
+            Latitude / అక్షాంశం <Text style={styles.requiredStar}>*</Text>
           </Text>
           <TextInput
             style={[
@@ -970,7 +974,7 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
             value={formik.values.latitude}
             onChangeText={formik.handleChange("latitude")}
             onBlur={formik.handleBlur("latitude")}
-            placeholder="Latitude"
+            placeholder="Latitude / అక్షాంశం"
           />
           {formik.errors.latitude && formik.touched.latitude && (
             <Text style={styles.errorText}>{formik.errors.latitude}</Text>
@@ -979,7 +983,7 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
 
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
-            Longitude <Text style={styles.requiredStar}>*</Text>
+            Longitude / రేఖాంశం <Text style={styles.requiredStar}>*</Text>
           </Text>
           <TextInput
             style={[
@@ -991,7 +995,7 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
             value={formik.values.longitude}
             onChangeText={formik.handleChange("longitude")}
             onBlur={formik.handleBlur("longitude")}
-            placeholder="Longitude"
+            placeholder="Longitude / రేఖాంశం"
           />
           {formik.errors.longitude && formik.touched.longitude && (
             <Text style={styles.errorText}>{formik.errors.longitude}</Text>
@@ -1007,7 +1011,7 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
           disabled={formik.isSubmitting}
         >
           <Text style={styles.submitButtonText}>
-            {formik.isSubmitting ? "SAVING..." : "SAVE"}
+            {formik.isSubmitting ? "SAVING... / సేవ్ చేస్తోంది..." : "SAVE / సేవ్ చేయండి"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -1038,11 +1042,11 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
   };
 
   const validationSchema = Yup.object().shape({
-    skillIds: Yup.array().min(1, "Required").required("Required"),
-    experienceYears: Yup.string().required("Required"),
-    preferredWorkType: Yup.string().required("Required"),
-    dailyRate: Yup.string().required("Required"),
-    workType: Yup.string().required("Required"),
+    skillIds: Yup.array().min(1, "Required / అవసరం").required("Required / అవసరం"),
+    experienceYears: Yup.string().required("Required / అవసరం"),
+    preferredWorkType: Yup.string().required("Required / అవసరం"),
+    dailyRate: Yup.string().required("Required / అవసరం"),
+    workType: Yup.string().required("Required / అవసరం"),
   });
 
   // ✅ initialValues now populated from API data
@@ -1129,11 +1133,11 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
   return (
     <FormikProvider value={formik}>
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Skill Details</Text>
+        <Text style={styles.sectionTitle}>Skill Details / నైపుణ్య వివరాలు</Text>
 
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
-            Select Skills <Text style={styles.requiredStar}>*</Text>
+            Select Skills / నైపుణ్యాలను ఎంచుకోండి <Text style={styles.requiredStar}>*</Text>
           </Text>
 
           <TouchableOpacity
@@ -1158,7 +1162,7 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
                 { color: selectedSkillNames ? "#000" : "#999" },
               ]}
             >
-              {selectedSkillNames || "Select Skills"}
+              {selectedSkillNames || "Select Skills / నైపుణ్యాలను ఎంచుకోండి"}
             </Text>
 
             <Ionicons
@@ -1214,7 +1218,7 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
 
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
-            Experience <Text style={styles.requiredStar}>*</Text>
+            Experience / అనుభవం <Text style={styles.requiredStar}>*</Text>
           </Text>
           <TextInput
             style={[
@@ -1226,7 +1230,7 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
             value={formik.values.experienceYears}
             onChangeText={formik.handleChange("experienceYears")}
             onBlur={formik.handleBlur("experienceYears")}
-            placeholder="Enter experience in years"
+            placeholder="Enter experience in years / సంవత్సరాలలో అనుభవం నమోదు చేయండి"
             keyboardType="numeric"
             maxLength={2}
           />
@@ -1239,7 +1243,7 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
 
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
-            Preferred Work Type <Text style={styles.requiredStar}>*</Text>
+            Preferred Work Type / ప్రాధాన్య పని రకం <Text style={styles.requiredStar}>*</Text>
           </Text>
           <View style={styles.radioColumn}>
             <TouchableOpacity
@@ -1258,7 +1262,7 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
                 size={22}
                 color="#0d6efd"
               />
-              <Text style={styles.radioText}>Daily Wage</Text>
+              <Text style={styles.radioText}>Daily Wage / రోజువారీ వేతనం</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -1277,7 +1281,7 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
                 size={22}
                 color="#0d6efd"
               />
-              <Text style={styles.radioText}>Contract</Text>
+              <Text style={styles.radioText}>Contract / కాంట్రాక్ట్</Text>
             </TouchableOpacity>
           </View>
           {formik.errors.preferredWorkType &&
@@ -1290,7 +1294,7 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
 
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
-            Daily Rate <Text style={styles.requiredStar}>*</Text>
+            Daily Rate / రోజువారీ రేటు <Text style={styles.requiredStar}>*</Text>
           </Text>
           <TextInput
             style={[
@@ -1302,7 +1306,7 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
             value={formik.values.dailyRate}
             onChangeText={formik.handleChange("dailyRate")}
             onBlur={formik.handleBlur("dailyRate")}
-            placeholder="Enter daily rate"
+            placeholder="Enter daily rate / రోజువారీ రేటు నమోదు చేయండి"
             keyboardType="numeric"
             maxLength={6}
           />
@@ -1313,7 +1317,7 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
 
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
-            Select Availability for Work{" "}
+            Select Availability for Work / పని కోసం లభ్యతను ఎంచుకోండి{" "}
             <Text style={styles.requiredStar}>*</Text>
           </Text>
           <View
@@ -1331,9 +1335,9 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
                 formik.setFieldValue("workType", itemValue);
               }}
             >
-              <Picker.Item label="Select Availability" value="" />
-              <Picker.Item label="Yes" value="yes" />
-              <Picker.Item label="No" value="no" />
+              <Picker.Item label="Select Availability / లభ్యతను ఎంచుకోండి" value="" />
+              <Picker.Item label="Yes / అవును" value="yes" />
+              <Picker.Item label="No / లేదు" value="no" />
             </Picker>
           </View>
           {formik.errors.workType && formik.touched.workType && (
@@ -1350,7 +1354,7 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
           disabled={formik.isSubmitting}
         >
           <Text style={styles.submitButtonText}>
-            {formik.isSubmitting ? "SAVING..." : "SAVE"}
+            {formik.isSubmitting ? "SAVING... / సేవ్ చేస్తోంది..." : "SAVE / సేవ్ చేయండి"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -1453,20 +1457,20 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
   const validationSchema = Yup.object().shape({
     workerExperienceList: Yup.array().of(
       Yup.object().shape({
-        employeeName: Yup.string().required("Required"),
-        projectName: Yup.string().required("Required"),
-        workPlace: Yup.string().required("Required"),
-        workType: Yup.string().required("Required"),
-        skillIds: Yup.array().min(1, "Required").required("Required"),
-        taskDescription: Yup.string().required("Required"),
-        startDate: Yup.string().required("Required"),
-        endDate: Yup.string().required("Required"),
-        daysWorked: Yup.string().required("Required"),
-        dailyWage: Yup.string().required("Required"),
-        totalAmount: Yup.string().required("Required"),
-        paymentStatus: Yup.string().required("Required"),
-        remarks: Yup.string().required("Required"),
-        rating: Yup.string().required("Required"),
+        employeeName: Yup.string().required("Required / అవసరం"),
+        projectName: Yup.string().required("Required / అవసరం"),
+        workPlace: Yup.string().required("Required / అవసరం"),
+        workType: Yup.string().required("Required / అవసరం"),
+        skillIds: Yup.array().min(1, "Required / అవసరం").required("Required / అవసరం"),
+        taskDescription: Yup.string().required("Required / అవసరం"),
+        startDate: Yup.string().required("Required / అవసరం"),
+        endDate: Yup.string().required("Required / అవసరం"),
+        daysWorked: Yup.string().required("Required / అవసరం"),
+        dailyWage: Yup.string().required("Required / అవసరం"),
+        totalAmount: Yup.string().required("Required / అవసరం"),
+        paymentStatus: Yup.string().required("Required / అవసరం"),
+        remarks: Yup.string().required("Required / అవసరం"),
+        rating: Yup.string().required("Required / అవసరం"),
       }),
     ),
   });
@@ -1563,7 +1567,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
     formik.setFieldValue("workerExperienceList", newExperiences);
   };
 
-  // Toggle skill selection for multi-select - FIXED: removed setCurrentSkillIndex(null)
+  // Toggle skill selection for multi-select
   const toggleSkill = (expIndex, skillId) => {
     formik.setFieldTouched(`workerExperienceList[${expIndex}].skillIds`, true);
     const currentSkillIds =
@@ -1580,7 +1584,6 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
       `workerExperienceList[${expIndex}].skillIds`,
       newSkillIds,
     );
-    // REMOVED: setCurrentSkillIndex(null); - This was closing the dropdown
   };
 
   // Get selected skill names for display
@@ -1664,7 +1667,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
           );
 
           if (end < start) {
-            Alert.alert("Invalid Date", "End date cannot be before Start date");
+            Alert.alert("Invalid Date / చెల్లని తేదీ", "End date cannot be before Start date / ముగింపు తేదీ ప్రారంభ తేదీకి ముందు ఉండకూడదు");
             return;
           }
         }
@@ -1680,12 +1683,12 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
   return (
     <FormikProvider value={formik}>
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Experience / Work Experience</Text>
+        <Text style={styles.sectionTitle}>Experience / Work Experience / అనుభవం / పని అనుభవం</Text>
 
         {formik.values.workerExperienceList.map((item, index) => (
           <View key={index} style={styles.experienceCard}>
             <View style={styles.expHeader}>
-              <Text style={styles.expTitle}>Experience {index + 1}</Text>
+              <Text style={styles.expTitle}>Experience {index + 1} / అనుభవం {index + 1}</Text>
 
               {formik.values.workerExperienceList.length > 1 && (
                 <TouchableOpacity
@@ -1693,14 +1696,14 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                   onPress={() => removeExperience(index)}
                 >
                   <Ionicons name="trash-outline" size={18} color="#fff" />
-                  <Text style={styles.deleteBtnText}>Delete</Text>
+                  <Text style={styles.deleteBtnText}>Delete / తొలగించు</Text>
                 </TouchableOpacity>
               )}
             </View>
 
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
-                Employer Name <Text style={styles.requiredStar}>*</Text>
+                Employer Name / యజమాని పేరు <Text style={styles.requiredStar}>*</Text>
               </Text>
               <TextInput
                 style={[
@@ -1716,7 +1719,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                 onBlur={formik.handleBlur(
                   `workerExperienceList[${index}].employeeName`,
                 )}
-                placeholder="Enter Employer Name"
+                placeholder="Enter Employer Name / యజమాని పేరు నమోదు చేయండి"
               />
               {formik.touched.workerExperienceList?.[index]?.employeeName &&
                 formik.errors.workerExperienceList?.[index]?.employeeName && (
@@ -1728,7 +1731,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
 
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
-                Project Name <Text style={styles.requiredStar}>*</Text>
+                Project Name / ప్రాజెక్ట్ పేరు <Text style={styles.requiredStar}>*</Text>
               </Text>
               <TextInput
                 style={[
@@ -1744,7 +1747,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                 onBlur={formik.handleBlur(
                   `workerExperienceList[${index}].projectName`,
                 )}
-                placeholder="Enter Project Name"
+                placeholder="Enter Project Name / ప్రాజెక్ట్ పేరు నమోదు చేయండి"
               />
               {formik.touched.workerExperienceList?.[index]?.projectName &&
                 formik.errors.workerExperienceList?.[index]?.projectName && (
@@ -1756,7 +1759,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
 
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
-                Work Place <Text style={styles.requiredStar}>*</Text>
+                Work Place / పని స్థలం <Text style={styles.requiredStar}>*</Text>
               </Text>
               <TextInput
                 style={[
@@ -1772,7 +1775,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                 onBlur={formik.handleBlur(
                   `workerExperienceList[${index}].workPlace`,
                 )}
-                placeholder="Enter Work Place"
+                placeholder="Enter Work Place / పని స్థలం నమోదు చేయండి"
               />
               {formik.touched.workerExperienceList?.[index]?.workPlace &&
                 formik.errors.workerExperienceList?.[index]?.workPlace && (
@@ -1784,7 +1787,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
 
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
-                Work Type <Text style={styles.requiredStar}>*</Text>
+                Work Type / పని రకం <Text style={styles.requiredStar}>*</Text>
               </Text>
               <TextInput
                 style={[
@@ -1800,7 +1803,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                 onBlur={formik.handleBlur(
                   `workerExperienceList[${index}].workType`,
                 )}
-                placeholder="Enter Work Type"
+                placeholder="Enter Work Type / పని రకం నమోదు చేయండి"
               />
               {formik.touched.workerExperienceList?.[index]?.workType &&
                 formik.errors.workerExperienceList?.[index]?.workType && (
@@ -1810,10 +1813,10 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                 )}
             </View>
 
-            {/* Skills Multi-select - UPDATED with new styles */}
+            {/* Skills Multi-select */}
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
-                Skills <Text style={styles.requiredStar}>*</Text>
+                Skills / నైపుణ్యాలు <Text style={styles.requiredStar}>*</Text>
               </Text>
 
               <TouchableOpacity
@@ -1832,7 +1835,6 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                     `workerExperienceList[${index}].skillIds`,
                     true,
                   );
-                  // Toggle dropdown for this specific index
                   setCurrentSkillIndex(
                     currentSkillIndex === index ? null : index,
                   );
@@ -1847,7 +1849,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                     { color: getSelectedSkillNames(index) ? "#000" : "#999" },
                   ]}
                 >
-                  {getSelectedSkillNames(index) || "Select Skills"}
+                  {getSelectedSkillNames(index) || "Select Skills / నైపుణ్యాలను ఎంచుకోండి"}
                 </Text>
 
                 <Ionicons
@@ -1912,7 +1914,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
 
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
-                Task Description <Text style={styles.requiredStar}>*</Text>
+                Task Description / పని వివరణ <Text style={styles.requiredStar}>*</Text>
               </Text>
               <TextInput
                 style={[
@@ -1931,7 +1933,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                 onBlur={formik.handleBlur(
                   `workerExperienceList[${index}].taskDescription`,
                 )}
-                placeholder="Enter Task Description"
+                placeholder="Enter Task Description / పని వివరణ నమోదు చేయండి"
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
@@ -1947,7 +1949,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
 
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
-                Start Date <Text style={styles.requiredStar}>*</Text>
+                Start Date / ప్రారంభ తేదీ <Text style={styles.requiredStar}>*</Text>
               </Text>
               <TouchableOpacity
                 style={[
@@ -1959,7 +1961,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                 onPress={() => openDatePicker("startDate", index)}
               >
                 <Text style={{ color: item.startDate ? "#000" : "#999" }}>
-                  {item.startDate || "Select Start Date"}
+                  {item.startDate || "Select Start Date / ప్రారంభ తేదీని ఎంచుకోండి"}
                 </Text>
               </TouchableOpacity>
               {formik.touched.workerExperienceList?.[index]?.startDate &&
@@ -1972,7 +1974,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
 
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
-                End Date <Text style={styles.requiredStar}>*</Text>
+                End Date / ముగింపు తేదీ <Text style={styles.requiredStar}>*</Text>
               </Text>
               <TouchableOpacity
                 style={[
@@ -1984,7 +1986,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                 onPress={() => openDatePicker("endDate", index)}
               >
                 <Text style={{ color: item.endDate ? "#000" : "#999" }}>
-                  {item.endDate || "Select End Date"}
+                  {item.endDate || "Select End Date / ముగింపు తేదీని ఎంచుకోండి"}
                 </Text>
               </TouchableOpacity>
               {formik.touched.workerExperienceList?.[index]?.endDate &&
@@ -1997,7 +1999,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
 
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
-                Days Worked <Text style={styles.requiredStar}>*</Text>
+                Days Worked / పని చేసిన రోజులు <Text style={styles.requiredStar}>*</Text>
               </Text>
               <TextInput
                 style={[
@@ -2018,7 +2020,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                   `workerExperienceList[${index}].daysWorked`,
                 )}
                 keyboardType="numeric"
-                placeholder="Enter Days Worked"
+                placeholder="Enter Days Worked / పని చేసిన రోజులు నమోదు చేయండి"
               />
               {formik.touched.workerExperienceList?.[index]?.daysWorked &&
                 formik.errors.workerExperienceList?.[index]?.daysWorked && (
@@ -2030,7 +2032,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
 
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
-                Daily Wage <Text style={styles.requiredStar}>*</Text>
+                Daily Wage / రోజువారీ వేతనం <Text style={styles.requiredStar}>*</Text>
               </Text>
               <TextInput
                 style={[
@@ -2051,7 +2053,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                   `workerExperienceList[${index}].dailyWage`,
                 )}
                 keyboardType="numeric"
-                placeholder="Enter Daily Wage"
+                placeholder="Enter Daily Wage / రోజువారీ వేతనం నమోదు చేయండి"
               />
               {formik.touched.workerExperienceList?.[index]?.dailyWage &&
                 formik.errors.workerExperienceList?.[index]?.dailyWage && (
@@ -2063,7 +2065,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
 
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
-                Total Amount <Text style={styles.requiredStar}>*</Text>
+                Total Amount / మొత్తం మొత్తం <Text style={styles.requiredStar}>*</Text>
               </Text>
               <TextInput
                 style={[
@@ -2075,7 +2077,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                 ]}
                 value={item.totalAmount}
                 editable={false}
-                placeholder="Total Amount"
+                placeholder="Total Amount / మొత్తం మొత్తం"
               />
               {formik.touched.workerExperienceList?.[index]?.totalAmount &&
                 formik.errors.workerExperienceList?.[index]?.totalAmount && (
@@ -2087,7 +2089,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
 
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
-                Payment Status <Text style={styles.requiredStar}>*</Text>
+                Payment Status / చెల్లింపు స్థితి <Text style={styles.requiredStar}>*</Text>
               </Text>
               <View
                 style={[
@@ -2111,10 +2113,10 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                     );
                   }}
                 >
-                  <Picker.Item label="Select Payment Status" value="" />
-                  <Picker.Item label="Paid" value="paid" />
-                  <Picker.Item label="Pending" value="pending" />
-                  <Picker.Item label="Partial" value="partial" />
+                  <Picker.Item label="Select Payment Status / చెల్లింపు స్థితిని ఎంచుకోండి" value="" />
+                  <Picker.Item label="Paid / చెల్లించబడింది" value="paid" />
+                  <Picker.Item label="Pending / పెండింగ్" value="pending" />
+                  <Picker.Item label="Partial / పాక్షికం" value="partial" />
                 </Picker>
               </View>
               {formik.touched.workerExperienceList?.[index]?.paymentStatus &&
@@ -2127,7 +2129,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
 
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
-                Remarks <Text style={styles.requiredStar}>*</Text>
+                Remarks / వ్యాఖ్యలు <Text style={styles.requiredStar}>*</Text>
               </Text>
               <TextInput
                 style={[
@@ -2144,7 +2146,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                 onBlur={formik.handleBlur(
                   `workerExperienceList[${index}].remarks`,
                 )}
-                placeholder="Enter Remarks"
+                placeholder="Enter Remarks / వ్యాఖ్యలు నమోదు చేయండి"
                 multiline
                 numberOfLines={3}
                 textAlignVertical="top"
@@ -2159,7 +2161,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
 
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
-                Rating <Text style={styles.requiredStar}>*</Text>
+                Rating / రేటింగ్ <Text style={styles.requiredStar}>*</Text>
               </Text>
               <View
                 style={[
@@ -2182,7 +2184,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                     );
                   }}
                 >
-                  <Picker.Item label="Select Rating" value="" />
+                  <Picker.Item label="Select Rating / రేటింగ్ ఎంచుకోండి" value="" />
                   <Picker.Item label="1" value="1" />
                   <Picker.Item label="2" value="2" />
                   <Picker.Item label="3" value="3" />
@@ -2202,7 +2204,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
 
         <TouchableOpacity style={styles.addMoreBtn} onPress={addExperience}>
           <Ionicons name="add-circle-outline" size={20} color="#fff" />
-          <Text style={styles.addMoreBtnText}>Add Experience</Text>
+          <Text style={styles.addMoreBtnText}>Add Experience / అనుభవాన్ని జోడించండి</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -2214,7 +2216,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
           disabled={formik.isSubmitting}
         >
           <Text style={styles.submitButtonText}>
-            {formik.isSubmitting ? "SAVING..." : "SAVE"}
+            {formik.isSubmitting ? "SAVING... / సేవ్ చేస్తోంది..." : "SAVE / సేవ్ చేయండి"}
           </Text>
         </TouchableOpacity>
 
@@ -2281,8 +2283,8 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
   }, [userData?.categories]);
 
   const validationSchema = Yup.object().shape({
-    workCategoryIds: Yup.array().min(1, "Required").required("Required"),
-    averageWorkersHiredPerMonth: Yup.string().required("Required"),
+    workCategoryIds: Yup.array().min(1, "Required / అవసరం").required("Required / అవసరం"),
+    averageWorkersHiredPerMonth: Yup.string().required("Required / అవసరం"),
   });
 
   const formik = useFormik({
@@ -2375,11 +2377,11 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
   return (
     <FormikProvider value={formik}>
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Employer Work Details</Text>
+        <Text style={styles.sectionTitle}>Employer Work Details / యజమాని పని వివరాలు</Text>
 
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
-            Work Categories <Text style={styles.requiredStar}>*</Text>
+            Work Categories / పని వర్గాలు <Text style={styles.requiredStar}>*</Text>
           </Text>
 
           <TouchableOpacity
@@ -2404,7 +2406,7 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
                 { color: selectedSkillNames ? "#000" : "#999" },
               ]}
             >
-              {selectedSkillNames || "Select Work Categories"}
+              {selectedSkillNames || "Select Work Categories / పని వర్గాలను ఎంచుకోండి"}
             </Text>
 
             <Ionicons
@@ -2464,7 +2466,7 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
 
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
-            Average Workers Hired Per Month{" "}
+            Average Workers Hired Per Month / నెలకు సగటు కార్మికులు నియమించబడ్డారు{" "}
             <Text style={styles.requiredStar}>*</Text>
           </Text>
 
@@ -2483,7 +2485,7 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
                 formik.setFieldValue("averageWorkersHiredPerMonth", itemValue);
               }}
             >
-              <Picker.Item label="Select Range" value="" />
+              <Picker.Item label="Select Range / పరిధిని ఎంచుకోండి" value="" />
               {averageWorkersOptions.map((option) => (
                 <Picker.Item
                   key={option.value}
@@ -2511,7 +2513,7 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
           disabled={formik.isSubmitting}
         >
           <Text style={styles.submitButtonText}>
-            {formik.isSubmitting ? "SAVING..." : "SAVE"}
+            {formik.isSubmitting ? "SAVING... / సేవ్ చేస్తోంది..." : "SAVE / సేవ్ చేయండి"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -2554,13 +2556,13 @@ const Education = ({ userData, onUpdateSuccess }) => {
     workerEducationList: Yup.array()
       .of(
         Yup.object().shape({
-          educationLevel: Yup.string().required("Required"),
-          institutionName: Yup.string().required("Required"),
-          passingYear: Yup.string().required("Required"),
+          educationLevel: Yup.string().required("Required / అవసరం"),
+          institutionName: Yup.string().required("Required / అవసరం"),
+          passingYear: Yup.string().required("Required / అవసరం"),
           // uploadCertificate: Yup.string().required("Required"),
         }),
       )
-      .min(1, "Required"),
+      .min(1, "Required / అవసరం"),
   });
 
   // Initialize with parsed education data
@@ -2613,7 +2615,7 @@ const Education = ({ userData, onUpdateSuccess }) => {
     <FormikProvider value={formik}>
       <ScrollView contentContainerStyle={{ paddingBottom: 30 }}>
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Education</Text>
+          <Text style={styles.sectionTitle}>Education / విద్య</Text>
 
           <FieldArray
             name="workerEducationList"
@@ -2623,7 +2625,7 @@ const Education = ({ userData, onUpdateSuccess }) => {
                   <View key={index} style={styles.educationCard}>
                     <View style={styles.rowBetween}>
                       <Text style={styles.subTitle}>
-                        Qualification {index + 1}
+                        Qualification {index + 1} / అర్హత {index + 1}
                       </Text>
                       {formik.values.workerEducationList.length > 1 && (
                         <TouchableOpacity
@@ -2635,14 +2637,14 @@ const Education = ({ userData, onUpdateSuccess }) => {
                             size={18}
                             color="#fff"
                           />
-                          <Text style={styles.deleteBtnText}>Delete</Text>
+                          <Text style={styles.deleteBtnText}>Delete / తొలగించు</Text>
                         </TouchableOpacity>
                       )}
                     </View>
 
                     <View style={styles.inputBlock}>
                       <Text style={styles.label}>
-                        Education Level{" "}
+                        Education Level / విద్యా స్థాయి{" "}
                         <Text style={styles.requiredStar}>*</Text>
                       </Text>
                       <View
@@ -2666,18 +2668,18 @@ const Education = ({ userData, onUpdateSuccess }) => {
                           }}
                         >
                           <Picker.Item
-                            label="Select Education Level"
+                            label="Select Education Level / విద్యా స్థాయిని ఎంచుకోండి"
                             value=""
                           />
-                          <Picker.Item label="8th" value="8th" />
-                          <Picker.Item label="10th" value="10th" />
-                          <Picker.Item label="12th" value="12th" />
-                          <Picker.Item label="Graduation" value="graduation" />
+                          <Picker.Item label="8th / 8వ తరగతి" value="8th" />
+                          <Picker.Item label="10th / 10వ తరగతి" value="10th" />
+                          <Picker.Item label="12th / 12వ తరగతి" value="12th" />
+                          <Picker.Item label="Graduation / డిగ్రీ" value="graduation" />
                           <Picker.Item
-                            label="Post Graduation"
+                            label="Post Graduation / పోస్ట్ గ్రాడ్యుయేషన్"
                             value="post_graduation"
                           />
-                          <Picker.Item label="Diploma" value="diploma" />
+                          <Picker.Item label="Diploma / డిప్లొమా" value="diploma" />
                         </Picker>
                       </View>
                       {getError(index, "educationLevel") ? (
@@ -2692,7 +2694,7 @@ const Education = ({ userData, onUpdateSuccess }) => {
 
                     <View style={styles.inputBlock}>
                       <Text style={styles.label}>
-                        Institute / School / College{" "}
+                        Institute / School / College / సంస్థ / పాఠశాల / కళాశాల{" "}
                         <Text style={styles.requiredStar}>*</Text>
                       </Text>
                       <TextInput
@@ -2708,7 +2710,7 @@ const Education = ({ userData, onUpdateSuccess }) => {
                         onBlur={formik.handleBlur(
                           `workerEducationList[${index}].institutionName`,
                         )}
-                        placeholder="Enter Institute / School / College Name"
+                        placeholder="Enter Institute / School / College Name / సంస్థ / పాఠశాల / కళాశాల పేరు నమోదు చేయండి"
                       />
                       {getError(index, "institutionName") ? (
                         <Text style={styles.errorText}>
@@ -2722,7 +2724,8 @@ const Education = ({ userData, onUpdateSuccess }) => {
 
                     <View style={styles.inputBlock}>
                       <Text style={styles.label}>
-                        Passing Year <Text style={styles.requiredStar}>*</Text>
+                        Passing Year / ఉత్తీర్ణత సంవత్సరం{" "}
+                        <Text style={styles.requiredStar}>*</Text>
                       </Text>
                       <TextInput
                         style={[
@@ -2736,7 +2739,7 @@ const Education = ({ userData, onUpdateSuccess }) => {
                         onBlur={formik.handleBlur(
                           `workerEducationList[${index}].passingYear`,
                         )}
-                        placeholder="Enter Passing Year"
+                        placeholder="Enter Passing Year / ఉత్తీర్ణత సంవత్సరం నమోదు చేయండి"
                         keyboardType="numeric"
                         maxLength={4}
                       />
@@ -2749,7 +2752,7 @@ const Education = ({ userData, onUpdateSuccess }) => {
 
                     <View style={styles.inputBlock}>
                       <Text style={styles.label}>
-                        Upload Certificate{" "}
+                        Upload Certificate / సర్టిఫికేట్ అప్లోడ్ చేయండి{" "}
                         <Text style={styles.requiredStar}>*</Text>
                       </Text>
                       <TouchableOpacity
@@ -2766,8 +2769,8 @@ const Education = ({ userData, onUpdateSuccess }) => {
 
                           // replace with actual picker
                           Alert.alert(
-                            "Upload Certificate",
-                            `Upload certificate for row ${index + 1}`,
+                            "Upload Certificate / సర్టిఫికేట్ అప్లోడ్ చేయండి",
+                            `Upload certificate for row ${index + 1} / వరుస ${index + 1} కోసం సర్టిఫికేట్ అప్లోడ్ చేయండి`,
                           );
 
                           formik.setFieldValue(
@@ -2777,15 +2780,15 @@ const Education = ({ userData, onUpdateSuccess }) => {
                         }}
                       >
                         <Text style={styles.uploadButtonText}>
-                          Upload Certificate
+                          Upload Certificate / సర్టిఫికేట్ అప్లోడ్ చేయండి
                         </Text>
                       </TouchableOpacity>
 
                       {item.uploadCertificate ? (
                         <Text style={styles.fileNameText}>
                           {item.uploadCertificate === "certificate-uploaded"
-                            ? "Certificate selected"
-                            : "Certificate available"}
+                            ? "Certificate selected / సర్టిఫికేట్ ఎంచుకోబడింది"
+                            : "Certificate available / సర్టిఫికేట్ అందుబాటులో ఉంది"}
                         </Text>
                       ) : null}
 
@@ -2805,7 +2808,9 @@ const Education = ({ userData, onUpdateSuccess }) => {
                   style={styles.addButton}
                   onPress={() => arrayHelpers.push({ ...emptyEducation })}
                 >
-                  <Text style={styles.addButtonText}>+ Add Qualification</Text>
+                  <Text style={styles.addButtonText}>
+                    + Add Qualification / అర్హతను జోడించండి
+                  </Text>
                 </TouchableOpacity>
               </>
             )}
@@ -2820,7 +2825,7 @@ const Education = ({ userData, onUpdateSuccess }) => {
             disabled={formik.isSubmitting}
           >
             <Text style={styles.submitButtonText}>
-              {formik.isSubmitting ? "SAVING..." : "SAVE"}
+              {formik.isSubmitting ? "SAVING... / సేవ్ చేస్తోంది..." : "SAVE / సేవ్ చేయండి"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -2940,13 +2945,14 @@ const ChangePassword = () => {
 const Help = () => {
   return (
     <View style={styles.sectionCard}>
-      <Text style={styles.sectionTitle}>Help</Text>
+      <Text style={styles.sectionTitle}>Help / సహాయం</Text>
 
       <View style={styles.helpBox}>
-        <Text style={styles.helpText}>Email: support@example.com</Text>
-        <Text style={styles.helpText}>Phone: +91 9876543210</Text>
+        <Text style={styles.helpText}>Email / ఇమెయిల్: support@example.com</Text>
+        <Text style={styles.helpText}>Phone / ఫోన్: +91 9876543210</Text>
         <Text style={styles.helpText}>
-          For profile update issues, contact support team.
+          For profile update issues, contact support team. / 
+          ప్రొఫైల్ అప్డేట్ సమస్యల కోసం, సపోర్ట్ టీమ్ను సంప్రదించండి.
         </Text>
       </View>
     </View>
@@ -3093,13 +3099,30 @@ const ProfileUpdate = () => {
     return !!value;
   };
 
+  // Helper function to translate section titles
+  const getSectionTitle = (section) => {
+    if (!section) return "My Profile / నా ప్రొఫైల్";
+    
+    const titles = {
+      basic_details: "Basic Details / ప్రాథమిక వివరాలు",
+      identity_verification: "Identity Verification / గుర్తింపు ధృవీకరణ",
+      location_information: "Location Information / స్థాన సమాచారం",
+      skill_details: "Skill Details / నైపుణ్య వివరాలు",
+      work_experience: "Work Experience / పని అనుభవం",
+      education: "Education / విద్య",
+      change_password: "Change Password / పాస్వర్డ్ మార్చండి",
+      work_details: "Work Details / పని వివరాలు",
+      help: "Help / సహాయం"
+    };
+    
+    return titles[section] || section.replace(/_/g, " ").toUpperCase() + " / " + section.replace(/_/g, " ").toUpperCase();
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
         <Text style={styles.header}>
-          {selectedSection
-            ? selectedSection.replace(/_/g, " ").toUpperCase()
-            : "My Profile"}
+          {selectedSection ? getSectionTitle(selectedSection) : "My Profile / నా ప్రొఫైల్"}
         </Text>
 
         <View style={styles.panel}>
@@ -3120,6 +3143,18 @@ const ProfileUpdate = () => {
                 })
                 .map((item) => {
                   const completed = isCompleted(item.key);
+                  
+                  // Translate menu titles
+                  let menuTitle = item.title;
+                  if (item.value === "basic_details") menuTitle = "Basic Details / ప్రాథమిక వివరాలు";
+                  else if (item.value === "identity_verification") menuTitle = "Identity Verification / గుర్తింపు ధృవీకరణ";
+                  else if (item.value === "location_information") menuTitle = "Location Information / స్థాన సమాచారం";
+                  else if (item.value === "skill_details") menuTitle = "Skill Details / నైపుణ్య వివరాలు";
+                  else if (item.value === "work_experience") menuTitle = "Work Experience / పని అనుభవం";
+                  else if (item.value === "education") menuTitle = "Education / విద్య";
+                  else if (item.value === "change_password") menuTitle = "Change Password / పాస్వర్డ్ మార్చండి";
+                  else if (item.value === "work_details") menuTitle = "Work Details / పని వివరాలు";
+                  else if (item.value === "help") menuTitle = "Help / సహాయం";
 
                   return (
                     <TouchableOpacity
@@ -3135,7 +3170,7 @@ const ProfileUpdate = () => {
                           color="#1e3a5f"
                           style={styles.menuIcon}
                         />
-                        <Text style={styles.menuTitle}>{item.title}</Text>
+                        <Text style={styles.menuTitle}>{menuTitle}</Text>
                       </View>
 
                       {item.value !== "help" && (
@@ -3159,9 +3194,9 @@ const ProfileUpdate = () => {
                               color="red"
                             />
                           )}
-                          <Text>
-                            {completed ? "Completed" : "Not Completed"}
-                          </Text>
+                          {/* <Text>
+                            {completed ? "Completed / పూర్తయింది" : "Not Completed / పూర్తి కాలేదు"}
+                          </Text> */}
                         </View>
                       )}
 
@@ -3181,7 +3216,7 @@ const ProfileUpdate = () => {
                 onPress={() => setSelectedSection(null)}
               >
                 <Ionicons name="arrow-back" size={20} color="#0d6efd" />
-                <Text style={styles.backButtonText}>Back to Profile Menu</Text>
+                <Text style={styles.backButtonText}>Back to Profile Menu / ప్రొఫైల్ మెనూకి తిరిగి వెళ్ళు</Text>
               </TouchableOpacity>
 
               {renderSelectedSection()}

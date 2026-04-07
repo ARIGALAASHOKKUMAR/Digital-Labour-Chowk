@@ -213,14 +213,14 @@ const JobSearchScreen = ({ navigation }) => {
   };
 
   const formatTimeAgo = (value) => {
-    if (!value) return "Recently posted";
+    if (!value) return "Recently posted / ఇటీవల పోస్ట్ చేయబడింది";
     return value;
   };
 
   const formatSalary = (value) => {
     if (value === null || value === undefined || value === "")
-      return "Not mentioned";
-    return `₹ ${value}/month`;
+      return "Not mentioned / పేర్కొనబడలేదు";
+    return `₹ ${value}/month / నెలకు`;
   };
 
   const ApplyJob = async (id) => {
@@ -233,7 +233,7 @@ const JobSearchScreen = ({ navigation }) => {
       dispatch,
     );
     if (response.status === 200) {
-      Alert.alert("Success", "Job applied successfully");
+      Alert.alert("Success", "Job applied successfully / ఉద్యోగం విజయవంతంగా దరఖాస్తు చేయబడింది");
       handleSearch();
       // setResultsList([]);
     }
@@ -289,7 +289,7 @@ const JobSearchScreen = ({ navigation }) => {
             onPress={() => ApplyJob(item.jobpostingid)}
           >
             <Ionicons name="checkmark-circle-outline" size={16} color="#fff" />
-            <Text style={styles.applyJobButtonText}>Apply Job</Text>
+            <Text style={styles.applyJobButtonText}>Apply Job / ఉద్యోగానికి దరఖాస్తు చేయండి</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -358,7 +358,7 @@ const JobSearchScreen = ({ navigation }) => {
         <View style={styles.jobMetaRow}>
           <MaterialIcons name="work-outline" size={13} color="#666" />
           <Text style={styles.jobMetaText}>
-            {worker.skill_experience_years || 0} yrs experience
+            {worker.skill_experience_years || 0} yrs experience / సంవత్సరాల అనుభవం
           </Text>
         </View>
 
@@ -366,7 +366,7 @@ const JobSearchScreen = ({ navigation }) => {
         <View style={styles.jobMetaRow}>
           <FontAwesome5 name="rupee-sign" size={11} color="#c58543" />
           <Text style={styles.jobMetaText}>
-            ₹ {worker.skill_daily_rate || 0}/day
+            ₹ {worker.skill_daily_rate || 0}/day / రోజుకు
           </Text>
         </View>
 
@@ -387,7 +387,7 @@ const JobSearchScreen = ({ navigation }) => {
             onPress={() => handleContactWorker(worker)}
           >
             <Ionicons name="call-outline" size={16} color="#fff" />
-            <Text style={styles.applyJobButtonText}>Contact</Text>
+            <Text style={styles.applyJobButtonText}>Contact / సంప్రదించండి</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -408,26 +408,14 @@ const JobSearchScreen = ({ navigation }) => {
     </TouchableOpacity>
   );
 
-  // Helper function to get worker skills summary
-  // const getWorkerSkills = (skillsString) => {
-  //   try {
-  //     const skills = JSON.parse(skillsString || "[]");
-  //     if (skills.length === 0) return "No skills listed";
-  //     const skillNames = skills.slice(0, 3).map((s) => s.skillName);
-  //     return skillNames.join(", ") + (skills.length > 3 ? "..." : "");
-  //   } catch (error) {
-  //     return "Skills not available";
-  //   }
-  // };
-
   const handleContactWorker = (worker) => {
     Alert.alert(
-      "Contact Worker",
-      `Name: ${worker.full_name}\nMobile: ${worker.mobile_number}\nEmail: ${worker.email}`,
+      "Contact Worker / కార్మికుడిని సంప్రదించండి",
+      `Name / పేరు: ${worker.full_name}\nMobile / మొబైల్: ${worker.mobile_number}\nEmail / ఇమెయిల్: ${worker.email}`,
       [
-        { text: "OK", style: "default" },
+        { text: "OK / సరే", style: "default" },
         {
-          text: "Call",
+          text: "Call / కాల్ చేయండి",
           onPress: () => console.log("Call:", worker.mobile_number),
         },
       ],
@@ -443,13 +431,13 @@ const JobSearchScreen = ({ navigation }) => {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.pageTitle}>
-          {isEmployer ? "Find Workers" : "Find Work / Jobs"}
+          {isEmployer ? "Find Workers / కార్మికులను కనుగొనండి" : "Find Work / Jobs / ఉద్యోగాలు కనుగొనండి"}
         </Text>
 
         <View style={styles.formCard}>
           <View style={styles.row}>
             <View style={styles.halfWidth}>
-              <Text style={styles.fieldLabel}>District</Text>
+              <Text style={styles.fieldLabel}>District / జిల్లా</Text>
               <View style={styles.selectBox}>
                 <Picker
                   selectedValue={districtId}
@@ -465,7 +453,7 @@ const JobSearchScreen = ({ navigation }) => {
                     }
                   }}
                 >
-                  <Picker.Item label="Select District" value="" />
+                  <Picker.Item label="Select District / జిల్లాను ఎంచుకోండి" value="" />
                   {dists.map((dist) => (
                     <Picker.Item
                       key={String(dist.dist_code)}
@@ -478,7 +466,7 @@ const JobSearchScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.halfWidth}>
-              <Text style={styles.fieldLabel}>Mandal</Text>
+              <Text style={styles.fieldLabel}>Mandal / మండలం</Text>
               <View style={styles.selectBox}>
                 <Picker
                   selectedValue={mandalId}
@@ -493,7 +481,7 @@ const JobSearchScreen = ({ navigation }) => {
                     }
                   }}
                 >
-                  <Picker.Item label="Select Mandal" value="" />
+                  <Picker.Item label="Select Mandal / మండలాన్ని ఎంచుకోండి" value="" />
                   {mandal.map((item) => (
                     <Picker.Item
                       key={String(item.mandal_code)}
@@ -508,7 +496,7 @@ const JobSearchScreen = ({ navigation }) => {
 
           <View style={styles.row}>
             <View style={styles.halfWidth}>
-              <Text style={styles.fieldLabel}>Village</Text>
+              <Text style={styles.fieldLabel}>Village / గ్రామం</Text>
               <View style={styles.selectBox}>
                 <Picker
                   selectedValue={villageId}
@@ -517,7 +505,7 @@ const JobSearchScreen = ({ navigation }) => {
                     setVillageId(itemValue);
                   }}
                 >
-                  <Picker.Item label="Select Village" value="" />
+                  <Picker.Item label="Select Village / గ్రామాన్ని ఎంచుకోండి" value="" />
                   {village.map((item) => (
                     <Picker.Item
                       key={String(item.village_code)}
@@ -531,7 +519,7 @@ const JobSearchScreen = ({ navigation }) => {
 
             <View style={styles.halfWidth}>
               <Text style={styles.fieldLabel}>
-                {isEmployer ? "Expected Rate (₹)" : "Range (₹)"}
+                {isEmployer ? "Expected Rate (₹) / ఆశించిన రేటు (₹)" : "Range (₹) / పరిధి (₹)"}
               </Text>
               <View style={styles.inputWithIcon}>
                 <Ionicons name="cash-outline" size={18} color="#666" />
@@ -541,7 +529,7 @@ const JobSearchScreen = ({ navigation }) => {
                   onChangeText={(text) =>
                     setWorkRate(text.replace(/[^0-9]/g, ""))
                   }
-                  placeholder="Enter amount"
+                  placeholder="Enter amount / మొత్తాన్ని నమోదు చేయండి"
                   keyboardType="numeric"
                   maxLength={10}
                 />
@@ -551,7 +539,7 @@ const JobSearchScreen = ({ navigation }) => {
 
           <View style={styles.fullWidthBlock}>
             <Text style={styles.fieldLabel}>
-              {isEmployer ? "Required Skills" : "Skills"}
+              {isEmployer ? "Required Skills / అవసరమైన నైపుణ్యాలు" : "Skills / నైపుణ్యాలు"}
             </Text>
 
             <TouchableOpacity
@@ -570,7 +558,7 @@ const JobSearchScreen = ({ navigation }) => {
                   { color: selectedSkillNames ? "#000" : "#999" },
                 ]}
               >
-                {selectedSkillNames || "Select Skills"}
+                {selectedSkillNames || "Select Skills / నైపుణ్యాలను ఎంచుకోండి"}
               </Text>
 
               <Ionicons
@@ -633,7 +621,7 @@ const JobSearchScreen = ({ navigation }) => {
               ) : (
                 <>
                   <Ionicons name="search" size={16} color="#fff" />
-                  <Text style={styles.searchButtonText}>SEARCH</Text>
+                  <Text style={styles.searchButtonText}>SEARCH / వెతకండి</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -650,14 +638,14 @@ const JobSearchScreen = ({ navigation }) => {
             >
               <Ionicons name="map-outline" size={16} color="#2d7fd3" />
               <Text style={styles.mapButtonText}>
-                {showMap ? "LIST VIEW" : "MAP VIEW"}
+                {showMap ? "LIST VIEW / జాబితా వీక్షణ" : "MAP VIEW / మ్యాప్ వీక్షణ"}
               </Text>
             </TouchableOpacity>
           </View>
         </View>
 
         <Text style={styles.resultsHeading}>
-          {isEmployer ? "Worker Results" : "Search Results"}
+          {isEmployer ? "Worker Results / కార్మికుల ఫలితాలు" : "Search Results / శోధన ఫలితాలు"}
         </Text>
 
         {loading ? (
@@ -679,7 +667,7 @@ const JobSearchScreen = ({ navigation }) => {
         ) : (
           <View style={styles.noDataCard}>
             <Text style={styles.noDataText}>
-              {isEmployer ? "No workers found" : "No jobs found"}
+              {isEmployer ? "No workers found / కార్మికులు ఏరీ లేరు" : "No jobs found / ఉద్యోగాలు ఏమీ లేవు"}
             </Text>
           </View>
         )}

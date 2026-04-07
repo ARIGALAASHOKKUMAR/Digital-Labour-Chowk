@@ -128,12 +128,16 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
 
             <View style={styles.infoLine}>
               <Icon name="phone" size={16} color="#2a7fd1" />
-              <Text style={styles.infoText}>{profile.mobile}</Text>
+              <Text style={styles.infoText}>
+                Phone (ఫోన్): {profile.mobile}
+              </Text>
             </View>
 
             <View style={styles.infoLine}>
               <Icon name="email" size={16} color="#2a7fd1" />
-              <Text style={styles.infoText}>{profile.email}</Text>
+              <Text style={styles.infoText}>
+                Email (ఇమెయిల్): {profile.email}
+              </Text>
             </View>
           </View>
         </View>
@@ -143,14 +147,14 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
             <Icon name="access-time" size={20} color="#7da3c7" />
             <Text
               style={{
-                fontSize: 16, // or whatever font size you need
-                fontWeight: "bold", // or whatever styling you need
+                fontSize: 16,
+                fontWeight: "bold",
                 color: workerData.skill_work_type === "yes" ? "green" : "red",
               }}
             >
               {workerData.skill_work_type === "yes"
-                ? "Available"
-                : "Not Available"}
+                ? "Available (అందుబాటులో ఉంది)"
+                : "Not Available (అందుబాటులో లేదు)"}
             </Text>{" "}
             <View style={styles.toggleCircle} />
           </View>
@@ -164,7 +168,7 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
               style={styles.blueTileText}
               onPress={() => navigation.navigate("AppliedJob")}
             >
-              Work / Job{"\n"}Applied
+              Work / Job (పని / ఉద్యోగం){"\n"}Applied (దరఖాస్తు చేసినవి)
             </Text>
           </TouchableOpacity>
 
@@ -173,7 +177,9 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
             style={[styles.topTile, styles.blueTile]}
           >
             <Icon name="chat" size={22} color="#2a7fd1" />
-            <Text style={styles.blueTileText}>Chat</Text>
+            <Text style={styles.blueTileText}>
+              Chat (చాట్)
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -181,19 +187,25 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
       <View style={styles.infoGrid}>
         <View style={styles.infoBox}>
           <Icon name="location-on" size={20} color="#2a7fd1" />
-          <Text style={styles.infoBoxLabel}>Location</Text>
+          <Text style={styles.infoBoxLabel}>
+            Location (స్థానం)
+          </Text>
           <Text style={styles.infoBoxValue}>{profile.location}</Text>
         </View>
 
         <View style={styles.infoBox}>
           <Icon name="work-outline" size={20} color="#2a7fd1" />
-          <Text style={styles.infoBoxLabel}>Experience</Text>
+          <Text style={styles.infoBoxLabel}>
+            Experience (అనుభవం)
+          </Text>
           <Text style={styles.infoBoxValue}>{profile.experience}</Text>
         </View>
 
         <View style={styles.infoBox}>
           <Icon name="badge" size={20} color="#2a7fd1" />
-          <Text style={styles.infoBoxLabel}>Age</Text>
+          <Text style={styles.infoBoxLabel}>
+            Age (వయస్సు)
+          </Text>
           <Text style={styles.infoBoxValue}>{profile.age}</Text>
         </View>
 
@@ -202,12 +214,16 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
           style={[styles.infoBox, styles.activeSchemeBox]}
         >
           <Icon name="currency-rupee" size={20} color="#2a7fd1" />
-          <Text style={styles.infoBoxValue}>Welfare and Schemes</Text>
+          <Text style={styles.infoBoxValue}>
+            Welfare and Schemes (సంక్షేమ పథకాలు)
+          </Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.sectionWrap}>
-        <Text style={styles.sectionTitle}>Work History</Text>
+        <Text style={styles.sectionTitle}>
+          Work History (పని చరిత్ర)
+        </Text>
 
         {displayWorkHistory.map((item, index) => {
           const itemSkills =
@@ -221,28 +237,33 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
                 <Text style={styles.dateText}>
                   {formatDate(item.startDate)}-{formatDate(item.endDate)}
                 </Text>
-                {/* <Text style={styles.dateText}>
-                    {formatDate(item.endDate)}
-                  </Text> */}
               </View>
 
               <Text style={styles.workText}>
-                <Text style={styles.boldText}>Project Name: </Text>
+                <Text style={styles.boldText}>
+                  Project Name (ప్రాజెక్ట్ పేరు):{" "}
+                </Text>
                 {item.projectName || "N/A"}
               </Text>
 
               <Text style={styles.workText}>
-                <Text style={styles.boldText}>Employer Name: </Text>
+                <Text style={styles.boldText}>
+                  Employer Name (నియోజకుడి పేరు):{" "}
+                </Text>
                 {item.employerName || item.employeeName || "N/A"}
               </Text>
 
               <Text style={styles.workText}>
-                <Text style={styles.boldText}>Description: </Text>
+                <Text style={styles.boldText}>
+                  Description (వివరణ):{" "}
+                </Text>
                 {item.taskDescription || "N/A"}
               </Text>
 
               <Text style={[styles.workText, { marginTop: 6 }]}>
-                <Text style={styles.boldText}>Skills:</Text>
+                <Text style={styles.boldText}>
+                  Skills (నైపుణ్యాలు):
+                </Text>
               </Text>
 
               <View style={styles.chipWrap}>
@@ -270,13 +291,17 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
 
               <View style={styles.bottomRow}>
                 <Text style={styles.paymentText}>
-                  <Text style={styles.boldText}>Payment: </Text>
+                  <Text style={styles.boldText}>
+                    Payment (చెల్లింపు):{" "}
+                  </Text>
                   {item.paymentStatus || "Completed"} ( ₹
                   {item.totalAmount || "42,000/month"})
                 </Text>
 
                 <Text style={styles.ratingText}>
-                  <Text style={styles.boldText}>Rating: </Text>
+                  <Text style={styles.boldText}>
+                    Rating (రేటింగ్):{" "}
+                  </Text>
                   {item.rating || "4.7"}/5
                 </Text>
               </View>
@@ -286,7 +311,9 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
       </View>
 
       <View style={styles.sectionWrap}>
-        <Text style={styles.sectionTitle}>Skill & Specializations</Text>
+        <Text style={styles.sectionTitle}>
+          Skill & Specializations (నైపుణ్యాలు & ప్రత్యేకతలు)
+        </Text>
         <View style={styles.chipWrap}>
           {displaySkills.map((skill, index) => (
             <View key={index} style={styles.bottomSkillChip}>
