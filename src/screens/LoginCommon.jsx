@@ -376,8 +376,8 @@ const LoginCommon = ({ navigation }) => {
       </View>
 
       <Text style={styles.title}>
-        Are you an existing{" "}
-        {selectedUserType === "worker" ? "worker" : "employer"} ?
+        మీరు ఇప్పటికే{" "}
+        {selectedUserType === "worker" ? "కార్మికుడా" : "నియోజకుడా"} ?
       </Text>
 
       <TouchableOpacity
@@ -387,7 +387,7 @@ const LoginCommon = ({ navigation }) => {
       >
         <Ionicons name="person-add-outline" size={20} color="#1e3a5f" />
         <Text style={styles.actionButtonSecondaryText}>
-          New User{"\n"}Register for the first time
+          కొత్త వినియోగదారు{"\n"}మొదటి సారి నమోదు చేసుకోండి
         </Text>
       </TouchableOpacity>
 
@@ -401,7 +401,7 @@ const LoginCommon = ({ navigation }) => {
       >
         <Ionicons name="log-in-outline" size={20} color="#fff" />
         <Text style={styles.actionButtonPrimaryText}>
-          Existing User{"\n"}Login With Phone Number
+          ఇప్పటికే ఉన్న వినియోగదారు{"\n"}ఫోన్ నంబర్‌తో లాగిన్ అవ్వండి
         </Text>
       </TouchableOpacity>
     </View>
@@ -925,10 +925,13 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
 
             <Text style={styles.deptName}>DEPARTMENT OF LABOUR</Text>
             <Text style={styles.title}>
-              {isWorker ? "Worker Registration / కార్మికుడి నమోదు" : "Employer Registration / యజమాని నమోదు"}
+              {isWorker
+                ? "Worker Registration / కార్మికుడి నమోదు"
+                : "Employer Registration / యజమాని నమోదు"}
             </Text>
             <Text style={styles.subtitle}>
-              Fill in the details to create your account / ఖాతాను సృష్టించడానికి వివరాలను నింపండి
+              Fill in the details to create your account / ఖాతాను సృష్టించడానికి
+              వివరాలను నింపండి
             </Text>
 
             {/* Full Name Field */}
@@ -1200,7 +1203,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
                 <Ionicons name="lock-closed" size={24} color="#1e3a5f" />
-                <Text style={styles.modalTitle}>Verify OTP / OTP నిర్ధారించండి</Text>
+                <Text style={styles.modalTitle}>
+                  Verify OTP / OTP నిర్ధారించండి
+                </Text>
               </View>
               <TouchableOpacity
                 onPress={handleCloseModal}
@@ -1211,7 +1216,8 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
             </View>
 
             <Text style={styles.modalSubtitle}>
-              Enter the 6-digit code sent to {formik.values.mobileNumber} / {formik.values.mobileNumber}కి పంపిన 6-అంకెల కోడ్ నమోదు చేయండి
+              Enter the 6-digit code sent to {formik.values.mobileNumber} /{" "}
+              {formik.values.mobileNumber}కి పంపిన 6-అంకెల కోడ్ నమోదు చేయండి
             </Text>
 
             <View style={styles.modalOtpContainer}>
@@ -1239,7 +1245,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
               </View>
 
               <View style={styles.resendOtpContainer}>
-                <Text style={styles.resendOtpText}>Didn't receive OTP? / OTP రాలేదా? </Text>
+                <Text style={styles.resendOtpText}>
+                  Didn't receive OTP? / OTP రాలేదా?{" "}
+                </Text>
                 <TouchableOpacity
                   onPress={handleResendOtp}
                   disabled={otpTimer > 0 || otpLoading}
@@ -1269,7 +1277,9 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <>
-                  <Text style={styles.submitButtonText}>Verify & Register / నిర్ధారించి నమోదు చేయండి</Text>
+                  <Text style={styles.submitButtonText}>
+                    Verify & Register / నిర్ధారించి నమోదు చేయండి
+                  </Text>
                   <Ionicons
                     name="checkmark-circle-outline"
                     size={20}
