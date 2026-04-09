@@ -175,6 +175,7 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
           <TouchableOpacity
             activeOpacity={0.9}
             style={[styles.topTile, styles.blueTile]}
+            onPress={()=>Alert("Coming Soon")}
           >
             <Icon name="chat" size={22} color="#2a7fd1" />
             <Text style={styles.blueTileText}>

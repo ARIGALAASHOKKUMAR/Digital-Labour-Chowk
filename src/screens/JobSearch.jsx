@@ -679,8 +679,8 @@ const JobSearchScreen = ({ navigation }) => {
               <Ionicons name="map-outline" size={16} color="#2d7fd3" />
               <Text style={styles.mapButtonText}>
                 {showMap
-                  ? "LIST VIEW / జాబితా వీక్షణ"
-                  : "MAP VIEW / మ్యాప్ వీక్షణ"}
+                  ? "LIST VIEW / జాబితా "
+                  : "MAP VIEW / మ్యాప్ "}
               </Text>
             </TouchableOpacity>
           </View>
