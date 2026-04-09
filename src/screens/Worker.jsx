@@ -14,7 +14,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { useSelector } from "react-redux";
 
-const Worker = ({ skills, workHistory, workerData, loading, refreshing,photoPath }) => {
+const Worker = ({
+  skills,
+  workHistory,
+  workerData,
+  loading,
+  refreshing,
+  photoPath,
+}) => {
   const navigation = useNavigation();
 
   const calculateAge = (dob) => {
@@ -101,7 +108,6 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing,photoPath
     );
   }
 
-
   return (
     <ScrollView
       showsVerticalScrollIndicator={true}
@@ -155,8 +161,8 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing,photoPath
               }}
             >
               {workerData.skill_work_type === "yes"
-                ? "Available (అందుబాటులో ఉంది)"
-                : "Not Available (అందుబాటులో లేదు)"}
+                ? "అందుబాటులో ఉన్నాను"
+                : "అందుబాటులో లేను"}
             </Text>{" "}
             <View style={styles.toggleCircle} />
           </View>
@@ -177,12 +183,10 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing,photoPath
           <TouchableOpacity
             activeOpacity={0.9}
             style={[styles.topTile, styles.blueTile]}
-            onPress={()=>Alert("Coming Soon")}
+            onPress={() => Alert("Coming Soon")}
           >
             <Icon name="chat" size={22} color="#2a7fd1" />
-            <Text style={styles.blueTileText}>
-              Chat (చాట్)
-            </Text>
+            <Text style={styles.blueTileText}>Chat (చాట్)</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -190,25 +194,19 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing,photoPath
       <View style={styles.infoGrid}>
         <View style={styles.infoBox}>
           <Icon name="location-on" size={20} color="#2a7fd1" />
-          <Text style={styles.infoBoxLabel}>
-            Location (స్థానం)
-          </Text>
+          <Text style={styles.infoBoxLabel}>Location (స్థానం)</Text>
           <Text style={styles.infoBoxValue}>{profile.location}</Text>
         </View>
 
         <View style={styles.infoBox}>
           <Icon name="work-outline" size={20} color="#2a7fd1" />
-          <Text style={styles.infoBoxLabel}>
-            Experience (అనుభవం)
-          </Text>
+          <Text style={styles.infoBoxLabel}>Experience (అనుభవం)</Text>
           <Text style={styles.infoBoxValue}>{profile.experience}</Text>
         </View>
 
         <View style={styles.infoBox}>
           <Icon name="badge" size={20} color="#2a7fd1" />
-          <Text style={styles.infoBoxLabel}>
-            Age (వయస్సు)
-          </Text>
+          <Text style={styles.infoBoxLabel}>Age (వయస్సు)</Text>
           <Text style={styles.infoBoxValue}>{profile.age}</Text>
         </View>
 
@@ -224,9 +222,7 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing,photoPath
       </View>
 
       <View style={styles.sectionWrap}>
-        <Text style={styles.sectionTitle}>
-          Work History (పని చరిత్ర)
-        </Text>
+        <Text style={styles.sectionTitle}>Work History (పని చరిత్ర)</Text>
 
         {displayWorkHistory.map((item, index) => {
           const itemSkills =
@@ -257,16 +253,12 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing,photoPath
               </Text>
 
               <Text style={styles.workText}>
-                <Text style={styles.boldText}>
-                  Description (వివరణ):{" "}
-                </Text>
+                <Text style={styles.boldText}>Description (వివరణ): </Text>
                 {item.taskDescription || "N/A"}
               </Text>
 
               <Text style={[styles.workText, { marginTop: 6 }]}>
-                <Text style={styles.boldText}>
-                  Skills (నైపుణ్యాలు):
-                </Text>
+                <Text style={styles.boldText}>Skills (నైపుణ్యాలు):</Text>
               </Text>
 
               <View style={styles.chipWrap}>
@@ -294,17 +286,13 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing,photoPath
 
               <View style={styles.bottomRow}>
                 <Text style={styles.paymentText}>
-                  <Text style={styles.boldText}>
-                    Payment (చెల్లింపు):{" "}
-                  </Text>
+                  <Text style={styles.boldText}>Payment (చెల్లింపు): </Text>
                   {item.paymentStatus || "Completed"} ( ₹
                   {item.totalAmount || "42,000/month"})
                 </Text>
 
                 <Text style={styles.ratingText}>
-                  <Text style={styles.boldText}>
-                    Rating (రేటింగ్):{" "}
-                  </Text>
+                  <Text style={styles.boldText}>Rating (రేటింగ్): </Text>
                   {item.rating || "4.7"}/5
                 </Text>
               </View>

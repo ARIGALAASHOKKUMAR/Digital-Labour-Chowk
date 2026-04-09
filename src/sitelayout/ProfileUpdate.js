@@ -48,7 +48,7 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
   const validationSchema = Yup.object().shape({
     fullName: Yup.string().required("Required / అవసరం"),
     mobileNumber: Yup.string().required("Required / అవసరం"),
-    email: Yup.string().required("Required / అవసరం"),
+    // email: Yup.string().required("Required / అవసరం"),
     dateOfBirth: Yup.string()
       .required("Required / అవసరం")
       .test("age-18", "You must be at least 18 years old / మీరు కనీసం 18 సంవత్సరాలు ఉండాలి", function (value) {
@@ -331,7 +331,7 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
 
           <View style={styles.inputBlock}>
             <Text style={styles.label}>
-              Email / ఇమెయిల్ <Text style={styles.requiredStar}>*</Text>
+              Email / ఇమెయిల్ <Text style={styles.requiredStar}></Text>
             </Text>
             <TextInput
               style={[
