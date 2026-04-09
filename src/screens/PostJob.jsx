@@ -24,7 +24,7 @@ import {
   GETVILLAGESAPP,
 } from "../utils/utils";
 
-const PostJob = ({ route }) => {
+const PostJob = ({ route,navigation }) => {
   const dispatch = useDispatch();
 
   const job = route?.params?.job || null;
@@ -285,6 +285,7 @@ const PostJob = ({ route }) => {
         resetForm();
         setMandal([]);
         setVillage([]);
+        navigation.navigate("EmployerJob")
       }
     } catch (error) {
       console.log("Error:", error);

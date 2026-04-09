@@ -234,7 +234,7 @@ const Workerposetdjobs = ({navigation}) => {
             <Ionicons name="create-outline" size={14} color="#4CAF50" />{" "}
           </View>
           <View style={styles.viewDetailsButton}>
-            <Text style={styles.viewDetailsText}>View Details</Text>
+            <Text style={styles.viewDetailsText}>View </Text>
             <Ionicons name="arrow-forward" size={14} color="#4CAF50" />
           </View>
         </View>
