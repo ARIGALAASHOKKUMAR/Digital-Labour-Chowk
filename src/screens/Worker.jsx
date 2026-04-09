@@ -12,8 +12,9 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import { useSelector } from "react-redux";
 
-const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
+const Worker = ({ skills, workHistory, workerData, loading, refreshing,photoPath }) => {
   const navigation = useNavigation();
 
   const calculateAge = (dob) => {
@@ -100,6 +101,7 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
     );
   }
 
+
   return (
     <ScrollView
       showsVerticalScrollIndicator={true}
@@ -116,7 +118,7 @@ const Worker = ({ skills, workHistory, workerData, loading, refreshing }) => {
             ) : (
               <Image
                 source={{
-                  uri: "https://cdn.pixabay.com/photo/2019/08/11/18/59/icon-4399701_1280.png",
+                  uri: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
                 }}
                 style={styles.profileImage}
               />

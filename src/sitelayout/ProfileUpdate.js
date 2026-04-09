@@ -2949,7 +2949,7 @@ const Help = () => {
 
       <View style={styles.helpBox}>
         <Text style={styles.helpText}>Email / ఇమెయిల్: support@example.com</Text>
-        <Text style={styles.helpText}>Phone / ఫోన్: +91 9876543210</Text>
+        <Text style={styles.helpText}>Phone / ఫోన్: +91 9999999999</Text>
         <Text style={styles.helpText}>
           For profile update issues, contact support team. / 
           ప్రొఫైల్ అప్డేట్ సమస్యల కోసం, సపోర్ట్ టీమ్ను సంప్రదించండి.
@@ -3087,6 +3087,8 @@ const ProfileUpdate = () => {
 
     const value = userData?.[key];
 
+    console.log(`Checking completion for `, value);
+
     if (key === "education" || key === "work_history" || key === "skills") {
       try {
         const parsed = JSON.parse(value || "[]");
@@ -3143,6 +3145,8 @@ const ProfileUpdate = () => {
                 })
                 .map((item) => {
                   const completed = isCompleted(item.key);
+                  console.log("tessss",item);
+                  
                   
                   // Translate menu titles
                   let menuTitle = item.title;

@@ -87,11 +87,7 @@ const Employer = ({navigation}) => {
         <View style={styles.profileCard}>
           <Image
             source={{
-              uri:
-                employer?.profile_image &&
-                employer?.profile_image !== "base64imageorURL"
-                  ? employer.profile_image
-                  : "https://i.pravatar.cc/150?img=12",
+              uri:"https://cdn-icons-png.flaticon.com/512/149/149071.png",
             }}
             style={styles.profileImage}
           />

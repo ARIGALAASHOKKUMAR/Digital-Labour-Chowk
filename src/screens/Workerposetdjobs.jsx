@@ -171,7 +171,6 @@ const Workerposetdjobs = ({ navigation }) => {
     return (
       <TouchableOpacity
         activeOpacity={0.9}
-        onPress={() => openJobDetails(job)}
         style={styles.card}
       >
         <View style={styles.cardHeader}>
@@ -244,7 +243,7 @@ const Workerposetdjobs = ({ navigation }) => {
             </Text>
             <Ionicons name="create-outline" size={14} color="#4CAF50" />{" "}
           </View>
-          <View style={styles.viewDetailsButton}>
+          <View style={styles.viewDetailsButton}  onPress={() => openJobDetails(job)}>
             <Text style={styles.viewDetailsText}>View </Text>
             <Ionicons name="arrow-forward" size={14} color="#4CAF50" />
           </View>

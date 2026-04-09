@@ -20,6 +20,8 @@ const HomeScreen = ({ navigation }) => {
   const roleId = state.roleId;
   const [loading, setLoading] = useState(true);
 
+  const {photoPath} = state
+
   const safeParseArray = (value) => {
     if (!value) return [];
     if (Array.isArray(value)) return value;
@@ -84,6 +86,7 @@ const HomeScreen = ({ navigation }) => {
           workerData={workerData}
           loading={loading}
           refreshing={refreshing}
+          photoPath={photoPath}
         />
       ) : (
         <Employer navigation={navigation}/>
