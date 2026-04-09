@@ -167,6 +167,10 @@ const Workerposetdjobs = ({navigation}) => {
 
   // Modern Job Card Component
   const ModernJobCard = ({ job }) => {
+
+    console.log("submitButtonText",job);
+    
+
     return (
       <TouchableOpacity
         activeOpacity={0.9}
@@ -205,7 +209,7 @@ const Workerposetdjobs = ({navigation}) => {
           <View style={styles.detailItemModern}>
             <Ionicons name="cash-outline" size={16} color="#4CAF50" />
             <Text style={styles.detailValueModern}>
-              ₹{job.workrateperday}/day
+              ₹{job.workrateperday}/{job.preferredworktype === "monthly" ? "month" : "day"}
             </Text>
           </View>
           <View style={styles.detailItemModern}>
