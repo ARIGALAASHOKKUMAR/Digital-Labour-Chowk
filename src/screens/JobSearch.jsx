@@ -8,6 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Linking,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { Picker } from "@react-native-picker/picker";
@@ -348,104 +349,108 @@ const JobSearchScreen = ({ navigation }) => {
     }
   };
 
-  const renderWorkerCard = (worker, index) => (
-    <TouchableOpacity
-      key={worker?.labour_id ? String(worker.labour_id) : String(index)}
-      style={styles.jobCard}
-      activeOpacity={0.85}
-    >
-      {/* Left Icon */}
-      <View style={styles.jobLeftIconWrap}>
-        <View style={styles.jobLeftIconCircle}>
-          <MaterialIcons name="person" size={22} color="#000" />
+  const renderWorkerCard = (worker, index) => {
+    console.log("worker", worker);
+
+    return (
+      <TouchableOpacity
+        key={worker?.labour_id ? String(worker.labour_id) : String(index)}
+        style={styles.jobCard}
+        activeOpacity={0.85}
+      >
+        {/* Left Icon */}
+        <View style={styles.jobLeftIconWrap}>
+          <View style={styles.jobLeftIconCircle}>
+            <MaterialIcons name="person" size={22} color="#000" />
+          </View>
         </View>
-      </View>
 
-      {/* Content */}
-      <View style={styles.jobContent}>
-        {/* Name */}
-        <Text style={styles.jobTitle} numberOfLines={1}>
-          {worker.full_name}
-        </Text>
-
-        {/* Location */}
-        <View style={styles.jobMetaRow}>
-          <Ionicons name="location-sharp" size={13} color="#e75480" />
-          <Text style={styles.jobMetaText} numberOfLines={1}>
-            {worker.village_name}, {worker.mandal_name}, {worker.dist_name}
+        {/* Content */}
+        <View style={styles.jobContent}>
+          {/* Name */}
+          <Text style={styles.jobTitle} numberOfLines={1}>
+            {worker.full_name}
           </Text>
-        </View>
 
-        {/* Experience */}
-        <View style={styles.jobMetaRow}>
-          <MaterialIcons name="work-outline" size={13} color="#666" />
-          <Text style={styles.jobMetaText}>
-            {worker.skill_experience_years || 0} yrs experience / సంవత్సరాల
-            అనుభవం
-          </Text>
-        </View>
-
-        {/* Wage */}
-        <View style={styles.jobMetaRow}>
-          <FontAwesome5 name="rupee-sign" size={11} color="#c58543" />
-          <Text style={styles.jobMetaText}>
-            ₹ {worker.skill_daily_rate || 0}/day / రోజుకు
-          </Text>
-        </View>
-
-        {/* Skills (optional short) */}
-        {worker.skills && (
+          {/* Location */}
           <View style={styles.jobMetaRow}>
-            <Ionicons name="star" size={13} color="#ffc107" />
+            <Ionicons name="location-sharp" size={13} color="#e75480" />
             <Text style={styles.jobMetaText} numberOfLines={1}>
-              {getWorkerSkills(worker.skills)}
+              {worker.village_name}, {worker.mandal_name}, {worker.dist_name}
             </Text>
           </View>
-        )}
 
-        {/* Button */}
-        <View style={styles.jobActionRow}>
-          <TouchableOpacity
-            style={styles.contactButton}
-            onPress={() => handleContactWorker(worker)}
-          >
-            <Ionicons name="call-outline" size={16} color="#fff" />
-            <Text style={styles.applyJobButtonText}>
-              Contact / సంప్రదించండి
+          {/* Experience */}
+          <View style={styles.jobMetaRow}>
+            <MaterialIcons name="work-outline" size={13} color="#666" />
+            <Text style={styles.jobMetaText}>
+              {worker.skill_experience_years || 0} yrs experience / సంవత్సరాల
+              అనుభవం
             </Text>
+          </View>
+
+          {/* Wage */}
+          <View style={styles.jobMetaRow}>
+            <Text style={styles.detailValueModern}>
+              ₹{worker.skill_daily_rate}/
+              {worker.skill_preferred_work_type === "daily_wage"
+                ? "day"
+                : worker.skill_preferred_work_type === "contract"
+                  ? "contract"
+                  : ""}
+            </Text>
+          </View>
+
+          {/* Skills (optional short) */}
+          {worker.skills && (
+            <View style={styles.jobMetaRow}>
+              <Ionicons name="star" size={13} color="#ffc107" />
+              <Text style={styles.jobMetaText} numberOfLines={1}>
+                {getWorkerSkills(worker.skills)}
+              </Text>
+            </View>
+          )}
+
+          {/* Button */}
+          <View style={styles.jobActionRow}>
+            <TouchableOpacity
+              style={styles.contactButton}
+              onPress={() => handleContactWorker(worker)}
+            >
+              <Ionicons name="call-outline" size={16} color="#fff" />
+              <Text style={styles.applyJobButtonText}>
+                Contact / సంప్రదించండి
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Arrow */}
+        <View style={styles.jobArrowWrap}>
+          <TouchableOpacity style={styles.arrowButton}>
+            <Ionicons
+              name="chevron-forward"
+              size={18}
+              color="#fff"
+              onPress={() =>
+                dispatch(
+                  showModal(<UserInfoDisplay data={worker} />, true, true),
+                )
+              }
+            />
           </TouchableOpacity>
         </View>
-      </View>
-
-      {/* Arrow */}
-      <View style={styles.jobArrowWrap}>
-        <TouchableOpacity style={styles.arrowButton}>
-          <Ionicons
-            name="chevron-forward"
-            size={18}
-            color="#fff"
-            onPress={() =>
-              dispatch(showModal(<UserInfoDisplay data={worker} />, true, true))
-            }
-          />
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const handleContactWorker = (worker) => {
-    Alert.alert(
-      "Contact Worker / కార్మికుడిని సంప్రదించండి",
-      `Name / పేరు: ${worker.full_name}\nMobile / మొబైల్: ${worker.mobile_number}\nEmail / ఇమెయిల్: ${worker.email}`,
-      [
-        { text: "OK / సరే", style: "default" },
-        {
-          text: "Call / కాల్ చేయండి",
-          onPress: () => console.log("Call:", worker.mobile_number),
-        },
-      ],
+      </TouchableOpacity>
     );
   };
+
+ const handleContactWorker = (worker) => {
+  if (worker?.mobile_number) {
+    Linking.openURL(`tel:${worker.mobile_number}`);
+  } else {
+    console.log("No mobile number available");
+  }
+};
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -676,11 +681,9 @@ const JobSearchScreen = ({ navigation }) => {
                 }
               }}
             >
-              <Ionicons name="map-outline" size={16} color="#2d7fd3" />
+              {/* <Ionicons name="map-outline" size={16} color="#2d7fd3" />F */}
               <Text style={styles.mapButtonText}>
-                {showMap
-                  ? "LIST VIEW / జాబితా "
-                  : "MAP VIEW / మ్యాప్ "}
+                {showMap ? "LIST VIEW / జాబితా " : "MAP VIEW / మ్యాప్ "}
               </Text>
             </TouchableOpacity>
           </View>
@@ -730,9 +733,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#2d7fd3",
   },
   appliedButton: {
-  backgroundColor: "#6c757d", // grey
-  opacity: 0.7
-},
+    backgroundColor: "#6c757d", // grey
+    opacity: 0.7,
+  },
   topHeader: {
     backgroundColor: "#2d7fd3",
     paddingHorizontal: 12,

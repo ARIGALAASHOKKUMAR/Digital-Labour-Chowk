@@ -21,7 +21,6 @@ const AppliedJobs = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const dispatch = useDispatch();
 
-  console.log("jobsListjobsList", jobsList);
 
   const getjobs = async () => {
     try {
