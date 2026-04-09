@@ -1203,9 +1203,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderContent}>
                 <Ionicons name="lock-closed" size={24} color="#1e3a5f" />
-                <Text style={styles.modalTitle}>
-                  Verify OTP / OTP నిర్ధారించండి
-                </Text>
+                <Text style={styles.modalTitle}>Verify OTP / OTP</Text>
               </View>
               <TouchableOpacity
                 onPress={handleCloseModal}
@@ -1245,9 +1243,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
               </View>
 
               <View style={styles.resendOtpContainer}>
-                <Text style={styles.resendOtpText}>
-                  Didn't receive OTP? / OTP రాలేదా?{" "}
-                </Text>
+                <Text style={styles.resendOtpText}>Didn't receive OTP? </Text>
                 <TouchableOpacity
                   onPress={handleResendOtp}
                   disabled={otpTimer > 0 || otpLoading}
@@ -1258,7 +1254,7 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
                       otpTimer > 0 && styles.resendOtpDisabled,
                     ]}
                   >
-                    Resend / మళ్లీ పంపండి {otpTimer > 0 ? `(${otpTimer}s)` : ""}
+                    Resend {otpTimer > 0 ? `(${otpTimer}s)` : ""}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -1313,6 +1309,10 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: "#1e3a5f",
+  },
+
+  submitButtonText: {
+    color: "white",
   },
 
   scrollContainer: {
