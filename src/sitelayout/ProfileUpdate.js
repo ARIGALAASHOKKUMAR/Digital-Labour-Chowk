@@ -455,7 +455,7 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
           ...state,
           isProfileUpdated: "Y",
         };
-        dispatch(login(updatedPayload));
+        // dispatch(login(updatedPayload));
 
         onUpdateSuccess?.(); // refresh latest profile data from parent
       }
@@ -1540,7 +1540,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
           ...state,
           isProfileUpdated: "Y",
         };
-        dispatch(login(updatedPayload));
+        // dispatch(login(updatedPayload));
         resetForm();
         onUpdateSuccess();
       } else {
@@ -2337,7 +2337,7 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
           ...state,
           isProfileUpdated: "Y",
         };
-        dispatch(login(updatedPayload));
+        // dispatch(login(updatedPayload));
         resetForm();
         onUpdateSuccess?.();
         setShowSkillsDropdown(false);
@@ -2596,7 +2596,7 @@ const Education = ({ userData, onUpdateSuccess }) => {
           ...state,
           isProfileUpdated: "Y",
         };
-        dispatch(login(updatedPayload));
+        // dispatch(login(updatedPayload));
         resetForm();
         onUpdateSuccess();
       }

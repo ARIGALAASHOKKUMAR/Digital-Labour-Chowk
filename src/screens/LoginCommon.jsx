@@ -377,7 +377,8 @@ const LoginCommon = ({ navigation }) => {
 
       <Text style={styles.title}>
         మీరు ఇప్పటికే{" "}
-        {selectedUserType === "worker" ? "కార్మికుడా" : "నియోజకుడా"} ?
+        {selectedUserType === "worker" ? "కార్మికుడిగా" : "యజమానిగా"} నమోదు
+        అయ్యారా?
       </Text>
 
       <TouchableOpacity
@@ -899,301 +900,289 @@ const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
           <View style={styles.bottomDecoration} />
           <View style={styles.bottomDecorationTwo} />
 
-         <View style={styles.card}>
-  <View style={styles.cardGlow} />
+          <View style={styles.card}>
+            <View style={styles.cardGlow} />
 
-  <TouchableOpacity
-    style={styles.backBtn}
-    onPress={() => navigation.goBack()}
-    activeOpacity={0.8}
-  >
-    <Ionicons name="arrow-back" size={20} color="#1e3a5f" />
-    <Text style={styles.backBtnText}>వెనక్కి</Text>
-  </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.backBtn}
+              onPress={() => navigation.goBack()}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="arrow-back" size={20} color="#1e3a5f" />
+              <Text style={styles.backBtnText}>వెనక్కి</Text>
+            </TouchableOpacity>
 
-  <View style={styles.logoWrapper}>
-    <View style={styles.logoOuterRing}>
-      <View style={styles.logoCircle}>
-        <Ionicons
-          name={isWorker ? "person-outline" : "business-outline"}
-          size={34}
-          color="#fff"
-        />
-      </View>
-    </View>
-  </View>
+            <View style={styles.logoWrapper}>
+              <View style={styles.logoOuterRing}>
+                <View style={styles.logoCircle}>
+                  <Ionicons
+                    name={isWorker ? "person-outline" : "business-outline"}
+                    size={34}
+                    color="#fff"
+                  />
+                </View>
+              </View>
+            </View>
 
-  <Text style={styles.deptName}>కార్మిక శాఖ</Text>
-  <Text style={styles.title}>
-    {isWorker ? "కార్మికుడి నమోదు" : "యజమాని నమోదు"}
-  </Text>
-  <Text style={styles.subtitle}>
-    ఖాతాను సృష్టించడానికి వివరాలను నమోదు చేయండి
-  </Text>
+            <Text style={styles.deptName}>కార్మిక శాఖ</Text>
+            <Text style={styles.title}>
+              {isWorker ? "కార్మికుడి నమోదు" : "యజమాని నమోదు"}
+            </Text>
+            <Text style={styles.subtitle}>
+              ఖాతాను సృష్టించడానికి వివరాలను నమోదు చేయండి
+            </Text>
 
-  {/* Full Name */}
-  <View style={styles.fieldBlock}>
-    <View
-      style={[
-        styles.inputWrapper,
-        showErrors && formik.errors.fullName && styles.inputWrapperError,
-      ]}
-    >
-      <Ionicons
-        name="person-outline"
-        size={20}
-        color="#5f6f94"
-        style={styles.leftIcon}
-      />
-      <TextInput
-        placeholder={
-          isWorker
-            ? "కార్మికుడి పూర్తి పేరు నమోదు చేయండి"
-            : "యజమాని పూర్తి పేరు నమోదు చేయండి"
-        }
-        placeholderTextColor="#94a3b8"
-        style={styles.input}
-        value={formik.values.fullName}
-        onChangeText={(text) =>
-          formik.setFieldValue("fullName", text)
-        }
-      />
-    </View>
-    {showErrors && formik.errors.fullName && (
-      <Text style={styles.errorText}>{formik.errors.fullName}</Text>
-    )}
-  </View>
+            {/* Full Name */}
+            <View style={styles.fieldBlock}>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  showErrors &&
+                    formik.errors.fullName &&
+                    styles.inputWrapperError,
+                ]}
+              >
+                <Ionicons
+                  name="person-outline"
+                  size={20}
+                  color="#5f6f94"
+                  style={styles.leftIcon}
+                />
+                <TextInput
+                  placeholder={
+                    isWorker
+                      ? "కార్మికుడి పూర్తి పేరు నమోదు చేయండి"
+                      : "యజమాని పూర్తి పేరు నమోదు చేయండి"
+                  }
+                  placeholderTextColor="#94a3b8"
+                  style={styles.input}
+                  value={formik.values.fullName}
+                  onChangeText={(text) =>
+                    formik.setFieldValue("fullName", text)
+                  }
+                />
+              </View>
+              {showErrors && formik.errors.fullName && (
+                <Text style={styles.errorText}>{formik.errors.fullName}</Text>
+              )}
+            </View>
 
-  {/* Email */}
-  <View style={styles.fieldBlock}>
-    <View
-      style={[
-        styles.inputWrapper,
-        showErrors && formik.errors.email && styles.inputWrapperError,
-      ]}
-    >
-      <Ionicons
-        name="mail-outline"
-        size={20}
-        color="#5f6f94"
-        style={styles.leftIcon}
-      />
-      <TextInput
-        placeholder={
-          isWorker
-            ? "కార్మికుడి ఇమెయిల్ నమోదు చేయండి"
-            : "యజమాని ఇమెయిల్ నమోదు చేయండి"
-        }
-        placeholderTextColor="#94a3b8"
-        style={styles.input}
-        value={formik.values.email}
-        onChangeText={formik.handleChange("email")}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-    </View>
-    {showErrors && formik.errors.email && (
-      <Text style={styles.errorText}>{formik.errors.email}</Text>
-    )}
-  </View>
+            {/* Email */}
+            <View style={styles.fieldBlock}>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  showErrors && formik.errors.email && styles.inputWrapperError,
+                ]}
+              >
+                <Ionicons
+                  name="mail-outline"
+                  size={20}
+                  color="#5f6f94"
+                  style={styles.leftIcon}
+                />
+                <TextInput
+                  placeholder={
+                    isWorker
+                      ? "కార్మికుడి ఇమెయిల్ నమోదు చేయండి"
+                      : "యజమాని ఇమెయిల్ నమోదు చేయండి"
+                  }
+                  placeholderTextColor="#94a3b8"
+                  style={styles.input}
+                  value={formik.values.email}
+                  onChangeText={formik.handleChange("email")}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                />
+              </View>
+              {showErrors && formik.errors.email && (
+                <Text style={styles.errorText}>{formik.errors.email}</Text>
+              )}
+            </View>
 
-  {/* Phone */}
-  <View style={styles.fieldBlock}>
-    <View
-      style={[
-        styles.inputWrapper,
-        showErrors &&
-          formik.errors.mobileNumber &&
-          styles.inputWrapperError,
-      ]}
-    >
-      <Ionicons
-        name="call-outline"
-        size={20}
-        color="#5f6f94"
-        style={styles.leftIcon}
-      />
-      <TextInput
-        placeholder={
-          isWorker
-            ? "కార్మికుడి మొబైల్ నంబర్ నమోదు చేయండి"
-            : "యజమాని మొబైల్ నంబర్ నమోదు చేయండి"
-        }
-        placeholderTextColor="#94a3b8"
-        style={styles.input}
-        value={formik.values.mobileNumber}
-        onChangeText={handlePhoneChange}
-        keyboardType="number-pad"
-        maxLength={10}
-      />
-    </View>
-    {showErrors && formik.errors.mobileNumber && (
-      <Text style={styles.errorText}>
-        {formik.errors.mobileNumber}
-      </Text>
-    )}
-  </View>
+            {/* Phone */}
+            <View style={styles.fieldBlock}>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  showErrors &&
+                    formik.errors.mobileNumber &&
+                    styles.inputWrapperError,
+                ]}
+              >
+                <Ionicons
+                  name="call-outline"
+                  size={20}
+                  color="#5f6f94"
+                  style={styles.leftIcon}
+                />
+                <TextInput
+                  placeholder={
+                    isWorker
+                      ? "కార్మికుడి మొబైల్ నంబర్ నమోదు చేయండి"
+                      : "యజమాని మొబైల్ నంబర్ నమోదు చేయండి"
+                  }
+                  placeholderTextColor="#94a3b8"
+                  style={styles.input}
+                  value={formik.values.mobileNumber}
+                  onChangeText={handlePhoneChange}
+                  keyboardType="number-pad"
+                  maxLength={10}
+                />
+              </View>
+              {showErrors && formik.errors.mobileNumber && (
+                <Text style={styles.errorText}>
+                  {formik.errors.mobileNumber}
+                </Text>
+              )}
+            </View>
 
-  {/* Password */}
-  <View style={styles.fieldBlock}>
-    <View
-      style={[
-        styles.inputWrapper,
-        showErrors &&
-          formik.errors.password &&
-          styles.inputWrapperError,
-      ]}
-    >
-      <Ionicons
-        name="lock-closed-outline"
-        size={20}
-        color="#5f6f94"
-        style={styles.leftIcon}
-      />
-      <TextInput
-        placeholder="పాస్వర్డ్ నమోదు చేయండి"
-        placeholderTextColor="#94a3b8"
-        style={styles.input}
-        value={formik.values.password}
-        onChangeText={formik.handleChange("password")}
-        secureTextEntry={!showPassword}
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
-      <TouchableOpacity
-        onPress={() => setShowPassword(!showPassword)}
-        style={styles.eyeButton}
-      >
-        <Ionicons
-          name={showPassword ? "eye-outline" : "eye-off-outline"}
-          size={22}
-          color="#1e3a5f"
-        />
-      </TouchableOpacity>
-    </View>
-    {showErrors && formik.errors.password && (
-      <Text style={styles.errorText}>{formik.errors.password}</Text>
-    )}
-  </View>
+            {/* Password */}
+            <View style={styles.fieldBlock}>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  showErrors &&
+                    formik.errors.password &&
+                    styles.inputWrapperError,
+                ]}
+              >
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={20}
+                  color="#5f6f94"
+                  style={styles.leftIcon}
+                />
+                <TextInput
+                  placeholder="పాస్వర్డ్ నమోదు చేయండి"
+                  placeholderTextColor="#94a3b8"
+                  style={styles.input}
+                  value={formik.values.password}
+                  onChangeText={formik.handleChange("password")}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeButton}
+                >
+                  <Ionicons
+                    name={showPassword ? "eye-outline" : "eye-off-outline"}
+                    size={22}
+                    color="#1e3a5f"
+                  />
+                </TouchableOpacity>
+              </View>
+              {showErrors && formik.errors.password && (
+                <Text style={styles.errorText}>{formik.errors.password}</Text>
+              )}
+            </View>
 
-  {/* Confirm Password */}
-  <View style={styles.fieldBlock}>
-    <View
-      style={[
-        styles.inputWrapper,
-        showErrors &&
-          formik.errors.confirmPassword &&
-          styles.inputWrapperError,
-      ]}
-    >
-      <Ionicons
-        name="lock-closed-outline"
-        size={20}
-        color="#5f6f94"
-        style={styles.leftIcon}
-      />
-      <TextInput
-        placeholder="పాస్వర్డ్ నిర్ధారించండి"
-        placeholderTextColor="#94a3b8"
-        style={styles.input}
-        value={formik.values.confirmPassword}
-        onChangeText={formik.handleChange("confirmPassword")}
-        secureTextEntry={!showConfirmPassword}
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
-      <TouchableOpacity
-        onPress={() =>
-          setShowConfirmPassword(!showConfirmPassword)
-        }
-        style={styles.eyeButton}
-      >
-        <Ionicons
-          name={
-            showConfirmPassword
-              ? "eye-outline"
-              : "eye-off-outline"
-          }
-          size={22}
-          color="#1e3a5f"
-        />
-      </TouchableOpacity>
-    </View>
-    {showErrors && formik.errors.confirmPassword && (
-      <Text style={styles.errorText}>
-        {formik.errors.confirmPassword}
-      </Text>
-    )}
-  </View>
+            {/* Confirm Password */}
+            <View style={styles.fieldBlock}>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  showErrors &&
+                    formik.errors.confirmPassword &&
+                    styles.inputWrapperError,
+                ]}
+              >
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={20}
+                  color="#5f6f94"
+                  style={styles.leftIcon}
+                />
+                <TextInput
+                  placeholder="పాస్వర్డ్ నిర్ధారించండి"
+                  placeholderTextColor="#94a3b8"
+                  style={styles.input}
+                  value={formik.values.confirmPassword}
+                  onChangeText={formik.handleChange("confirmPassword")}
+                  secureTextEntry={!showConfirmPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={styles.eyeButton}
+                >
+                  <Ionicons
+                    name={
+                      showConfirmPassword ? "eye-outline" : "eye-off-outline"
+                    }
+                    size={22}
+                    color="#1e3a5f"
+                  />
+                </TouchableOpacity>
+              </View>
+              {showErrors && formik.errors.confirmPassword && (
+                <Text style={styles.errorText}>
+                  {formik.errors.confirmPassword}
+                </Text>
+              )}
+            </View>
 
-  {/* Terms */}
-  <View style={styles.termsContainer}>
-    <TouchableOpacity
-      style={styles.checkboxWrapper}
-      onPress={() =>
-        formik.setFieldValue(
-          "agreeTerms",
-          !formik.values.agreeTerms
-        )
-      }
-      activeOpacity={0.8}
-    >
-      <View
-        style={[
-          styles.checkbox,
-          formik.values.agreeTerms &&
-            styles.checkboxChecked,
-        ]}
-      >
-        {formik.values.agreeTerms && (
-          <Ionicons name="checkmark" size={16} color="#fff" />
-        )}
-      </View>
-      <Text style={styles.termsText}>
-        నేను అంగీకరిస్తున్నాను{" "}
-        <Text
-          style={styles.termsLink}
-          onPress={() =>
-            navigation.navigate("TermsAndConditions")
-          }
-        >
-          నిబంధనలు మరియు షరతులు
-        </Text>{" "}
-        <Text>మరియు </Text>
-        <Text
-          style={styles.termsLink}
-          onPress={() =>
-            navigation.navigate("PrivacyPolicy")
-          }
-        >
-          గోప్యతా విధానం
-        </Text>
-      </Text>
-    </TouchableOpacity>
-    {showErrors && formik.errors.agreeTerms && (
-      <Text style={styles.errorText}>
-        {formik.errors.agreeTerms}
-      </Text>
-    )}
-  </View>
+            {/* Terms */}
+            <View style={styles.termsContainer}>
+              <TouchableOpacity
+                style={styles.checkboxWrapper}
+                onPress={() =>
+                  formik.setFieldValue("agreeTerms", !formik.values.agreeTerms)
+                }
+                activeOpacity={0.8}
+              >
+                <View
+                  style={[
+                    styles.checkbox,
+                    formik.values.agreeTerms && styles.checkboxChecked,
+                  ]}
+                >
+                  {formik.values.agreeTerms && (
+                    <Ionicons name="checkmark" size={16} color="#fff" />
+                  )}
+                </View>
+                <Text style={styles.termsText}>
+                  నేను అంగీకరిస్తున్నాను{" "}
+                  <Text
+                    style={styles.termsLink}
+                    onPress={() => navigation.navigate("TermsAndConditions")}
+                  >
+                    నిబంధనలు మరియు షరతులు
+                  </Text>{" "}
+                  <Text>మరియు </Text>
+                  <Text
+                    style={styles.termsLink}
+                    onPress={() => navigation.navigate("PrivacyPolicy")}
+                  >
+                    గోప్యతా విధానం
+                  </Text>
+                </Text>
+              </TouchableOpacity>
+              {showErrors && formik.errors.agreeTerms && (
+                <Text style={styles.errorText}>{formik.errors.agreeTerms}</Text>
+              )}
+            </View>
 
-  {/* OTP */}
-  <TouchableOpacity
-    style={[
-      styles.sendOtpButton,
-      otpLoading && styles.sendOtpButtonDisabled,
-    ]}
-    onPress={handleSendOtp}
-    disabled={otpLoading}
-    activeOpacity={0.85}
-  >
-    {otpLoading ? (
-      <ActivityIndicator color="#fff" />
-    ) : (
-      <Text style={styles.sendOtpText}>OTP పంపండి</Text>
-    )}
-  </TouchableOpacity>
-</View>
+            {/* OTP */}
+            <TouchableOpacity
+              style={[
+                styles.sendOtpButton,
+                otpLoading && styles.sendOtpButtonDisabled,
+              ]}
+              onPress={handleSendOtp}
+              disabled={otpLoading}
+              activeOpacity={0.85}
+            >
+              {otpLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.sendOtpText}>OTP పంపండి</Text>
+              )}
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.bottomSpacing} />
         </ScrollView>
