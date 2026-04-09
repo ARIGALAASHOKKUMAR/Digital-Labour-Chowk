@@ -705,7 +705,7 @@ const JobSearchScreen = ({ navigation }) => {
             resultsList.map((item, index) => renderWorkerCard(item, index))
           ) : (
             resultsList
-              .filter((job) => !job.isapplied)
+              // .filter((job) => !job.isapplied)
               .map((item, index) => renderJobCard(item, index))
           )
         ) : (
