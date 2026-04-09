@@ -20,7 +20,7 @@ import { showModal } from "../actions";
 
 const { width, height } = Dimensions.get("window");
 
-const Workerposetdjobs = ({navigation}) => {
+const Workerposetdjobs = ({ navigation }) => {
   const dispatch = useDispatch();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +32,6 @@ const Workerposetdjobs = ({navigation}) => {
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [applicantDetailsModalVisible, setApplicantDetailsModalVisible] =
     useState(false);
-
 
   const getWorkerJobs = async () => {
     try {
@@ -167,9 +166,7 @@ const Workerposetdjobs = ({navigation}) => {
 
   // Modern Job Card Component
   const ModernJobCard = ({ job }) => {
-
-    console.log("submitButtonText",job);
-    
+    console.log("submitButtonText", job);
 
     return (
       <TouchableOpacity
@@ -209,7 +206,12 @@ const Workerposetdjobs = ({navigation}) => {
           <View style={styles.detailItemModern}>
             <Ionicons name="cash-outline" size={16} color="#4CAF50" />
             <Text style={styles.detailValueModern}>
-              ₹{job.workrateperday}/{job.preferredworktype === "monthly" ? "month" : "day"}
+              ₹{job.workrateperday}{" "}
+              {job.preferredworktype === "monthly"
+                ? "/month"
+                : job.preferredworktype === "contract"
+                  ? "contract basis"
+                  : "/day"}
             </Text>
           </View>
           <View style={styles.detailItemModern}>
@@ -234,7 +236,12 @@ const Workerposetdjobs = ({navigation}) => {
             </Text>
           </View>
           <View style={styles.viewDetailsButton}>
-            <Text style={styles.viewDetailsText} onPress={()=>navigation.navigate("JobPosting",{job})}>Edit</Text>
+            <Text
+              style={styles.viewDetailsText}
+              onPress={() => navigation.navigate("JobPosting", { job })}
+            >
+              Edit
+            </Text>
             <Ionicons name="create-outline" size={14} color="#4CAF50" />{" "}
           </View>
           <View style={styles.viewDetailsButton}>
