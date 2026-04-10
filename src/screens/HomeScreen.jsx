@@ -78,21 +78,27 @@ const HomeScreen = ({ navigation }) => {
   const dispatch = useDispatch();
 
   return (
-    <>
-      {roleId == 12 ? (
-        <Worker
-          skills={skills}
-          workHistory={workHistory}
-          workerData={workerData}
-          loading={loading}
-          refreshing={refreshing}
-          photoPath={photoPath}
-        />
-      ) : (
-        <Employer navigation={navigation}/>
-      )}
-    </>
-  );
+  <>
+    {roleId == 12 ? (
+      <Worker
+        skills={skills}
+        workHistory={workHistory}
+        workerData={workerData}
+        loading={loading}
+        refreshing={refreshing}
+        photoPath={photoPath}
+      />
+    ) : roleId == 13 ? (
+      <Employer navigation={navigation} />
+    ) : (
+      <View style={{ alignItems: "center", marginTop: 50 }}>
+        <Text style={{ fontSize: 16, color: "#666" }}>
+          You are not authorized or no services available.
+        </Text>
+      </View>
+    )}
+  </>
+);
 };
 
 export default HomeScreen;
