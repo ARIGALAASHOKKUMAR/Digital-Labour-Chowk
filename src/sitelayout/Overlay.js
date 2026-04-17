@@ -8,23 +8,29 @@ function Overlay() {
   const [userLoading, setUserLoading] = useState("Loading, Please Wait...");
   const [randomFact, setRandomFact] = useState("");
 
-  const facts = [
-    "India is the world's largest democracy.",
-    "India has the third-largest startup ecosystem in the world.",
-    "The first successful Indian satellite was launched in 1980.",
-    "Aadhaar, India's biometric identification system, is the largest of its kind globally.",
-    "ISRO's Mars Orbiter Mission made India the first Asian nation to reach Martian orbit.",
-    "Kuchipudi dance originated in Andhra Pradesh.",
-    "Sriharikota in Andhra Pradesh is home to ISRO's main launch center.",
-    "Andhra Pradesh forests are home to tigers, elephants, deer and birds.",
-    "Forest guards patrol forests to prevent poaching and illegal logging.",
-    "Eco-tourism in Andhra Pradesh promotes forest conservation.",
-    "భారత అటవీ శాఖ 1864 లో స్థాపించబడింది.",
-    "అటవీ సంరక్షణ చట్టం 1927 లో అమలులోకి వచ్చింది.",
-    "వన్యప్రాణి సంరక్షణ చట్టం 1972 లో ప్రవేశపెట్టబడింది.",
-    "ఆంధ్రప్రదేశ్ అటవీ శాఖ పర్యావరణ అవగాహన కార్యక్రమాలు నిర్వహిస్తుంది.",
-    "డ్రోన్ల సహాయంతో అటవీ సంరక్షణ జరుగుతోంది.",
-  ];
+ const facts = [
+  "At Labour Chowk, every sunrise brings hope for work and survival.",
+  "Hands that build cities wait at Labour Chowk for an opportunity.",
+  "Labour Chowk is where struggle meets determination every day.",
+  "Every worker at Labour Chowk carries dreams bigger than their hardships.",
+  "Behind every construction is a worker who once stood at Labour Chowk.",
+  "Labour Chowk is not just a place, it is a symbol of survival.",
+  "Time spent waiting at Labour Chowk decides the day's fate.",
+  "Workers at Labour Chowk don’t seek sympathy, only work.",
+  "Each face at Labour Chowk reflects courage and silent sacrifice.",
+  "Labour Chowk shows the real backbone of a nation.",
+  
+  "లేబర్ చౌక్ వద్ద ప్రతి ఉదయం కొత్త ఆశతో మొదలవుతుంది.",
+  "పని కోసం ఎదురు చూస్తున్న చేతుల్లో ఎన్నో కలలు ఉంటాయి.",
+  "లేబర్ చౌక్ అనేది జీవితం కోసం జరిగే పోరాటం.",
+  "ఇక్కడ ప్రతి కార్మికుడి చెమటలో కుటుంబం ఆశ ఉంటుంది.",
+  "లేబర్ చౌక్ వద్ద సమయం అంటే డబ్బు, ఎదురు చూడటం అంటే నష్టం.",
+  "కష్టపడి పనిచేసే వారికి అవకాశం కోసం వేచిచూసే స్థలం లేబర్ చౌక్.",
+  "ప్రతి రోజు పని దొరుకుతుందా అన్న అనిశ్చితి ఇక్కడ కనిపిస్తుంది.",
+  "లేబర్ చౌక్ అనేది ధైర్యం, సహనం, ఆశల సమాహారం.",
+  "ఇక్కడ జీవితం కోసం ప్రతి క్షణం పోరాటమే.",
+  "లేబర్ చౌక్ వద్ద నిలబడేది కేవలం శరీరం కాదు, ఆశ కూడా."
+];
 
   const getSecureRandomIndex = (length) => {
     try {
