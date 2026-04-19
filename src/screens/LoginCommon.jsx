@@ -292,7 +292,7 @@ const LoginCommon = ({ navigation }) => {
         </View>
         <View style={styles.optionTextWrap}>
           <Text style={styles.optionTitle}>
-            I am a Worker{"\n"} నేను కార్మికుడిని
+            I am a Worker{"\n"} నేను కార్మికుడు
           </Text>{" "}
         </View>
         <Ionicons name="chevron-forward" size={22} color="#1e3a5f" />
@@ -308,7 +308,7 @@ const LoginCommon = ({ navigation }) => {
         </View>
         <View style={styles.optionTextWrap}>
           <Text style={styles.optionTitle}>
-            I am an Employer {"\n"} నేను యజమానుడిని
+            I am an Employer {"\n"} నేను యజమాని
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={22} color="#1e3a5f" />
@@ -418,7 +418,7 @@ const LoginCommon = ({ navigation }) => {
         activeOpacity={0.8}
       >
         <Ionicons name="arrow-back" size={20} color="#1e3a5f" />
-        <Text style={styles.backBtnText}>Back</Text>
+        <Text style={styles.backBtnText}>Back / వెనక్కి</Text>
       </TouchableOpacity>
 
       <View style={styles.logoWrapper}>
@@ -438,14 +438,23 @@ const LoginCommon = ({ navigation }) => {
       </View>
 
       <Text style={styles.deptName}>Digital Labour Chowk</Text>
+
       <Text style={styles.title}>
-        Login {selectedUserType === "worker" ? "Worker" : "Employer"}
-      </Text>
-      <Text style={styles.subtitle}>
-        Sign in to access your{" "}
-        {selectedUserType === "worker" ? "worker" : "employer"} account
+        Login{" "}
+        {selectedUserType === "worker"
+          ? "Worker / కార్మికుడు"
+          : "Employer / యజమాని"}
       </Text>
 
+      <Text style={styles.subtitle}>
+        Sign in to access your{" "}
+        {selectedUserType === "worker"
+          ? "worker / కార్మికుడు"
+          : "employer / యజమాని"}{" "}
+        account
+      </Text>
+
+      {/* USERNAME */}
       <View style={styles.fieldBlock}>
         <View
           style={[
@@ -460,7 +469,7 @@ const LoginCommon = ({ navigation }) => {
             style={styles.leftIcon}
           />
           <TextInput
-            placeholder="Enter User ID"
+            placeholder="Enter User ID / యూజర్ ఐడి నమోదు చేయండి"
             placeholderTextColor="#94a3b8"
             style={styles.input}
             value={username}
@@ -480,6 +489,7 @@ const LoginCommon = ({ navigation }) => {
         ) : null}
       </View>
 
+      {/* PASSWORD */}
       <View style={styles.fieldBlock}>
         <View
           style={[
@@ -494,7 +504,7 @@ const LoginCommon = ({ navigation }) => {
             style={styles.leftIcon}
           />
           <TextInput
-            placeholder="Enter Password"
+            placeholder="Enter Password / పాస్‌వర్డ్ నమోదు చేయండి"
             placeholderTextColor="#94a3b8"
             style={styles.input}
             value={password}
@@ -523,6 +533,7 @@ const LoginCommon = ({ navigation }) => {
         ) : null}
       </View>
 
+      {/* CAPTCHA */}
       <View style={styles.fieldBlock}>
         <View style={styles.captchaRow}>
           <View
@@ -532,7 +543,7 @@ const LoginCommon = ({ navigation }) => {
             ]}
           >
             <TextInput
-              placeholder="Captcha"
+              placeholder="Captcha / క్యాప్చా"
               placeholderTextColor="#94a3b8"
               style={styles.input}
               value={deptCaptcha}
@@ -555,7 +566,9 @@ const LoginCommon = ({ navigation }) => {
                 resizeMode="contain"
               />
             ) : (
-              <Text style={styles.captchaPlaceholderText}>Captcha</Text>
+              <Text style={styles.captchaPlaceholderText}>
+                Captcha / క్యాప్చా
+              </Text>
             )}
           </View>
 
@@ -573,6 +586,7 @@ const LoginCommon = ({ navigation }) => {
         ) : null}
       </View>
 
+      {/* LOGIN BUTTON */}
       <TouchableOpacity
         style={[
           styles.loginButton,
@@ -587,7 +601,8 @@ const LoginCommon = ({ navigation }) => {
         ) : (
           <>
             <Text style={styles.loginText}>
-              Login {selectedUserType === "worker" ? "Worker" : "Employer"}
+              లాగిన్ చేయండి{" "}
+              {/* {selectedUserType === "worker" ? "కార్మికుడు" : "యజమాని"} */}
             </Text>
             <Ionicons
               name="arrow-forward-outline"
@@ -661,7 +676,7 @@ const LoginCommon = ({ navigation }) => {
 };
 
 const CommonRegistrationForm = ({ navigation, type = "worker" }) => {
-  const isWorker = type === "worker";
+  const isWorker = type === "DLC Worker";
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);

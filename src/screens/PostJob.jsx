@@ -24,8 +24,21 @@ import {
   GETVILLAGESAPP,
 } from "../utils/utils";
 
-const PostJob = ({ route,navigation }) => {
+const PostJob = ({ route, navigation }) => {
   const dispatch = useDispatch();
+
+  const handleAccessScreen = () => {
+    Alert.alert(
+      "Notice",
+      "Please post the job only if you are at the work location / మీరు పనిస్థలంలో ఉన్నప్పుడే జాబ్ పోస్ట్ చేయండి",
+      [{ text: "OK" }],
+      { cancelable: false },
+    );
+  };
+
+  useEffect(() => {
+    handleAccessScreen();
+  }, []);
 
   const job = route?.params?.job || null;
   const [dists, setDists] = useState([]);
@@ -285,7 +298,7 @@ const PostJob = ({ route,navigation }) => {
         resetForm();
         setMandal([]);
         setVillage([]);
-        navigation.navigate("EmployerJob")
+        navigation.navigate("EmployerJob");
       }
     } catch (error) {
       console.log("Error:", error);
