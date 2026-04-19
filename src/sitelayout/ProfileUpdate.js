@@ -611,11 +611,11 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
             </Text>
           </TouchableOpacity>
 
-          {formik.values.uploadDocument ? (
+          {/* {formik.values.uploadDocument ? (
             <Text style={styles.fileNameText}>
               {formik.values.uploadDocument}
             </Text>
-          ) : null}
+          ) : null} */}
 
           {formik.errors.uploadDocument && formik.touched.uploadDocument && (
             <Text style={styles.errorText}>{formik.errors.uploadDocument}</Text>
