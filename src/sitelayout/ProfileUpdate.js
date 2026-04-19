@@ -435,8 +435,37 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
     : "e-Shram Card Number / ఇ-శ్రమ్ కార్డ్ నంబర్";
 
   const validationSchema = Yup.object().shape({
-    documentType: Yup.string().required("Required / అవసరం"),
-    documentNumber: Yup.string().required("Required / అవసరం"),
+   documentType: Yup.string()
+  .required("Required / అవసరం"),
+
+documentNumber: Yup.string()
+  .required("Required / అవసరం")
+  .test(
+    "doc-validation",
+    "Invalid Document Number / తప్పు డాక్యుమెంట్ నంబర్",
+    function (value) {
+      const { documentType } = this.parent;
+
+      if (!value) return false;
+
+      switch (documentType) {
+        case "PAN":
+          return /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value);
+
+        case "AADHAR":
+          return /^[0-9]{12}$/.test(value);
+
+        case "DRIVING_LICENSE":
+          return /^[A-Z0-9]{8,16}$/.test(value);
+
+        case "VOTER_ID":
+          return /^[A-Z]{3}[0-9]{7}$/.test(value);
+
+        default:
+          return true;
+      }
+    }
+  ),
     uploadDocument: Yup.string().required("Required / అవసరం"),
     [conditionalFieldName]: Yup.string().required("Required / అవసరం"),
   });
@@ -507,6 +536,7 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
               onValueChange={(itemValue) => {
                 formik.setFieldTouched("documentType", true);
                 formik.setFieldValue("documentType", itemValue);
+                formik.setFieldValue("documentNumber", ""); // 
               }}
               enabled={!formik.isSubmitting}
             >

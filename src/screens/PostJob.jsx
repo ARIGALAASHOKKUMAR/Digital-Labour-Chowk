@@ -398,7 +398,7 @@ const PostJob = ({ route, navigation }) => {
 
           <View style={styles.inputBlock}>
             <Text style={styles.label}>
-              Start Date <Text style={styles.requiredStar}>*</Text>
+             Application Start Date <Text style={styles.requiredStar}>*</Text>
             </Text>
             <TouchableOpacity
               style={styles.datePickerButton}
@@ -436,7 +436,7 @@ const PostJob = ({ route, navigation }) => {
 
           <View style={styles.inputBlock}>
             <Text style={styles.label}>
-              End Date <Text style={styles.requiredStar}>*</Text>
+             Application End Date <Text style={styles.requiredStar}>*</Text>
             </Text>
             <TouchableOpacity
               style={styles.datePickerButton}
