@@ -38,11 +38,7 @@ async function uploadToServer(file, formik, path, name) {
   try {
     const formData = new FormData();
 
-    formData.append("file", {
-      uri: file.uri,
-      name: file.name || `file_${Date.now()}`,
-      type: file.mimeType || "application/octet-stream",
-    });
+    formData.append("file", file);
 
     console.log("Uploading file...");
 
