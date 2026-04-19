@@ -29,6 +29,7 @@ import {
   GETVILLAGESAPP,
 } from "../utils/utils";
 import { profileMenu } from "../utils/CommonFunctions";
+import ImageBucketRN from "../utils/ImageBucketRN";
 
 // ==================== Basic Details Component ====================
 
@@ -435,37 +436,36 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
     : "e-Shram Card Number / ఇ-శ్రమ్ కార్డ్ నంబర్";
 
   const validationSchema = Yup.object().shape({
-   documentType: Yup.string()
-  .required("Required / అవసరం"),
+    documentType: Yup.string().required("Required / అవసరం"),
 
-documentNumber: Yup.string()
-  .required("Required / అవసరం")
-  .test(
-    "doc-validation",
-    "Invalid Document Number / తప్పు డాక్యుమెంట్ నంబర్",
-    function (value) {
-      const { documentType } = this.parent;
+    documentNumber: Yup.string()
+      .required("Required / అవసరం")
+      .test(
+        "doc-validation",
+        "Invalid Document Number / తప్పు డాక్యుమెంట్ నంబర్",
+        function (value) {
+          const { documentType } = this.parent;
 
-      if (!value) return false;
+          if (!value) return false;
 
-      switch (documentType) {
-        case "PAN":
-          return /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value);
+          switch (documentType) {
+            case "PAN":
+              return /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(value);
 
-        case "AADHAR":
-          return /^[0-9]{12}$/.test(value);
+            case "AADHAR":
+              return /^[0-9]{12}$/.test(value);
 
-        case "DRIVING_LICENSE":
-          return /^[A-Z0-9]{8,16}$/.test(value);
+            case "DRIVING_LICENSE":
+              return /^[A-Z0-9]{8,16}$/.test(value);
 
-        case "VOTER_ID":
-          return /^[A-Z]{3}[0-9]{7}$/.test(value);
+            case "VOTER_ID":
+              return /^[A-Z]{3}[0-9]{7}$/.test(value);
 
-        default:
-          return true;
-      }
-    }
-  ),
+            default:
+              return true;
+          }
+        },
+      ),
     uploadDocument: Yup.string().required("Required / అవసరం"),
     [conditionalFieldName]: Yup.string().required("Required / అవసరం"),
   });
@@ -536,7 +536,7 @@ documentNumber: Yup.string()
               onValueChange={(itemValue) => {
                 formik.setFieldTouched("documentType", true);
                 formik.setFieldValue("documentType", itemValue);
-                formik.setFieldValue("documentNumber", ""); // 
+                formik.setFieldValue("documentNumber", ""); //
               }}
               enabled={!formik.isSubmitting}
             >
@@ -595,13 +595,16 @@ documentNumber: Yup.string()
             ]}
             onPress={() => {
               formik.setFieldTouched("uploadDocument", true);
-              Alert.alert(
-                "Upload / అప్లోడ్",
-                "Open Document Picker / డాక్యుమెంట్ పికర్ తెరవండి",
+
+              let path = "APFD/SAWMILLS/";
+
+              ImageBucketRN(
+                formik,
+                path,
+                "uploadDocument",
+                20971520, // 20MB
               );
-              formik.setFieldValue("uploadDocument", "test-document.pdf");
             }}
-            disabled={formik.isSubmitting}
           >
             <Text style={styles.uploadButtonText}>
               Upload Document / డాక్యుమెంట్ అప్లోడ్ చేయండి
@@ -1894,7 +1897,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
 
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
-                Work Type / పని రకం 
+                Work Type / పని రకం
                 {/* <Text style={styles.requiredStar}>*</Text> */}
               </Text>
               <TextInput
@@ -1924,7 +1927,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
             {/* Skills Multi-select */}
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
-                Skills / నైపుణ్యాలు 
+                Skills / నైపుణ్యాలు
                 {/* <Text style={styles.requiredStar}>*</Text> */}
               </Text>
 
@@ -2250,7 +2253,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
 
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
-                Remarks / వ్యాఖ్యలు 
+                Remarks / వ్యాఖ్యలు
                 {/* <Text style={styles.requiredStar}>*</Text> */}
               </Text>
               <TextInput
@@ -2283,7 +2286,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
 
             <View style={styles.inputBlock}>
               <Text style={styles.label}>
-                Rating / రేటింగ్ 
+                Rating / రేటింగ్
                 {/* <Text style={styles.requiredStar}>*</Text> */}
               </Text>
               <View
