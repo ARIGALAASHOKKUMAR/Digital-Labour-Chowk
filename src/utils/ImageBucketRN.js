@@ -4,8 +4,8 @@ import { Alert } from "react-native";
 import axios from "axios";
 
 
-export const IMG_UPLOAD_URL = process.env.REACT_APP_IMG_UPLOAD_URL;
-export const IMG_DOWNLOAD_URL = process.env.REACT_APP_IMG_DOWNLOAD_URL;
+export const IMG_UPLOAD_URL = "https://swapi.dev.nidhi.apcfss.in/socialwelfaredms/user-defined-path/file-upload/";
+export const IMG_DOWNLOAD_URL = "https://swapi.dev.nidhi.apcfss.in/socialwelfaredms/user-defined-path/file-download/";
 
 export const SUPPORTED_FORMATS = [
   "image/jpeg",
