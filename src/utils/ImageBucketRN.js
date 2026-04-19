@@ -1,68 +1,149 @@
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
-import { Alert } from "react-native";
+import { Alert,Image } from "react-native";
 import axios from "axios";
 
+// ✅ CONSTANTS (same as web)
+export const IMG_UPLOAD_URL =
+  "https://swapi.dev.nidhi.apcfss.in/socialwelfaredms/user-defined-path/file-upload/";
+export const IMG_DOWNLOAD_URL =
+  "https://swapi.dev.nidhi.apcfss.in/socialwelfaredms/user-defined-path/file-download/";
 
-export const IMG_UPLOAD_URL = "https://swapi.dev.nidhi.apcfss.in/socialwelfaredms/user-defined-path/file-upload/";
-export const IMG_DOWNLOAD_URL = "https://swapi.dev.nidhi.apcfss.in/socialwelfaredms/user-defined-path/file-download/";
-
-export const SUPPORTED_FORMATS = [
-  "image/jpeg",
+const SUPPORTED_FORMATS = [
   "image/jpg",
+  "image/jpeg",
   "image/png",
   "application/pdf",
-  "application/json",
+  "text/javascript",
   "video/mp4",
+  "application/json",
+  "application/vnd.google-earth.kml+xml",
+  "image/svg+xml",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/zip",
+  "application/x-zip-compressed",
+  "",
 ];
 
-// ✅ validation
-function validateFileTypeAndSize(file, size) {
-  const maxSizeMB = size / (1024 * 1024);
+const MAX_FILE_SIZE = 20971520;
 
-  if (file.size && file.size > size) {
-    Alert.alert("Error", `File should be less than ${maxSizeMB} MB`);
-    return false;
-  }
-
-  if (file.mimeType && !SUPPORTED_FORMATS.includes(file.mimeType)) {
-    Alert.alert("Error", `Invalid file format: ${file.name}`);
-    return false;
-  }
-
-  return true;
-}
-
-// ✅ common upload API
-async function uploadToServer(file, formik, path, name) {
+// ✅ COMMON AXIOS POST (same like web)
+const CommonAxiosPost = async (url, values) => {
   try {
-    const formData = new FormData();
-
-    formData.append("file", file);
-
-    console.log("Uploading file...");
-
-    const res = await axios.post(IMG_UPLOAD_URL + path, formData, {
+    let res = await axios({
+      url: url,
+      method: "post",
+      data: values,
       headers: {
         "Content-Type": "multipart/form-data",
       },
     });
 
     if (res.status === 200) {
-      const uploadedPath = IMG_DOWNLOAD_URL + res.data;
+      return res;
+    }
+  } catch (err) {
+    Alert.alert("Error", "Upload failed");
+  }
+};
 
-      // ✅ store string in formik
+// ✅ VALIDATION (aligned with web)
+function validateFileTypeAndSize(file, size) {
+  const maxSizeMB = size / (1024 * 1024);
+
+  const fileSize = file.size || file.fileSize || 0;
+  const fileType = file.mimeType || file.type || "";
+
+  if (fileSize > size) {
+    Alert.alert(
+      "Error",
+      `Please check your file size, it should be less than ${maxSizeMB}MB`
+    );
+    return false;
+  }
+
+  // geojson exception
+  if (
+    !SUPPORTED_FORMATS.includes(fileType) &&
+    file.name?.split(".").pop()?.toLowerCase() !== "geojson"
+  ) {
+    Alert.alert(
+      "Error",
+      `Invalid file format. Your file type is ${
+        file.name?.split(".").pop()?.toLowerCase()
+      }`
+    );
+    return false;
+  }
+
+  return true;
+}
+
+const getFileNameWithExtension = (file) => {
+  let name = file.name || `file_${Date.now()}`;
+
+  // If already has extension → return
+  if (name.includes(".")) return name;
+
+  // derive extension from mimeType
+  const mime = file.mimeType || file.type || "";
+
+  const map = {
+    "image/jpeg": ".jpg",
+    "image/jpg": ".jpg",
+    "image/png": ".png",
+    "application/pdf": ".pdf",
+    "video/mp4": ".mp4",
+    "application/json": ".json",
+  };
+
+  const ext = map[mime] || "";
+
+  return name + ext;
+};
+
+// ✅ COMMON UPLOAD FUNCTION (matches web ImageBucket)
+async function uploadFile(file, formik, path, name, size) {
+  if (!validateFileTypeAndSize(file, size)) return;
+
+  console.log("ffff",file);
+  
+
+  try {
+    const formData = new FormData();
+
+    formData.append("file", {
+      uri: file.uri,
+      name: file.fileName || `file_${Date.now()}`,
+      type: file.mimeType || file.type || "application/octet-stream",
+    });
+
+    const response = await CommonAxiosPost(
+      IMG_UPLOAD_URL + path,
+      formData
+    );
+
+    if (response?.status === 200) {
+
+        console.log("rrrrrr", response.data);
+        
+      const uploadedPath = IMG_DOWNLOAD_URL + response?.data;
+
+      // ✅ EXACTLY SAME AS WEB (string only)
       formik.setFieldValue(name, uploadedPath);
 
       Alert.alert("Success", "File Uploaded Successfully");
     }
   } catch (error) {
     formik.setFieldValue(name, null);
-    Alert.alert("Error", "File upload failed");
+    Alert.alert(
+      "Error",
+      "Unfortunately, we encountered an error while uploading"
+    );
   }
 }
 
-// ✅ pick document (PDF, etc.)
+// ✅ DOCUMENT PICKER
 async function pickDocument(formik, path, name, size) {
   const result = await DocumentPicker.getDocumentAsync({
     type: "*/*",
@@ -73,12 +154,10 @@ async function pickDocument(formik, path, name, size) {
 
   const file = result.assets[0];
 
-  if (!validateFileTypeAndSize(file, size)) return;
-
-  await uploadToServer(file, formik, path, name);
+  await uploadFile(file, formik, path, name, size);
 }
 
-// ✅ camera
+// ✅ CAMERA
 async function openCamera(formik, path, name, size) {
   const permission = await ImagePicker.requestCameraPermissionsAsync();
 
@@ -88,7 +167,7 @@ async function openCamera(formik, path, name, size) {
   }
 
   const result = await ImagePicker.launchCameraAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    mediaTypes: ImagePicker.MediaTypeOptions.All,
     quality: 0.7,
   });
 
@@ -96,12 +175,10 @@ async function openCamera(formik, path, name, size) {
 
   const file = result.assets[0];
 
-  if (!validateFileTypeAndSize(file, size)) return;
-
-  await uploadToServer(file, formik, path, name);
+  await uploadFile(file, formik, path, name, size);
 }
 
-// ✅ gallery
+// ✅ GALLERY
 async function openGallery(formik, path, name, size) {
   const permission =
     await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -112,7 +189,7 @@ async function openGallery(formik, path, name, size) {
   }
 
   const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    mediaTypes: ImagePicker.MediaTypeOptions.All,
     quality: 0.7,
   });
 
@@ -120,36 +197,31 @@ async function openGallery(formik, path, name, size) {
 
   const file = result.assets[0];
 
-  if (!validateFileTypeAndSize(file, size)) return;
-
-  await uploadToServer(file, formik, path, name);
+  await uploadFile(file, formik, path, name, size);
 }
 
-// ✅ MAIN COMMON FUNCTION
+// ✅ MAIN FUNCTION (same flexibility as before)
 export default async function ImageBucketRN(
   formik,
   path,
   name,
-  size = 20971520,
-  mode = "all" // 👈 important
+  size = MAX_FILE_SIZE,
+  mode = "all"
 ) {
   try {
-    // 👉 CASE 1: only document
     if (mode === "document") {
       return pickDocument(formik, path, name, size);
     }
 
-    // 👉 CASE 2: only camera
     if (mode === "camera") {
       return openCamera(formik, path, name, size);
     }
 
-    // 👉 CASE 3: only gallery
     if (mode === "gallery") {
       return openGallery(formik, path, name, size);
     }
 
-    // 👉 CASE 4: ALL OPTIONS (default)
+    // ✅ ALL OPTIONS
     Alert.alert("Upload", "Choose option", [
       {
         text: "Camera",

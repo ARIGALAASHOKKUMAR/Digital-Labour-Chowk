@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
   Platform,
+  Image,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigation } from "@react-navigation/native";
@@ -485,6 +486,8 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
     validationSchema,
     onSubmit: handleSubmit,
   });
+
+  
 
 
 
