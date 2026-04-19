@@ -477,7 +477,7 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
       stageName: "DOCUMENT_VERIFICATION",
       documentType: userData?.document_type || "",
       documentNumber: userData?.document_number || "",
-      uploadDocument: userData?.upload_document || "test",
+      uploadDocument: userData?.upload_document || "",
       [conditionalFieldName]: showLabourLicence
         ? userData?.labour_licence || ""
         : userData?.e_shram_card_number || "",
@@ -611,11 +611,11 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
             </Text>
           </TouchableOpacity>
 
-          {/* {formik.values.uploadDocument ? (
+          {formik.values.uploadDocument ? (
             <Text style={styles.fileNameText}>
               {formik.values.uploadDocument}
             </Text>
-          ) : null} */}
+          ) : null}
 
           {formik.errors.uploadDocument && formik.touched.uploadDocument && (
             <Text style={styles.errorText}>{formik.errors.uploadDocument}</Text>
