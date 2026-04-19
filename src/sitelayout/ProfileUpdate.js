@@ -611,11 +611,57 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
             </Text>
           </TouchableOpacity>
 
-          {formik.values.uploadDocument ? (
-            <Text style={styles.fileNameText}>
-              {formik.values.uploadDocument}
-            </Text>
-          ) : null}
+          {formik.values.uploadDocument
+            ? (() => {
+                const fileUrl = formik.values.uploadDocument;
+
+                const isImage = /\.(jpg|jpeg|png)$/i.test(fileUrl);
+                const isPdf = /\.pdf$/i.test(fileUrl);
+
+                // ✅ IMAGE PREVIEW
+                if (isImage) {
+                  return (
+                    <View style={{ marginTop: 10 }}>
+                      <Image
+                        source={{ uri: fileUrl }}
+                        style={{
+                          width: 120,
+                          height: 120,
+                          borderRadius: 8,
+                          resizeMode: "cover",
+                        }}
+                      />
+                    </View>
+                  );
+                }
+
+                // ✅ PDF DOWNLOAD ICON
+                if (isPdf) {
+                  return (
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginTop: 10,
+                      }}
+                      onPress={() => Linking.openURL(fileUrl)}
+                    >
+                      <Ionicons
+                        name="document-text-outline"
+                        size={24}
+                        color="red"
+                      />
+                      <Text style={{ marginLeft: 8, color: "blue" }}>
+                        Download PDF
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                }
+
+                // ✅ DEFAULT (other files)
+                return <Text style={styles.fileNameText}>{fileUrl}</Text>;
+              })()
+            : null}
 
           {formik.errors.uploadDocument && formik.touched.uploadDocument && (
             <Text style={styles.errorText}>{formik.errors.uploadDocument}</Text>
