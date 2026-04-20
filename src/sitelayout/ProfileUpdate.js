@@ -488,12 +488,6 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
     onSubmit: handleSubmit,
   });
 
-  
-
-
-
-  
-
   async function handleSubmit(values, { setSubmitting }) {
     try {
       const response = await commonAPICall(
@@ -619,59 +613,64 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
             </Text>
           </TouchableOpacity>
           <View style={{ alignItems: "center" }}>
+            {formik.values.uploadDocument
+              ? (() => {
+                  const fileUrl = formik.values.uploadDocument;
 
-          {formik.values.uploadDocument
-            ? (() => {
-                const fileUrl = formik.values.uploadDocument;
+                  const isImage = /\.(jpg|jpeg|png)$/i.test(fileUrl);
+                  const isPdf = /\.pdf$/i.test(fileUrl);
 
-                const isImage = /\.(jpg|jpeg|png)$/i.test(fileUrl);
-                const isPdf = /\.pdf$/i.test(fileUrl);
+                  // ✅ IMAGE PREVIEW
+                  if (isImage) {
+                    return (
+                      <View style={{ marginTop: 10 }}>
+                        <Image
+                          source={{ uri: fileUrl }}
+                          style={{
+                            width: 120,
+                            height: 120,
+                            borderRadius: 8,
+                            resizeMode: "cover",
+                          }}
+                        />
+                      </View>
+                    );
+                  }
 
-                // ✅ IMAGE PREVIEW
-                if (isImage) {
-                  return (
-                    <View style={{ marginTop: 10 }}>
-                      <Image
-                        source={{ uri: fileUrl }}
+                  // ✅ PDF DOWNLOAD ICON
+                  if (isPdf) {
+                    return (
+                      <TouchableOpacity
                         style={{
-                          width: 120,
-                          height: 120,
-                          borderRadius: 8,
-                          resizeMode: "cover",
+                          flexDirection: "row",
+                          alignItems: "center",
+                          marginTop: 10,
                         }}
-                      />
-                    </View>
-                  );
-                }
+                        onPress={() => Linking.openURL(fileUrl)}
+                      >
+                        <Ionicons
+                          name="document-text-outline"
+                          size={24}
+                          color="red"
+                        />
+                        <Text style={{ marginLeft: 8, color: "blue" }}>
+                          Download PDF
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  }
 
-                // ✅ PDF DOWNLOAD ICON
-                if (isPdf) {
-                  return (
-                    <TouchableOpacity
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        marginTop: 10,
-                      }}
-                      onPress={() => Linking.openURL(fileUrl)}
-                    >
-                      <Ionicons
-                        name="document-text-outline"
-                        size={24}
-                        color="red"
-                      />
-                      <Text style={{ marginLeft: 8, color: "blue" }}>
-                        Download PDF
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                }
+                  // ✅ DEFAULT (other files)
+                  return <Text style={styles.fileNameText}>{fileUrl}</Text>;
+                })()
+              : null}
+          </View>
 
-                // ✅ DEFAULT (other files)
-                return <Text style={styles.fileNameText}>{fileUrl}</Text>;
-              })()
-            : null}
-            </View>
+          {formik.values.image_location && (
+            <Text style={{ marginTop: 5, fontSize: 12 }}>
+              📍 {formik.values.image_location}
+            </Text>
+          )}
 
           {formik.errors.uploadDocument && formik.touched.uploadDocument && (
             <Text style={styles.errorText}>{formik.errors.uploadDocument}</Text>

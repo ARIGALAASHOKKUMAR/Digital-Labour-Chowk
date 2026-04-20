@@ -2,6 +2,8 @@ import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { Alert,Image } from "react-native";
 import axios from "axios";
+import * as Location from "expo-location";
+
 
 // ✅ CONSTANTS (same as web)
 export const IMG_UPLOAD_URL =
@@ -144,20 +146,7 @@ async function uploadFile(file, formik, path, name, size) {
 }
 
 // ✅ DOCUMENT PICKER
-async function pickDocument(formik, path, name, size) {
-  const result = await DocumentPicker.getDocumentAsync({
-    type: "*/*",
-    copyToCacheDirectory: true,
-  });
 
-  if (result.canceled) return;
-
-  const file = result.assets[0];
-
-  await uploadFile(file, formik, path, name, size);
-}
-
-// ✅ CAMERA
 async function openCamera(formik, path, name, size) {
   const permission = await ImagePicker.requestCameraPermissionsAsync();
 
@@ -166,8 +155,32 @@ async function openCamera(formik, path, name, size) {
     return;
   }
 
+  // ✅ LOCATION PERMISSION
+  const locPermission = await Location.requestForegroundPermissionsAsync();
+
+  let addressText = null;
+
+  if (locPermission.granted) {
+    const loc = await Location.getCurrentPositionAsync({});
+
+    // ✅ CONVERT LAT/LNG → ADDRESS
+    const address = await Location.reverseGeocodeAsync({
+      latitude: loc.coords.latitude,
+      longitude: loc.coords.longitude,
+    });
+
+    if (address.length > 0) {
+      const place = address[0];
+
+      // 🔥 FORMAT ADDRESS (you can adjust)
+      addressText = `${place.name || ""}, ${place.street || ""}, ${
+        place.city || place.district || ""
+      }, ${place.region || ""}, ${place.postalCode || ""}`;
+    }
+  }
+
   const result = await ImagePicker.launchCameraAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.All,
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
     quality: 0.7,
   });
 
@@ -175,8 +188,52 @@ async function openCamera(formik, path, name, size) {
 
   const file = result.assets[0];
 
+  // ✅ SAVE ADDRESS INSTEAD OF LAT/LNG
+  if (addressText) {
+    formik.setFieldValue(`image_location`, addressText);
+  }
+
   await uploadFile(file, formik, path, name, size);
 }
+
+// ✅ CAMERA
+// async function openCamera(formik, path, name, size) {
+//   const permission = await ImagePicker.requestCameraPermissionsAsync();
+
+//   if (!permission.granted) {
+//     Alert.alert("Permission required", "Camera access is needed");
+//     return;
+//   }
+
+//   // ✅ LOCATION
+//   const locPermission = await Location.requestForegroundPermissionsAsync();
+
+//   let locationData = null;
+
+//   if (locPermission.granted) {
+//     const loc = await Location.getCurrentPositionAsync({});
+//     locationData = {
+//       latitude: loc.coords.latitude,
+//       longitude: loc.coords.longitude,
+//     };
+//   }
+
+//   const result = await ImagePicker.launchCameraAsync({
+//     mediaTypes: ImagePicker.MediaTypeOptions.Images,
+//     quality: 0.7,
+//   });
+
+//   if (result.canceled) return;
+
+//   const file = result.assets[0];
+
+//   // ✅ SAVE LOCATION
+//   if (locationData) {
+//     formik.setFieldValue("image_location", locationData);
+//   }
+
+//   await uploadFile(file, formik, path, name, size);
+// }
 
 // ✅ GALLERY
 async function openGallery(formik, path, name, size) {
