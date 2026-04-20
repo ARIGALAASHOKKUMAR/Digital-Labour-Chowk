@@ -3229,7 +3229,7 @@ const ProfileUpdate = () => {
   };
 
   useEffect(() => {
-    {state.roleName == "DLC Employer" || state.roleName === "DLC Worker" && overalldetails()}
+    {(state.roleName == "DLC Employer" || state.roleName === "DLC Worker") && overalldetails()}
   }, [refreshKey]);
 
   const handleRefreshProfile = () => {
@@ -3359,9 +3359,13 @@ const ProfileUpdate = () => {
     );
   };
 
+
+  console.log("state.roleName state.roleName ",state.roleId );
+  
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {state.roleName == "DLC Employer" || state.roleName === "DLC Worker" && (
+      {(state.roleId === 13 || state.roleName === "DLC Worker") && (
         <View style={styles.card}>
           <Text style={styles.header}>
             {selectedSection
