@@ -169,7 +169,7 @@ async function openCamera(formik, path, name, size, dispatch) {
     dispatch(hideLoader());
 
     if (addressText) {
-      formik.setFieldValue(`${name}_location`, addressText);
+      formik.setFieldValue(`${name}Location`, addressText);
     }
 
     await uploadFile(file, formik, path, name, size);

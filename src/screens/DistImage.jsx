@@ -26,11 +26,10 @@ import { dists28 } from "../utils/CommonFunctions";
 
 const GeoTagging = () => {
   const dispatch = useDispatch();
-  const roleId = useSelector((state) => state.LoginReducer.roleId); 
-  
-  
+  const roleId = useSelector((state) => state.LoginReducer.roleId);
+
   const [existingData, setExistingData] = useState(null);
-  
+
   const SubmitDetails = async (values) => {
     // Prepare payload with ground truthing images
     const payload = {
@@ -81,10 +80,16 @@ const GeoTagging = () => {
       sideImage: Yup.string().required("Side image required"),
     }),
     ...(roleId === 4 && {
-      groundTruthFrontImage: Yup.string().required("Ground truth front image required"),
-      groundTruthBackImage: Yup.string().required("Ground truth back image required"),
-      groundTruthSideImage: Yup.string().required("Ground truth side image required"),
-    })
+      groundTruthFrontImage: Yup.string().required(
+        "Ground truth front image required",
+      ),
+      groundTruthBackImage: Yup.string().required(
+        "Ground truth back image required",
+      ),
+      groundTruthSideImage: Yup.string().required(
+        "Ground truth side image required",
+      ),
+    }),
   });
 
   const getGeoTaggingDetails = async () => {
@@ -113,7 +118,7 @@ const GeoTagging = () => {
             groundTruthBackLocation: "",
             groundTruthSideImage: "",
             groundTruthSideLocation: "",
-            remarks: ""
+            remarks: "",
           });
         }
       }
@@ -155,11 +160,13 @@ const GeoTagging = () => {
       groundTruthBackLocation: "",
       groundTruthSideImage: "",
       groundTruthSideLocation: "",
-      remarks: ""
+      remarks: "",
     },
     validationSchema,
     onSubmit: SubmitDetails,
   });
+
+  
 
   return (
     <ScrollView
@@ -201,9 +208,18 @@ const GeoTagging = () => {
           >
             <Picker.Item label="Select Category" value="" />
             <Picker.Item label="Bus Shelters & Hoardings" value="1" />
-            <Picker.Item label="Hospital TV Screens & Anna Canteens" value="2" />
-            <Picker.Item label="CCTV Screens at APSRTC Bus Stations" value="3" />
-            <Picker.Item label="Auto Backs & Digital Wall Paintings" value="4" />
+            <Picker.Item
+              label="Hospital TV Screens & Anna Canteens"
+              value="2"
+            />
+            <Picker.Item
+              label="CCTV Screens at APSRTC Bus Stations"
+              value="3"
+            />
+            <Picker.Item
+              label="Auto Backs & Digital Wall Paintings"
+              value="4"
+            />
             <Picker.Item label="Pillar Boards" value="5" />
           </Picker>
         </View>
@@ -246,7 +262,9 @@ const GeoTagging = () => {
                       />
                       {formik.values[`${name}Location`] && (
                         <View style={styles.locationBox}>
-                          <Text style={{ fontWeight: "bold" }}>📍 Location</Text>
+                          <Text style={{ fontWeight: "bold" }}>
+                            📍 Location
+                          </Text>
                           <Text style={{ fontSize: 13, color: "#333" }}>
                             {formik.values[`${name}Location`]}
                           </Text>
@@ -267,8 +285,10 @@ const GeoTagging = () => {
             {existingData && (
               <>
                 <View style={styles.readOnlySection}>
-                  <Text style={styles.sectionTitle}>📋 Existing Images (Read Only)</Text>
-                  
+                  <Text style={styles.sectionTitle}>
+                    📋 Existing Images (Read Only)
+                  </Text>
+
                   {/* Existing Front Image */}
                   <Text style={styles.label}>Existing Front Image</Text>
                   {formik.values.existingFrontImage ? (
@@ -279,7 +299,9 @@ const GeoTagging = () => {
                       />
                       {formik.values.existingFrontLocation && (
                         <View style={styles.locationBox}>
-                          <Text style={{ fontWeight: "bold" }}>📍 Location</Text>
+                          <Text style={{ fontWeight: "bold" }}>
+                            📍 Location
+                          </Text>
                           <Text style={{ fontSize: 13, color: "#333" }}>
                             {formik.values.existingFrontLocation}
                           </Text>
@@ -287,7 +309,9 @@ const GeoTagging = () => {
                       )}
                     </View>
                   ) : (
-                    <Text style={styles.noDataText}>No front image available</Text>
+                    <Text style={styles.noDataText}>
+                      No front image available
+                    </Text>
                   )}
 
                   {/* Existing Back Image */}
@@ -300,7 +324,9 @@ const GeoTagging = () => {
                       />
                       {formik.values.existingBackLocation && (
                         <View style={styles.locationBox}>
-                          <Text style={{ fontWeight: "bold" }}>📍 Location</Text>
+                          <Text style={{ fontWeight: "bold" }}>
+                            📍 Location
+                          </Text>
                           <Text style={{ fontSize: 13, color: "#333" }}>
                             {formik.values.existingBackLocation}
                           </Text>
@@ -308,7 +334,9 @@ const GeoTagging = () => {
                       )}
                     </View>
                   ) : (
-                    <Text style={styles.noDataText}>No back image available</Text>
+                    <Text style={styles.noDataText}>
+                      No back image available
+                    </Text>
                   )}
 
                   {/* Existing Side Image */}
@@ -321,7 +349,9 @@ const GeoTagging = () => {
                       />
                       {formik.values.existingSideLocation && (
                         <View style={styles.locationBox}>
-                          <Text style={{ fontWeight: "bold" }}>📍 Location</Text>
+                          <Text style={{ fontWeight: "bold" }}>
+                            📍 Location
+                          </Text>
                           <Text style={{ fontSize: 13, color: "#333" }}>
                             {formik.values.existingSideLocation}
                           </Text>
@@ -329,7 +359,9 @@ const GeoTagging = () => {
                       )}
                     </View>
                   ) : (
-                    <Text style={styles.noDataText}>No side image available</Text>
+                    <Text style={styles.noDataText}>
+                      No side image available
+                    </Text>
                   )}
                 </View>
 
@@ -337,13 +369,23 @@ const GeoTagging = () => {
 
                 {/* Ground Truth Images Upload Section */}
                 <View style={styles.groundTruthSection}>
-                  <Text style={styles.sectionTitle}>✅ Ground Truth Images (Upload New)</Text>
-                  
-                  {["groundTruthFrontImage", "groundTruthBackImage", "groundTruthSideImage"].map((name) => {
-                    const label = name.replace("groundTruth", "").replace("Image", "");
+                  <Text style={styles.sectionTitle}>
+                    ✅ Ground Truth Images (Upload New)
+                  </Text>
+
+                  {[
+                    "groundTruthFrontImage",
+                    "groundTruthBackImage",
+                    "groundTruthSideImage",
+                  ].map((name) => {
+                    const label = name
+                      .replace("groundTruth", "")
+                      .replace("Image", "");
                     return (
                       <View key={name}>
-                        <Text style={styles.label}>Ground Truth {label} Image</Text>
+                        <Text style={styles.label}>
+                          Ground Truth {label} Image
+                        </Text>
                         <TouchableOpacity
                           style={styles.uploadButton}
                           onPress={() => {
@@ -358,10 +400,14 @@ const GeoTagging = () => {
                             );
                           }}
                         >
-                          <Text style={styles.uploadButtonText}>Capture Ground Truth {label}</Text>
+                          <Text style={styles.uploadButtonText}>
+                            Capture Ground Truth {label}
+                          </Text>
                         </TouchableOpacity>
                         {formik.touched[name] && formik.errors[name] && (
-                          <Text style={styles.error}>{formik.errors[name]}</Text>
+                          <Text style={styles.error}>
+                            {formik.errors[name]}
+                          </Text>
                         )}
                         {formik.values[name] && (
                           <View style={styles.rowContainer}>
@@ -369,11 +415,19 @@ const GeoTagging = () => {
                               source={{ uri: formik.values[name] }}
                               style={styles.previewImage}
                             />
-                            {formik.values[`${name.replace("Image", "Location")}`] && (
+                            {formik.values[
+                              `${name.replace("Image", "Location")}`
+                            ] && (
                               <View style={styles.locationBox}>
-                                <Text style={{ fontWeight: "bold" }}>📍 Location</Text>
+                                <Text style={{ fontWeight: "bold" }}>
+                                  📍 Location
+                                </Text>
                                 <Text style={{ fontSize: 13, color: "#333" }}>
-                                  {formik.values[`${name.replace("Image", "Location")}`]}
+                                  {
+                                    formik.values[
+                                      `${name.replace("Image", "Location")}`
+                                    ]
+                                  }
                                 </Text>
                               </View>
                             )}
@@ -388,27 +442,34 @@ const GeoTagging = () => {
 
             {/* If no existing data, show message */}
             {!existingData && (
-              <Text style={styles.noDataMessage}>No existing data found. Please contact administrator.</Text>
+              <Text style={styles.noDataMessage}>
+                No existing data found. Please contact administrator.
+              </Text>
             )}
           </>
         )}
 
         {/* REMARKS - For both roles */}
-        <Text style={styles.label}>Remarks</Text>
-        <TextInput
-          style={{
-            borderWidth: 1,
-            borderColor: "#ccc",
-            borderRadius: 6,
-            padding: 10,
-            marginTop: 8,
-          }}
-          placeholder="Enter any remarks here..."
-          value={formik.values.remarks}
-          onChangeText={(text) => formik.setFieldValue("remarks", text)}
-        />
-        {formik.touched.remarks && formik.errors.remarks && (
-          <Text style={styles.error}>{formik.errors.remarks}</Text>
+
+        {roleId === 4 && (
+          <View>
+            <Text style={styles.label}>Remarks</Text>
+            <TextInput
+              style={{
+                borderWidth: 1,
+                borderColor: "#ccc",
+                borderRadius: 6,
+                padding: 10,
+                marginTop: 8,
+              }}
+              placeholder="Enter any remarks here..."
+              value={formik.values.remarks}
+              onChangeText={(text) => formik.setFieldValue("remarks", text)}
+            />
+            {formik.touched.remarks && formik.errors.remarks && (
+              <Text style={styles.error}>{formik.errors.remarks}</Text>
+            )}
+          </View>
         )}
 
         {/* SUBMIT BUTTON */}
