@@ -166,7 +166,11 @@ const GeoTagging = () => {
     onSubmit: SubmitDetails,
   });
 
+
+  console.log("ffff",formik.values);
   
+
+
 
   return (
     <ScrollView
