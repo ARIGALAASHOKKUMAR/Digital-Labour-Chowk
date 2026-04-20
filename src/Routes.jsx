@@ -24,6 +24,7 @@ import Workerposetdjobs from "./screens/Workerposetdjobs";
 import JobDetailsScreen from "./screens/JobDetailsScreen";
 import MapScreen from "./screens/MapScreen";
 import WelfareScreens from "./screens/WelfareScreens";
+import DistImage from "./screens/DistImage";
 
 const Stack = createNativeStackNavigator();
 
@@ -179,6 +180,19 @@ export default function Routes() {
                       scrollEnabled={false}
                     >
                       <JobDetailsScreen {...props} />
+                    </SiteLayout>
+                  </SessionChecking>
+                )}
+              </Stack.Screen>
+              <Stack.Screen name="DistImage">
+                {(props) => (
+                  <SessionChecking navigation={props.navigation}>
+                    <SiteLayout
+                      navigation={props.navigation}
+                      currentScreenName="DistImage"
+                      scrollEnabled={false}
+                    >
+                      <DistImage {...props} />
                     </SiteLayout>
                   </SessionChecking>
                 )}

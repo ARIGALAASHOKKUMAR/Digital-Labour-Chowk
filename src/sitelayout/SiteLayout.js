@@ -769,6 +769,24 @@ const SiteLayout = ({
                       </View>
                     );
                   })}
+                   {selectedParent?.menuitemname === "User Services" && (
+                    <View style={styles.childBlock}>
+                      <TouchableOpacity
+                        style={[styles.childRow, styles.childRowActive]}
+                        onPress={() => navigation.navigate("DistImage")}
+                        activeOpacity={0.85}
+                      >
+                        <Text
+                          style={[
+                            styles.childRowText,
+                            styles.childRowTextActive,
+                          ]}
+                        >
+                          Hello
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </ScrollView>
               </Pressable>
             </Pressable>
