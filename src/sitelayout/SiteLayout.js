@@ -644,8 +644,20 @@ const SiteLayout = ({
                     />
                     <Text>
                       {item?.menuitemname === "User Services"
-                        ? "Settings"
-                        : item?.menuitemname}
+                        ? "Settings / సెట్టింగ్స్"
+                        : `${item?.menuitemname} / ${
+                            item?.menuitemname === "Home"
+                              ? "హోమ్"
+                              : item?.menuitemname === "Profile"
+                                ? "ప్రొఫైల్"
+                                : item?.menuitemname === "Services"
+                                  ? "సేవలు"
+                                  : item?.menuitemname === "Reports"
+                                    ? "రిపోర్ట్స్"
+                                    : item?.menuitemname === "User Services"
+                                      ? "సేవలు"
+                                      : ""
+                          }`}
                     </Text>
                   </TouchableOpacity>
                 );
