@@ -3361,7 +3361,7 @@ const ProfileUpdate = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {state.roleName == "DLC Employer" && state.roleName === "DLC Worker" && (
+      {state.roleName == "DLC Employer" || state.roleName === "DLC Worker" && (
         <View style={styles.card}>
           <Text style={styles.header}>
             {selectedSection
