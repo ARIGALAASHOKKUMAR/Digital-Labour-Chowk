@@ -782,7 +782,7 @@ const SiteLayout = ({
                             styles.childRowTextActive,
                           ]}
                         >
-                          Hello
+                          Dist Image
                         </Text>
                       </TouchableOpacity>
                     </View>
