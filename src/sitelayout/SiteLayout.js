@@ -648,7 +648,13 @@ const SiteLayout = ({
                     <Text>
                       {item?.menuitemname === "User Services"
                         ? "Settings / సెట్టింగ్స్"
-                        : `${item?.menuitemname === "GEO TAGGING" && roleId === 4?"Ground Truthing": "Geo Tagging"} / ${
+                        : `${
+                            item?.menuitemname === "GEO TAGGING"
+                              ? roleId === 4
+                                ? "Ground Truthing"
+                                : "Geo Tagging"
+                              : item?.menuitemname
+                          } / ${
                             item?.menuitemname === "Home"
                               ? "హోమ్"
                               : item?.menuitemname === "Profile"
