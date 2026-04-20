@@ -36,11 +36,11 @@ const GeoTagging = () => {
       districtId: values.districtId,
       categoryId: values.categoryId,
       // Ground truthing images (new ones for roleId 11)
-      groundTruthFrontImage: values.groundTruthFrontImage || "",
+      groundTruthFrontImageLocation: values.groundTruthFrontImageLocation || "",
       groundTruthFrontLocation: values.groundTruthFrontLocation || "",
-      groundTruthBackImage: values.groundTruthBackImage || "",
+      groundTruthBackImageLocation: values.groundTruthBackImageLocation || "",
       groundTruthBackLocation: values.groundTruthBackLocation || "",
-      groundTruthSideImage: values.groundTruthSideImage || "",
+      groundTruthSideImageLocation: values.groundTruthSideImageLocation || "",
       groundTruthSideLocation: values.groundTruthSideLocation || "",
       remarks: values.remarks,
       // For roleId 4, these will be the main images
@@ -80,13 +80,13 @@ const GeoTagging = () => {
       sideImage: Yup.string().required("Side image required"),
     }),
     ...(roleId === 4 && {
-      groundTruthFrontImage: Yup.string().required(
+      groundTruthFrontImageLocation: Yup.string().required(
         "Ground truth front image required",
       ),
-      groundTruthBackImage: Yup.string().required(
+      groundTruthBackImageLocation: Yup.string().required(
         "Ground truth back image required",
       ),
-      groundTruthSideImage: Yup.string().required(
+      groundTruthSideImageLocation: Yup.string().required(
         "Ground truth side image required",
       ),
     }),
@@ -112,11 +112,11 @@ const GeoTagging = () => {
             existingSideImage: data?.side_image || "",
             existingSideLocation: data?.side_image_location || "",
             // Ground truth images (to be filled)
-            groundTruthFrontImage: "",
+            groundTruthFrontImageLocation: "",
             groundTruthFrontLocation: "",
-            groundTruthBackImage: "",
+            groundTruthBackImageLocation: "",
             groundTruthBackLocation: "",
-            groundTruthSideImage: "",
+            groundTruthSideImageLocation: "",
             groundTruthSideLocation: "",
             remarks: "",
           });
@@ -154,11 +154,11 @@ const GeoTagging = () => {
       existingSideImage: "",
       existingSideLocation: "",
       // For roleId 11 (ground truth images)
-      groundTruthFrontImage: "",
+      groundTruthFrontImageLocation: "",
       groundTruthFrontLocation: "",
-      groundTruthBackImage: "",
+      groundTruthBackImageLocation: "",
       groundTruthBackLocation: "",
-      groundTruthSideImage: "",
+      groundTruthSideImageLocation: "",
       groundTruthSideLocation: "",
       remarks: "",
     },
@@ -166,11 +166,7 @@ const GeoTagging = () => {
     onSubmit: SubmitDetails,
   });
 
-
-  console.log("ffff",formik.values);
-  
-
-
+  console.log("ffff", formik.values);
 
   return (
     <ScrollView
@@ -378,9 +374,9 @@ const GeoTagging = () => {
                   </Text>
 
                   {[
-                    "groundTruthFrontImage",
-                    "groundTruthBackImage",
-                    "groundTruthSideImage",
+                    "groundTruthFrontImageLocation",
+                    "groundTruthBackImageLocation",
+                    "groundTruthSideImageLocation",
                   ].map((name) => {
                     const label = name
                       .replace("groundTruth", "")
@@ -419,19 +415,13 @@ const GeoTagging = () => {
                               source={{ uri: formik.values[name] }}
                               style={styles.previewImage}
                             />
-                            {formik.values[
-                              `${name.replace("Image", "Location")}`
-                            ] && (
+                            {formik.values[`${name}Location`] && (
                               <View style={styles.locationBox}>
                                 <Text style={{ fontWeight: "bold" }}>
                                   📍 Location
                                 </Text>
                                 <Text style={{ fontSize: 13, color: "#333" }}>
-                                  {
-                                    formik.values[
-                                      `${name.replace("Image", "Location")}`
-                                    ]
-                                  }
+                                  {formik.values[`${name}Location`]}
                                 </Text>
                               </View>
                             )}
