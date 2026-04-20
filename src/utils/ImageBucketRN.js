@@ -1,9 +1,8 @@
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
-import { Alert,Image } from "react-native";
+import { Alert, Image } from "react-native";
 import axios from "axios";
 import * as Location from "expo-location";
-
 
 // ✅ CONSTANTS (same as web)
 export const IMG_UPLOAD_URL =
@@ -59,7 +58,7 @@ function validateFileTypeAndSize(file, size) {
   if (fileSize > size) {
     Alert.alert(
       "Error",
-      `Please check your file size, it should be less than ${maxSizeMB}MB`
+      `Please check your file size, it should be less than ${maxSizeMB}MB`,
     );
     return false;
   }
@@ -71,9 +70,10 @@ function validateFileTypeAndSize(file, size) {
   ) {
     Alert.alert(
       "Error",
-      `Invalid file format. Your file type is ${
-        file.name?.split(".").pop()?.toLowerCase()
-      }`
+      `Invalid file format. Your file type is ${file.name
+        ?.split(".")
+        .pop()
+        ?.toLowerCase()}`,
     );
     return false;
   }
@@ -108,8 +108,7 @@ const getFileNameWithExtension = (file) => {
 async function uploadFile(file, formik, path, name, size) {
   if (!validateFileTypeAndSize(file, size)) return;
 
-  console.log("ffff",file);
-  
+  console.log("ffff", file);
 
   try {
     const formData = new FormData();
@@ -120,15 +119,11 @@ async function uploadFile(file, formik, path, name, size) {
       type: file.mimeType || file.type || "application/octet-stream",
     });
 
-    const response = await CommonAxiosPost(
-      IMG_UPLOAD_URL + path,
-      formData
-    );
+    const response = await CommonAxiosPost(IMG_UPLOAD_URL + path, formData);
 
     if (response?.status === 200) {
+      console.log("rrrrrr", response.data);
 
-        console.log("rrrrrr", response.data);
-        
       const uploadedPath = IMG_DOWNLOAD_URL + response?.data;
 
       // ✅ EXACTLY SAME AS WEB (string only)
@@ -140,7 +135,7 @@ async function uploadFile(file, formik, path, name, size) {
     formik.setFieldValue(name, null);
     Alert.alert(
       "Error",
-      "Unfortunately, we encountered an error while uploading"
+      "Unfortunately, we encountered an error while uploading",
     );
   }
 }
@@ -173,9 +168,14 @@ async function openCamera(formik, path, name, size) {
       const place = address[0];
 
       // 🔥 FORMAT ADDRESS (you can adjust)
-      addressText = `${place.name || ""}, ${place.street || ""}, ${
-        place.city || place.district || ""
-      }, ${place.region || ""}, ${place.postalCode || ""}`;
+      addressText = {
+        lat: loc.coords.latitude,
+        lng: loc.coords.longitude,
+        street: place.street || "",
+        city: place.city || place.district || "",
+        state: place.region || "",
+        pincode: place.postalCode || "",
+      };
     }
   }
 
@@ -237,8 +237,7 @@ async function openCamera(formik, path, name, size) {
 
 // ✅ GALLERY
 async function openGallery(formik, path, name, size) {
-  const permission =
-    await ImagePicker.requestMediaLibraryPermissionsAsync();
+  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
   if (!permission.granted) {
     Alert.alert("Permission required", "Gallery access is needed");
@@ -263,7 +262,7 @@ export default async function ImageBucketRN(
   path,
   name,
   size = MAX_FILE_SIZE,
-  mode = "all"
+  mode = "all",
 ) {
   try {
     if (mode === "document") {

@@ -666,11 +666,38 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
               : null}
           </View>
 
-          {formik.values.image_location && (
-            <Text style={{ marginTop: 5, fontSize: 12 }}>
-              📍 {formik.values.image_location}
-            </Text>
-          )}
+         {formik.values.image_location && (
+  <View
+    style={{
+      marginTop: 10,
+      padding: 10,
+      backgroundColor: "#f5f5f5",
+      borderRadius: 8,
+      width: "90%",
+    }}
+  >
+    {/* Location Icon + Title */}
+    <Text style={{ fontWeight: "bold", marginBottom: 5 }}>
+      📍 Location Details
+    </Text>
+
+    {/* Address */}
+    <Text style={{ fontSize: 13 }}>
+      {formik.values.image_location.street},
+      {"\n"}
+      {formik.values.image_location.city},
+      {"\n"}
+      {formik.values.image_location.state} -{" "}
+      {formik.values.image_location.pincode}
+    </Text>
+
+    {/* Lat Long (small & subtle) */}
+    <Text style={{ fontSize: 11, color: "gray", marginTop: 5 }}>
+      Lat: {formik.values.image_location.lat} | Lng:{" "}
+      {formik.values.image_location.lng}
+    </Text>
+  </View>
+)}
 
           {formik.errors.uploadDocument && formik.touched.uploadDocument && (
             <Text style={styles.errorText}>{formik.errors.uploadDocument}</Text>
