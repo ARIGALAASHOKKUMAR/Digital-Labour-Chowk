@@ -164,3 +164,5 @@ export const JOBSEARCH = "/api/user/digitalLabourChowkJobPostings/search";
 export const JOBAPPLY = "/api/user/digital-labour-chowk/applyJob";
 export const FINDWORKER = "/api/user/digitalLabourChowkRegDetails";
 export const MYJOBSOFWORKER = "/api/user/digitalLabourChowkJobPostings";
+export const GEOTAGGINGPOST = "/api/user/createGeoTagging";
+export const GEOTAGGINGGET = "/api/user/geo-tagging-details";

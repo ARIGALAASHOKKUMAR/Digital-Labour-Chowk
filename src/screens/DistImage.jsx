@@ -13,7 +13,12 @@ import { useFormik, FormikProvider } from "formik";
 import * as Yup from "yup";
 import { Picker } from "@react-native-picker/picker";
 
-import { commonAPICall, GETDISTSAPP } from "../utils/utils";
+import {
+  commonAPICall,
+  GEOTAGGINGGET,
+  GEOTAGGINGPOST,
+  GETDISTSAPP,
+} from "../utils/utils";
 import { useDispatch } from "react-redux";
 import ImageBucketRN from "../utils/ImageBucketRN";
 import { dists28 } from "../utils/CommonFunctions";
@@ -21,48 +26,80 @@ import { dists28 } from "../utils/CommonFunctions";
 const GeoTagging = () => {
   const dispatch = useDispatch();
 
-  // ✅ Yup Validation
+  const SubmitDetails = async (values) => {
+    const response = await commonAPICall(
+      GEOTAGGINGPOST,
+      values,
+      "post",
+      dispatch,
+    );
+
+    console.log("responseresponse", response);
+
+    if (response.status === 200) {
+      formik.resetForm();
+    }
+  };
+
+  // ✅ Validation
   const validationSchema = Yup.object().shape({
-    dist: Yup.string().required("District is required"),
-    category: Yup.string().required("Category is required"),
+    districtId: Yup.string().required("District is required"),
+    categoryId: Yup.string().required("Category is required"),
     frontImage: Yup.string().required("Front image required"),
     backImage: Yup.string().required("Back image required"),
     sideImage: Yup.string().required("Side image required"),
   });
 
+  const getGeoTaggingDetails = async () => {
+    const response = await commonAPICall(GEOTAGGINGGET, {}, "get", dispatch);
+
+    if (response.status === 200) {
+      const data = response?.data.Geo_Tagging_Details?.[0];
+      if (data) {
+        formik.setValues({
+          districtId: data?.district_id?.toString() || "",
+          categoryId: data?.category_id?.toString() || "",
+
+          frontImage: data?.front_image,
+          frontImageLocation: data?.front_image_location || "",
+
+          backImage: data?.back_image,
+          backImageLocation: data?.back_image_location || "",
+
+          sideImage: data?.side_image,
+          sideImageLocation: data?.side_image_location || "",
+        });
+      }
+    }
+  };
+
+  useEffect(() => {
+    getGeoTaggingDetails();
+  }, []);
+
   const formik = useFormik({
     initialValues: {
-      dist: "",
-      category: "",
+      districtId: "",
+      categoryId: "",
 
       frontImage: "",
-      frontImage_location: null,
-
+      frontImageLocation: "",
       backImage: "",
-      backImage_location: null,
-
+      backImageLocation: "",
       sideImage: "",
-      sideImage_location: null,
+      sideImageLocation: "",
     },
+
     validationSchema,
 
-    onSubmit: (values) => {
-      console.log("FINAL PAYLOAD:", values);
-
-      Alert.alert("Success", "Geo Tagging submitted successfully");
-
-      // 👉 API CALL (optional)
-      // commonAPICall(SAVE_API, payload, "post", dispatch);
-    },
+    onSubmit: SubmitDetails,
   });
-
 
   return (
     <ScrollView
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
     >
-      {" "}
       <FormikProvider value={formik}>
         <Text style={styles.title}>GEO TAGGING</Text>
 
@@ -70,8 +107,8 @@ const GeoTagging = () => {
         <Text style={styles.label}>District / జిల్లా</Text>
         <View style={styles.selectBox}>
           <Picker
-            selectedValue={formik.values.dist}
-            onValueChange={(value) => formik.setFieldValue("dist", value)}
+            selectedValue={formik.values.districtId}
+            onValueChange={(value) => formik.setFieldValue("districtId", value)}
           >
             <Picker.Item label="Select District" value="" />
             {dists28.map((dist) => (
@@ -83,48 +120,41 @@ const GeoTagging = () => {
             ))}
           </Picker>
         </View>
-        {formik.touched.dist && formik.errors.dist && (
-          <Text style={styles.error}>{formik.errors.dist}</Text>
+        {formik.touched.districtId && formik.errors.districtId && (
+          <Text style={styles.error}>{formik.errors.districtId}</Text>
         )}
 
         {/* CATEGORY */}
         <Text style={styles.label}>Category / వర్గం</Text>
         <View style={styles.selectBox}>
           <Picker
-            selectedValue={formik.values.category}
-            onValueChange={(value) => formik.setFieldValue("category", value)}
+            selectedValue={formik.values.categoryId}
+            onValueChange={(value) => formik.setFieldValue("categoryId", value)}
           >
             <Picker.Item label="Select Category" value="" />
 
-            <Picker.Item
-              label="Bus Shelters & Hoardings"
-              value="1"
-            />
-
+            <Picker.Item label="Bus Shelters & Hoardings" value="1" />
             <Picker.Item
               label="Hospital TV Screens & Anna Canteens"
               value="2"
             />
-
             <Picker.Item
               label="CCTV Screens at APSRTC Bus Stations"
               value="3"
             />
-
             <Picker.Item
               label="Auto Backs & Digital Wall Paintings"
               value="4"
             />
-
             <Picker.Item label="Pillar Boards" value="5" />
           </Picker>
         </View>
-        {formik.touched.category && formik.errors.category && (
-          <Text style={styles.error}>{formik.errors.category}</Text>
+        {formik.touched.categoryId && formik.errors.categoryId && (
+          <Text style={styles.error}>{formik.errors.categoryId}</Text>
         )}
 
-        {/* IMAGE BLOCK FUNCTION */}
-        {["frontImage", "backImage", "sideImage"].map((name, index) => {
+        {/* IMAGE BLOCK */}
+        {["frontImage", "backImage", "sideImage"].map((name) => {
           const label = name.replace("Image", "");
 
           return (
@@ -135,7 +165,14 @@ const GeoTagging = () => {
                 style={styles.uploadButton}
                 onPress={() => {
                   formik.setFieldTouched(name, true);
-                  ImageBucketRN(formik, "APFD/SAWMILLS/", name, 20971520,"camera",dispatch);
+                  ImageBucketRN(
+                    formik,
+                    "APFD/SAWMILLS/",
+                    name,
+                    20971520,
+                    "camera",
+                    dispatch,
+                  );
                 }}
               >
                 <Text style={styles.uploadButtonText}>Capture {label}</Text>
@@ -152,12 +189,11 @@ const GeoTagging = () => {
                     style={styles.previewImage}
                   />
 
-                  {formik.values[`${name}_location`] && (
+                  {formik.values[`${name}Location`] && (
                     <View style={styles.locationBox}>
                       <Text style={{ fontWeight: "bold" }}>📍 Location</Text>
-
                       <Text style={{ fontSize: 13, color: "#333" }}>
-                        {formik.values[`${name}_location`]}
+                        {formik.values[`${name}Location`]}
                       </Text>
                     </View>
                   )}
