@@ -114,7 +114,7 @@ async function uploadFile(file, formik, path, name, size) {
 
     formData.append("file", {
       uri: file.uri,
-      name: file.fileName || `file_${Date.now()}`,
+      name: file.fileName || file.name,
       type: file.mimeType || file.type || "application/octet-stream",
     });
 
