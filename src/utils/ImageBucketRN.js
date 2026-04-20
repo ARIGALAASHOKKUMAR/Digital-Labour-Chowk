@@ -1,10 +1,13 @@
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
-import { Alert, Image } from "react-native";
+import { Alert } from "react-native";
 import axios from "axios";
 import * as Location from "expo-location";
+import { hideLoader, showLoader } from "../actions";
 
-// ✅ CONSTANTS (same as web)
+// ✅ IMPORT YOUR LOADER ACTIONS
+
+// ✅ CONSTANTS
 export const IMG_UPLOAD_URL =
   "https://swapi.dev.nidhi.apcfss.in/socialwelfaredms/user-defined-path/file-upload/";
 export const IMG_DOWNLOAD_URL =
@@ -28,7 +31,7 @@ const SUPPORTED_FORMATS = [
 
 const MAX_FILE_SIZE = 20971520;
 
-// ✅ COMMON AXIOS POST (same like web)
+// ✅ COMMON AXIOS POST
 const CommonAxiosPost = async (url, values) => {
   try {
     let res = await axios({
@@ -48,7 +51,7 @@ const CommonAxiosPost = async (url, values) => {
   }
 };
 
-// ✅ VALIDATION (aligned with web)
+// ✅ VALIDATION
 function validateFileTypeAndSize(file, size) {
   const maxSizeMB = size / (1024 * 1024);
 
@@ -58,12 +61,11 @@ function validateFileTypeAndSize(file, size) {
   if (fileSize > size) {
     Alert.alert(
       "Error",
-      `Please check your file size, it should be less than ${maxSizeMB}MB`,
+      `Please check your file size, it should be less than ${maxSizeMB}MB`
     );
     return false;
   }
 
-  // geojson exception
   if (
     !SUPPORTED_FORMATS.includes(fileType) &&
     file.name?.split(".").pop()?.toLowerCase() !== "geojson"
@@ -73,7 +75,7 @@ function validateFileTypeAndSize(file, size) {
       `Invalid file format. Your file type is ${file.name
         ?.split(".")
         .pop()
-        ?.toLowerCase()}`,
+        ?.toLowerCase()}`
     );
     return false;
   }
@@ -81,34 +83,9 @@ function validateFileTypeAndSize(file, size) {
   return true;
 }
 
-const getFileNameWithExtension = (file) => {
-  let name = file.name || `file_${Date.now()}`;
-
-  // If already has extension → return
-  if (name.includes(".")) return name;
-
-  // derive extension from mimeType
-  const mime = file.mimeType || file.type || "";
-
-  const map = {
-    "image/jpeg": ".jpg",
-    "image/jpg": ".jpg",
-    "image/png": ".png",
-    "application/pdf": ".pdf",
-    "video/mp4": ".mp4",
-    "application/json": ".json",
-  };
-
-  const ext = map[mime] || "";
-
-  return name + ext;
-};
-
-// ✅ COMMON UPLOAD FUNCTION (matches web ImageBucket)
+// ✅ UPLOAD
 async function uploadFile(file, formik, path, name, size) {
   if (!validateFileTypeAndSize(file, size)) return;
-
-  console.log("ffff", file);
 
   try {
     const formData = new FormData();
@@ -122,11 +99,8 @@ async function uploadFile(file, formik, path, name, size) {
     const response = await CommonAxiosPost(IMG_UPLOAD_URL + path, formData);
 
     if (response?.status === 200) {
-      console.log("rrrrrr", response.data);
-
       const uploadedPath = IMG_DOWNLOAD_URL + response?.data;
 
-      // ✅ EXACTLY SAME AS WEB (string only)
       formik.setFieldValue(name, uploadedPath);
 
       Alert.alert("Success", "File Uploaded Successfully");
@@ -135,105 +109,75 @@ async function uploadFile(file, formik, path, name, size) {
     formik.setFieldValue(name, null);
     Alert.alert(
       "Error",
-      "Unfortunately, we encountered an error while uploading",
+      "Unfortunately, we encountered an error while uploading"
     );
   }
 }
 
-// ✅ DOCUMENT PICKER
+// ✅ CAMERA WITH REDUX LOADER
+async function openCamera(formik, path, name, size, dispatch) {
+  try {
+    // ✅ OPEN CAMERA FIRST (NO DELAY)
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
 
-async function openCamera(formik, path, name, size) {
-  const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert("Permission required", "Camera access is needed");
+      return;
+    }
 
-  if (!permission.granted) {
-    Alert.alert("Permission required", "Camera access is needed");
-    return;
-  }
-
-  // ✅ LOCATION PERMISSION
-  const locPermission = await Location.requestForegroundPermissionsAsync();
-
-  let addressText = null;
-
-  if (locPermission.granted) {
-    const loc = await Location.getCurrentPositionAsync({});
-
-    // ✅ CONVERT LAT/LNG → ADDRESS
-    const address = await Location.reverseGeocodeAsync({
-      latitude: loc.coords.latitude,
-      longitude: loc.coords.longitude,
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
     });
 
-    if (address.length > 0) {
-      const place = address[0];
+    if (result.canceled) return;
 
-      // 🔥 FORMAT ADDRESS (you can adjust)
-      addressText = {
-        lat: loc.coords.latitude,
-        lng: loc.coords.longitude,
-        street: place.street || "",
-        city: place.city || place.district || "",
-        state: place.region || "",
-        pincode: place.postalCode || "",
-      };
+    const file = result.assets[0];
+
+    // ✅ SHOW LOADER AFTER CAPTURE (better UX)
+    dispatch(showLoader("Fetching location..."));
+
+    let addressText = null;
+
+    try {
+      const locPermission = await Location.requestForegroundPermissionsAsync();
+
+      if (locPermission.granted) {
+        const loc = await Location.getCurrentPositionAsync({});
+
+        const address = await Location.reverseGeocodeAsync({
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+        });
+
+        if (address.length > 0) {
+          const place = address[0];
+
+          addressText = [
+            place.formattedAddress,
+            `Lat:${loc.coords.latitude}`,
+            `Lng:${loc.coords.longitude}`,
+          ]
+            .filter(Boolean)
+            .join(" - ");
+        }
+      }
+    } catch (e) {
+      console.log("Location error", e);
     }
+
+    dispatch(hideLoader());
+
+    if (addressText) {
+      formik.setFieldValue(`${name}_location`, addressText);
+    }
+
+    await uploadFile(file, formik, path, name, size);
+  } catch (err) {
+    dispatch(hideLoader());
+    Alert.alert("Error", "Something went wrong");
   }
-
-  const result = await ImagePicker.launchCameraAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    quality: 0.7,
-  });
-
-  if (result.canceled) return;
-
-  const file = result.assets[0];
-
-  // ✅ SAVE ADDRESS INSTEAD OF LAT/LNG
-  if (addressText) {
-    formik.setFieldValue(`image_location`, addressText);
-  }
-
-  await uploadFile(file, formik, path, name, size);
 }
-
-// ✅ CAMERA
-// async function openCamera(formik, path, name, size) {
-//   const permission = await ImagePicker.requestCameraPermissionsAsync();
-
-//   if (!permission.granted) {
-//     Alert.alert("Permission required", "Camera access is needed");
-//     return;
-//   }
-
-//   // ✅ LOCATION
-//   const locPermission = await Location.requestForegroundPermissionsAsync();
-
-//   let locationData = null;
-
-//   if (locPermission.granted) {
-//     const loc = await Location.getCurrentPositionAsync({});
-//     locationData = {
-//       latitude: loc.coords.latitude,
-//       longitude: loc.coords.longitude,
-//     };
-//   }
-
-//   const result = await ImagePicker.launchCameraAsync({
-//     mediaTypes: ImagePicker.MediaTypeOptions.Images,
-//     quality: 0.7,
-//   });
-
-//   if (result.canceled) return;
-
-//   const file = result.assets[0];
-
-//   // ✅ SAVE LOCATION
-//   if (locationData) {
-//     formik.setFieldValue("image_location", locationData);
-//   }
-
-//   await uploadFile(file, formik, path, name, size);
-// }
 
 // ✅ GALLERY
 async function openGallery(formik, path, name, size) {
@@ -256,13 +200,25 @@ async function openGallery(formik, path, name, size) {
   await uploadFile(file, formik, path, name, size);
 }
 
-// ✅ MAIN FUNCTION (same flexibility as before)
+// ✅ DOCUMENT
+async function pickDocument(formik, path, name, size) {
+  const result = await DocumentPicker.getDocumentAsync({});
+
+  if (result.canceled) return;
+
+  const file = result.assets[0];
+
+  await uploadFile(file, formik, path, name, size);
+}
+
+// ✅ MAIN FUNCTION
 export default async function ImageBucketRN(
   formik,
   path,
   name,
   size = MAX_FILE_SIZE,
   mode = "all",
+  dispatch
 ) {
   try {
     if (mode === "document") {
@@ -270,18 +226,18 @@ export default async function ImageBucketRN(
     }
 
     if (mode === "camera") {
-      return openCamera(formik, path, name, size);
+      return openCamera(formik, path, name, size, dispatch);
     }
 
     if (mode === "gallery") {
       return openGallery(formik, path, name, size);
     }
 
-    // ✅ ALL OPTIONS
     Alert.alert("Upload", "Choose option", [
       {
         text: "Camera",
-        onPress: () => openCamera(formik, path, name, size),
+        onPress: () =>
+          openCamera(formik, path, name, size, dispatch),
       },
       {
         text: "Gallery",
@@ -294,6 +250,7 @@ export default async function ImageBucketRN(
       { text: "Cancel", style: "cancel" },
     ]);
   } catch (error) {
+    dispatch(hideLoader());
     Alert.alert("Error", "Something went wrong");
   }
 }

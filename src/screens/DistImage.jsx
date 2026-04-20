@@ -4,72 +4,77 @@ import {
   Text,
   TouchableOpacity,
   Image,
-  Linking,
   StyleSheet,
+  Alert,
+  ScrollView,
 } from "react-native";
 
-import { useFormik } from "formik";
+import { useFormik, FormikProvider } from "formik";
+import * as Yup from "yup";
 import { Picker } from "@react-native-picker/picker";
-import Ionicons from "react-native-vector-icons/Ionicons";
 
 import { commonAPICall, GETDISTSAPP } from "../utils/utils";
 import { useDispatch } from "react-redux";
 import ImageBucketRN from "../utils/ImageBucketRN";
+import { dists28 } from "../utils/CommonFunctions";
 
-// ⚠️ make sure this exists in your project
-// import ImageBucketRN from "../utils/ImageBucketRN";
+const GeoTagging = () => {
+  const dispatch = useDispatch();
 
-const DistImage = () => {
-  const [dists, setDists] = useState([]);
+  // ✅ Yup Validation
+  const validationSchema = Yup.object().shape({
+    dist: Yup.string().required("District is required"),
+    category: Yup.string().required("Category is required"),
+    frontImage: Yup.string().required("Front image required"),
+    backImage: Yup.string().required("Back image required"),
+    sideImage: Yup.string().required("Side image required"),
+  });
 
   const formik = useFormik({
     initialValues: {
       dist: "",
-      image: "",
-      uploadDocument: "",
-      image_location: null,
+      category: "",
+
+      frontImage: "",
+      frontImage_location: null,
+
+      backImage: "",
+      backImage_location: null,
+
+      sideImage: "",
+      sideImage_location: null,
+    },
+    validationSchema,
+
+    onSubmit: (values) => {
+      console.log("FINAL PAYLOAD:", values);
+
+      Alert.alert("Success", "Geo Tagging submitted successfully");
+
+      // 👉 API CALL (optional)
+      // commonAPICall(SAVE_API, payload, "post", dispatch);
     },
   });
 
-  const dispatch = useDispatch();
-
-  const getdists = async () => {
-    try {
-      const response = await commonAPICall(GETDISTSAPP, {}, "get", dispatch);
-      if (response?.status === 200) {
-        setDists(response?.data?.District_List || []);
-      } else {
-        setDists([]);
-      }
-    } catch (error) {
-      console.log("Error fetching districts:", error);
-      setDists([]);
-    }
-  };
-
-  useEffect(() => {
-    getdists();
-  }, []);
 
   return (
-    <View style={styles.container}>
-      {/* DISTRICT */}
-      <View style={styles.halfWidth}>
-        <Text style={styles.fieldLabel}>District / జిల్లా</Text>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+    >
+      {" "}
+      <FormikProvider value={formik}>
+        <Text style={styles.title}>GEO TAGGING</Text>
 
+        {/* DISTRICT */}
+        <Text style={styles.label}>District / జిల్లా</Text>
         <View style={styles.selectBox}>
           <Picker
             selectedValue={formik.values.dist}
-            onValueChange={(value) => {
-              formik.setFieldValue("dist", value);
-            }}
+            onValueChange={(value) => formik.setFieldValue("dist", value)}
           >
-            <Picker.Item
-              label="Select District / జిల్లాను ఎంచుకోండి"
-              value=""
-            />
-
-            {dists.map((dist) => (
+            <Picker.Item label="Select District" value="" />
+            {dists28.map((dist) => (
               <Picker.Item
                 key={String(dist.dist_code)}
                 label={dist.dist_name}
@@ -78,123 +83,142 @@ const DistImage = () => {
             ))}
           </Picker>
         </View>
-      </View>
-
-      {/* UPLOAD */}
-      <View style={styles.inputBlock}>
-        <Text style={styles.label}>
-          Upload Document / ఫోటో అప్లోడ్ చేయండి{" "}
-          <Text style={styles.requiredStar}>*</Text>
-        </Text>
-
-        <TouchableOpacity
-          style={styles.uploadButton}
-          onPress={() => {
-            formik.setFieldTouched("uploadDocument", true);
-
-            let path = "APFD/SAWMILLS/";
-
-            ImageBucketRN(formik, path, "uploadDocument", 20971520);
-          }}
-        >
-          <Text style={styles.uploadButtonText}>
-            Upload Image / ఫోటో అప్లోడ్ చేయండి
-          </Text>
-        </TouchableOpacity>
-
-        {/* PREVIEW */}
-        <View style={{ alignItems: "center" }}>
-          {formik.values.uploadDocument ? (
-            /\.(jpg|jpeg|png)$/i.test(formik.values.uploadDocument) ? (
-              <Image
-                source={{ uri: formik.values.uploadDocument }}
-                style={styles.previewImage}
-              />
-            ) : /\.pdf$/i.test(formik.values.uploadDocument) ? (
-              <TouchableOpacity
-                style={styles.pdfRow}
-                onPress={() =>
-                  Linking.openURL(formik.values.uploadDocument)
-                }
-              >
-                <Ionicons name="document-text-outline" size={24} color="red" />
-                <Text style={styles.pdfText}>Download PDF</Text>
-              </TouchableOpacity>
-            ) : (
-              <Text>{formik.values.uploadDocument}</Text>
-            )
-          ) : null}
-        </View>
-
-        {/* LOCATION */}
-        {formik.values.image_location && (
-          <View style={styles.locationBox}>
-            <Text style={{ fontWeight: "bold", marginBottom: 5 }}>
-              📍 Location Details
-            </Text>
-
-            <Text style={{ fontSize: 13 }}>
-              {formik.values.image_location.street}
-              {"\n"}
-              {formik.values.image_location.city}
-              {"\n"}
-              {formik.values.image_location.state} -{" "}
-              {formik.values.image_location.pincode}
-            </Text>
-
-            <Text style={styles.latLng}>
-              Lat: {formik.values.image_location.lat} | Lng:{" "}
-              {formik.values.image_location.lng}
-            </Text>
-          </View>
+        {formik.touched.dist && formik.errors.dist && (
+          <Text style={styles.error}>{formik.errors.dist}</Text>
         )}
-      </View>
-    </View>
+
+        {/* CATEGORY */}
+        <Text style={styles.label}>Category / వర్గం</Text>
+        <View style={styles.selectBox}>
+          <Picker
+            selectedValue={formik.values.category}
+            onValueChange={(value) => formik.setFieldValue("category", value)}
+          >
+            <Picker.Item label="Select Category" value="" />
+
+            <Picker.Item
+              label="Bus Shelters & Hoardings"
+              value="1"
+            />
+
+            <Picker.Item
+              label="Hospital TV Screens & Anna Canteens"
+              value="2"
+            />
+
+            <Picker.Item
+              label="CCTV Screens at APSRTC Bus Stations"
+              value="3"
+            />
+
+            <Picker.Item
+              label="Auto Backs & Digital Wall Paintings"
+              value="4"
+            />
+
+            <Picker.Item label="Pillar Boards" value="5" />
+          </Picker>
+        </View>
+        {formik.touched.category && formik.errors.category && (
+          <Text style={styles.error}>{formik.errors.category}</Text>
+        )}
+
+        {/* IMAGE BLOCK FUNCTION */}
+        {["frontImage", "backImage", "sideImage"].map((name, index) => {
+          const label = name.replace("Image", "");
+
+          return (
+            <View key={name}>
+              <Text style={styles.label}>{label} Image</Text>
+
+              <TouchableOpacity
+                style={styles.uploadButton}
+                onPress={() => {
+                  formik.setFieldTouched(name, true);
+                  ImageBucketRN(formik, "APFD/SAWMILLS/", name, 20971520,"camera",dispatch);
+                }}
+              >
+                <Text style={styles.uploadButtonText}>Capture {label}</Text>
+              </TouchableOpacity>
+
+              {formik.touched[name] && formik.errors[name] && (
+                <Text style={styles.error}>{formik.errors[name]}</Text>
+              )}
+
+              {formik.values[name] && (
+                <View style={styles.rowContainer}>
+                  <Image
+                    source={{ uri: formik.values[name] }}
+                    style={styles.previewImage}
+                  />
+
+                  {formik.values[`${name}_location`] && (
+                    <View style={styles.locationBox}>
+                      <Text style={{ fontWeight: "bold" }}>📍 Location</Text>
+
+                      <Text style={{ fontSize: 13, color: "#333" }}>
+                        {formik.values[`${name}_location`]}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              )}
+            </View>
+          );
+        })}
+
+        {/* SUBMIT */}
+        <TouchableOpacity
+          style={[
+            styles.submitButton,
+            {
+              opacity: formik.isValid ? 1 : 0.6,
+            },
+          ]}
+          onPress={formik.handleSubmit}
+          disabled={!formik.isValid}
+        >
+          <Text style={styles.submitText}>Submit</Text>
+        </TouchableOpacity>
+      </FormikProvider>
+    </ScrollView>
   );
 };
 
-export default DistImage;
+export default GeoTagging;
 
 const styles = StyleSheet.create({
   container: {
-    padding: 10,
+    flexGrow: 1,
+    padding: 16,
+    paddingBottom: 120, // 👈 important
   },
-
-  halfWidth: {
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 15,
+    color: "#2e7d32",
   },
 
-  fieldLabel: {
-    fontSize: 14,
-    fontWeight: "600",
+  label: {
+    marginTop: 12,
     marginBottom: 5,
+    fontWeight: "600",
   },
 
   selectBox: {
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 6,
-    overflow: "hidden",
-  },
-
-  inputBlock: {
-    marginTop: 15,
-  },
-
-  label: {
-    fontSize: 14,
-    marginBottom: 6,
-  },
-
-  requiredStar: {
-    color: "red",
   },
 
   uploadButton: {
-    backgroundColor: "#2e7d32",
+    backgroundColor: "#0288d1",
     padding: 10,
     borderRadius: 6,
     alignItems: "center",
+    marginBottom: 5,
   },
 
   uploadButtonText: {
@@ -202,34 +226,47 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
+  rowContainer: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 8,
+  },
+
   previewImage: {
     width: 120,
     height: 120,
     borderRadius: 8,
-    marginTop: 10,
-  },
-
-  pdfRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 10,
-  },
-
-  pdfText: {
-    marginLeft: 8,
-    color: "blue",
   },
 
   locationBox: {
-    marginTop: 10,
-    padding: 10,
+    flex: 1,
+    padding: 8,
     backgroundColor: "#f5f5f5",
     borderRadius: 8,
   },
 
   latLng: {
-    fontSize: 11,
+    fontSize: 12,
     color: "gray",
     marginTop: 5,
+  },
+
+  submitButton: {
+    marginTop: 20,
+    backgroundColor: "#2e7d32",
+    padding: 12,
+    borderRadius: 6,
+    alignItems: "center",
+  },
+
+  submitText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+
+  error: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 2,
   },
 });

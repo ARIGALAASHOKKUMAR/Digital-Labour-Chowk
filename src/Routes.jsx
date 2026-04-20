@@ -184,12 +184,12 @@ export default function Routes() {
                   </SessionChecking>
                 )}
               </Stack.Screen>
-              <Stack.Screen name="DistImage">
+              <Stack.Screen name="AddAgency">
                 {(props) => (
                   <SessionChecking navigation={props.navigation}>
                     <SiteLayout
                       navigation={props.navigation}
-                      currentScreenName="DistImage"
+                      currentScreenName="AddAgency"
                       scrollEnabled={false}
                     >
                       <DistImage {...props} />

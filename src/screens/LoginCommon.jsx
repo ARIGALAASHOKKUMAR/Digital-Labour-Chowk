@@ -261,6 +261,8 @@ const LoginCommon = ({ navigation }) => {
       navigation.navigate("RegisterWorker");
     } else if (selectedUserType === "employer") {
       navigation.navigate("RegisterEmployer");
+    } else if (selectedUserType === "agency") {
+      navigation.navigate("AddAgency");
     }
   };
 
@@ -309,6 +311,21 @@ const LoginCommon = ({ navigation }) => {
         <View style={styles.optionTextWrap}>
           <Text style={styles.optionTitle}>
             I am an Employer {"\n"} నేను యజమాని
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={22} color="#1e3a5f" />
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.optionCard}
+        onPress={() => setSelectedUserType("agency")}
+        activeOpacity={0.85}
+      >
+        <View style={styles.optionIconWrap}>
+          <Ionicons name="business-outline" size={26} color="#1e3a5f" />
+        </View>
+        <View style={styles.optionTextWrap}>
+          <Text style={styles.optionTitle}>
+            I am an Agency {"\n"} నేను ఒక సంస్థను
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={22} color="#1e3a5f" />
@@ -443,14 +460,18 @@ const LoginCommon = ({ navigation }) => {
         Login{" "}
         {selectedUserType === "worker"
           ? "Worker / కార్మికుడు"
-          : "Employer / యజమాని"}
+          : selectedUserType === "agency"
+            ? "Agency / ఏజెన్సీ"
+            : "Employer / యజమాని"}
       </Text>
 
       <Text style={styles.subtitle}>
         Sign in to access your{" "}
         {selectedUserType === "worker"
-          ? "worker / కార్మికుడు"
-          : "employer / యజమాని"}{" "}
+          ? "Worker / కార్మికుడు"
+          : selectedUserType === "agency"
+            ? "Agency / ఏజెన్సీ"
+            : "Employer / యజమాని"}{" "}
         account
       </Text>
 
@@ -664,9 +685,11 @@ const LoginCommon = ({ navigation }) => {
 
           {!selectedUserType
             ? renderRoleSelection()
-            : !selectedAction
-              ? renderActionSelection()
-              : renderLoginForm()}
+            : selectedUserType === "agency"
+              ? renderLoginForm()
+              : !selectedAction
+                ? renderActionSelection()
+                : renderLoginForm()}
 
           <View style={styles.bottomSpacing} />
         </ScrollView>

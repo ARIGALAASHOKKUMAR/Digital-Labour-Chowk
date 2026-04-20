@@ -607,7 +607,8 @@ const SiteLayout = ({
                   item?.menuitemname === "Home" ||
                   item?.menuitemname === "User Services" ||
                   item?.menuitemname === "Services" ||
-                  item?.menuitemname === "Reports",
+                  item?.menuitemname === "Reports" ||
+                  item?.menuitemname === "GEO TAGGING",
               )
               .map((item, index) => {
                 const active = isParentActive(item);
@@ -622,6 +623,8 @@ const SiteLayout = ({
                       return "grid-outline";
                     case "Reports":
                       return "document-text-outline";
+                    case "GEO TAGGING":
+                      return "business-outline"; // or "add-circle-outline"
                     default:
                       return "apps-outline";
                   }
@@ -769,24 +772,6 @@ const SiteLayout = ({
                       </View>
                     );
                   })}
-                   {selectedParent?.menuitemname === "User Services" && (
-                    <View style={styles.childBlock}>
-                      <TouchableOpacity
-                        style={[styles.childRow, styles.childRowActive]}
-                        onPress={() => navigation.navigate("DistImage")}
-                        activeOpacity={0.85}
-                      >
-                        <Text
-                          style={[
-                            styles.childRowText,
-                            styles.childRowTextActive,
-                          ]}
-                        >
-                          Dist Image
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
                 </ScrollView>
               </Pressable>
             </Pressable>

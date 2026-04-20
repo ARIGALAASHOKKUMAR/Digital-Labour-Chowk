@@ -567,35 +567,121 @@ export const profileMenu = [
   },
 ];
 
-export const new_dist = [
-  { dist_code: "", dist_name: "--select--" },
-  { dist_code: 749, dist_name: "NTR" },
-  { dist_code: 505, dist_name: "EAST GODAVARI" },
-  { dist_code: 503, dist_name: "CHITTOOR" },
-  { dist_code: 506, dist_name: "GUNTUR" },
-  { dist_code: 748, dist_name: "ELURU" },
-  { dist_code: 746, dist_name: "KAKINADA" },
-  { dist_code: 523, dist_name: "WEST GODAVARI" },
-  { dist_code: 521, dist_name: "VIZIANAGARAM" },
-  { dist_code: 502, dist_name: "ANANTAPUR" },
-  { dist_code: 753, dist_name: "ANNAMAYYA" },
-  { dist_code: 750, dist_name: "BAPATLA" },
-  { dist_code: 517, dist_name: "PRAKASAM" },
-  { dist_code: 744, dist_name: "ANAKAPALLI" },
-  { dist_code: 511, dist_name: "KURNOOL" },
-  { dist_code: 752, dist_name: "TIRUPATI" },
-  { dist_code: 519, dist_name: "SRIKAKULAM" },
-  { dist_code: 510, dist_name: "KRISHNA" },
-  { dist_code: 755, dist_name: "NANDYAL" },
-  { dist_code: 751, dist_name: "PALNADU" },
-  { dist_code: 515, dist_name: "SPSR NELLORE" },
-  { dist_code: 520, dist_name: "VISAKHAPATANAM" },
-  { dist_code: 754, dist_name: "SRI SATHYA SAI" },
-  { dist_code: 743, dist_name: "PARVATHIPURAM MANYAM" },
-  { dist_code: 745, dist_name: "ALLURI SITHARAMA RAJU" },
-  { dist_code: 747, dist_name: "DR.B.R.AMBEDKAR KONASEEMA" },
-  { dist_code: 504, dist_name: "Y.S.R.Kadapa" },
-];
+
+export const dists28 =  [
+	{
+		"dist_code" : 502,
+		"dist_name" : "ANANTAPUR"
+	},
+	{
+		"dist_code" : 503,
+		"dist_name" : "CHITTOOR"
+	},
+	{
+		"dist_code" : 504,
+		"dist_name" : "Y.S.R."
+	},
+	{
+		"dist_code" : 505,
+		"dist_name" : "EAST GODAVARI"
+	},
+	{
+		"dist_code" : 506,
+		"dist_name" : "GUNTUR"
+	},
+	{
+		"dist_code" : 510,
+		"dist_name" : "KRISHNA"
+	},
+	{
+		"dist_code" : 511,
+		"dist_name" : "KURNOOL"
+	},
+	{
+		"dist_code" : 515,
+		"dist_name" : "SPSR NELLORE"
+	},
+	{
+		"dist_code" : 517,
+		"dist_name" : "PRAKASAM"
+	},
+	{
+		"dist_code" : 519,
+		"dist_name" : "SRIKAKULAM"
+	},
+	{
+		"dist_code" : 520,
+		"dist_name" : "VISAKHAPATANAM"
+	},
+	{
+		"dist_code" : 521,
+		"dist_name" : "VIZIANAGARAM"
+	},
+	{
+		"dist_code" : 523,
+		"dist_name" : "WEST GODAVARI"
+	},
+	{
+		"dist_code" : 743,
+		"dist_name" : "PARVATHIPURAM MANYAM"
+	},
+	{
+		"dist_code" : 744,
+		"dist_name" : "ANAKAPALLI"
+	},
+	{
+		"dist_code" : 745,
+		"dist_name" : "ALLURI SITHARAMA RAJU"
+	},
+	{
+		"dist_code" : 746,
+		"dist_name" : "KAKINADA"
+	},
+	{
+		"dist_code" : 747,
+		"dist_name" : "DR.B.R.AMBEDKAR KONASEEMA"
+	},
+	{
+		"dist_code" : 748,
+		"dist_name" : "ELURU"
+	},
+	{
+		"dist_code" : 749,
+		"dist_name" : "NTR"
+	},
+	{
+		"dist_code" : 750,
+		"dist_name" : "BAPATLA"
+	},
+	{
+		"dist_code" : 751,
+		"dist_name" : "PALNADU"
+	},
+	{
+		"dist_code" : 752,
+		"dist_name" : "TIRUPATI"
+	},
+	{
+		"dist_code" : 753,
+		"dist_name" : "ANNAMAYYA"
+	},
+	{
+		"dist_code" : 754,
+		"dist_name" : "SRI SATHYA SAI"
+	},
+	{
+		"dist_code" : 755,
+		"dist_name" : "NANDYAL"
+	},
+	{
+		"dist_code" : 756,
+		"dist_name" : "MARKAPURAM"
+	},
+	{
+		"dist_code" : 757,
+		"dist_name" : "POLAVARAM"
+	}
+]
 
 
 

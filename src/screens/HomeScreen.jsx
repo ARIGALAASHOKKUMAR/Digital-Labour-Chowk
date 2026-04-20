@@ -20,7 +20,7 @@ const HomeScreen = ({ navigation }) => {
   const roleId = state.roleId;
   const [loading, setLoading] = useState(true);
 
-  const {photoPath} = state
+  const { photoPath } = state;
 
   const safeParseArray = (value) => {
     if (!value) return [];
@@ -72,33 +72,35 @@ const HomeScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
-    fetchWorkerDetails();
+    if (roleId === 12 || roleId === 13) {
+      fetchWorkerDetails();
+    }
   }, []);
 
   const dispatch = useDispatch();
 
   return (
-  <>
-    {roleId == 12 ? (
-      <Worker
-        skills={skills}
-        workHistory={workHistory}
-        workerData={workerData}
-        loading={loading}
-        refreshing={refreshing}
-        photoPath={photoPath}
-      />
-    ) : roleId == 13 ? (
-      <Employer navigation={navigation} />
-    ) : (
-      <View style={{ alignItems: "center", marginTop: 50 }}>
-        <Text style={{ fontSize: 16, color: "#666" }}>
-          You are not authorized or no services available.
-        </Text>
-      </View>
-    )}
-  </>
-);
+    <>
+      {roleId == 12 ? (
+        <Worker
+          skills={skills}
+          workHistory={workHistory}
+          workerData={workerData}
+          loading={loading}
+          refreshing={refreshing}
+          photoPath={photoPath}
+        />
+      ) : roleId == 13 ? (
+        <Employer navigation={navigation} />
+      ) : (
+        <View style={{ alignItems: "center", marginTop: 50 }}>
+          <Text style={{ fontSize: 16, color: "#666" }}>
+            Welcome to Labour Department
+          </Text>
+        </View>
+      )}
+    </>
+  );
 };
 
 export default HomeScreen;
