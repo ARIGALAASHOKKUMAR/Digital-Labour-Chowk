@@ -618,6 +618,7 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
               Upload Document / డాక్యుమెంట్ అప్లోడ్ చేయండి
             </Text>
           </TouchableOpacity>
+          <View style={{ alignItems: "center" }}>
 
           {formik.values.uploadDocument
             ? (() => {
@@ -670,6 +671,7 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
                 return <Text style={styles.fileNameText}>{fileUrl}</Text>;
               })()
             : null}
+            </View>
 
           {formik.errors.uploadDocument && formik.touched.uploadDocument && (
             <Text style={styles.errorText}>{formik.errors.uploadDocument}</Text>
