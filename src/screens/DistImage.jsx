@@ -26,7 +26,9 @@ import { dists28 } from "../utils/CommonFunctions";
 
 const GeoTagging = () => {
   const dispatch = useDispatch();
-  const roleId = useSelector((state) => state.LoginReducer.roleId);  
+  const roleId = useSelector((state) => state.LoginReducer.roleId); 
+  
+  
   const [existingData, setExistingData] = useState(null);
   
   const SubmitDetails = async (values) => {
