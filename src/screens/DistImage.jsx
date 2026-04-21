@@ -23,6 +23,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import ImageBucketRN from "../utils/ImageBucketRN";
 import { dists28 } from "../utils/CommonFunctions";
+import * as Location from "expo-location";
 
 const GeoTagging = () => {
   const dispatch = useDispatch();
@@ -97,6 +98,12 @@ const GeoTagging = () => {
 
   const [status, setStatus] = useState(false);
 
+
+
+  
+
+ 
+
   const getGeoTaggingDetails = async () => {
     const response = await commonAPICall(GEOTAGGINGGET, {}, "get", dispatch);
 
@@ -104,9 +111,12 @@ const GeoTagging = () => {
       const data = response?.data.Geo_Tagging_Details?.[0];
       setWholeData(response?.data.Geo_Tagging_Details || []);
       if (data) {
-        // setExistingData(data);
-        // For roleId 11, populate the existing data to display
         if (roleId === 4) {
+          const lat = data.front_image_location.split(" - ")[1].split(":")[1];
+          const lon = data.front_image_location.split(" - ")[2].split(":")[1];
+
+          console.log("lattt lonnnn", lat, lon);
+
           formik.setValues({
             districtId: data?.district_id?.toString() || "",
             categoryId: data?.category_id?.toString() || "",
@@ -181,7 +191,7 @@ const GeoTagging = () => {
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
     >
-      {roleId === 4 && !status && (
+      {roleId === 4 && !status && wholedata.length > 0 && (
         <View style={{ marginTop: 10 }}>
           {/* HEADER */}
           <View style={styles.tableHeader}>
@@ -198,8 +208,9 @@ const GeoTagging = () => {
             <View key={index} style={styles.tableRow}>
               {/* <Text style={styles.cell}>{item.dist_name}</Text>
         <Text style={styles.cell}>{item.category_name}</Text> */}
-              <Text style={styles.cell}>{index + 1}</Text>
-
+              <Text style={[styles.cell, { textAlign: "center" }]}>
+                {index + 1}
+              </Text>
               <View style={styles.cell}>
                 <Image
                   source={{ uri: item.front_image }}
@@ -223,9 +234,7 @@ const GeoTagging = () => {
                     alignSelf: "center",
                   }}
                 >
-                  <Text style={{ color: "#fff", fontSize: 12 }}>
-                   Verify
-                  </Text>
+                  <Text style={{ color: "#fff", fontSize: 12 }}>Verify</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -340,7 +349,7 @@ const GeoTagging = () => {
                 padding: 10,
                 marginBottom: 10,
               }}
-               enabled={roleId !== 4 || !existingData}
+              enabled={roleId !== 4 || !existingData}
               placeholder="Enter Landmark"
               value={formik.values.landmark}
               onChangeText={(text) => formik.setFieldValue("landmark", text)}
