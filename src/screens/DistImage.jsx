@@ -33,26 +33,39 @@ const GeoTagging = () => {
 
   const SubmitDetails = async (values) => {
     // Prepare payload with ground truthing images
-    const payload = {
-      districtId: values.districtId,
-      categoryId: values.categoryId,
-      landmark: values.landmark,
-      // Ground truthing images (new ones for roleId 11)
-      groundTruthFrontImageLocation: values.groundTruthFrontImageLocation || "",
-      groundTruthFrontLocation: values.groundTruthFrontLocation || "",
-      groundTruthBackImageLocation: values.groundTruthBackImageLocation || "",
-      groundTruthBackLocation: values.groundTruthBackLocation || "",
-      groundTruthSideImageLocation: values.groundTruthSideImageLocation || "",
-      groundTruthSideLocation: values.groundTruthSideLocation || "",
-      remarks: values.remarks,
-      // For roleId 4, these will be the main images
-      frontImage: values.frontImage || "",
-      frontImageLocation: values.frontImageLocation || "",
-      backImage: values.backImage || "",
-      backImageLocation: values.backImageLocation || "",
-      sideImage: values.sideImage || "",
-      sideImageLocation: values.sideImageLocation || "",
-    };
+    let payload = {};
+
+    if (roleId === 4) {
+      // Only ground truthing data
+      payload = {
+        agencyId: existingData?.geotagid || 1,
+
+        groundTruthingFrontImage: values.groundTruthFrontImageLocation || "",
+        groundTruthingBackImage: values.groundTruthBackImageLocation || "",
+        groundTruthingSideImage: values.groundTruthSideImageLocation || "",
+
+        groundTruthingFrontLocation: values.groundTruthFrontImageLocationLocation || "",
+        groundTruthingBackLocation: values.groundTruthFrontImageLocationLocation || "",
+        groundTruthingSideLocation: values.groundTruthFrontImageLocationLocation || "",
+
+        remarks: values.remarks || "",
+      };
+    } else if (roleId === 11) {
+      // Full payload
+      payload = {
+        districtId: values.districtId,
+        categoryId: values.categoryId,
+        landmark: values.landmark,
+        frontImage: values.frontImage || "",
+        frontImageLocation: values.frontImageLocation || "",
+        backImage: values.backImage || "",
+        backImageLocation: values.backImageLocation || "",
+        sideImage: values.sideImage || "",
+        sideImageLocation: values.sideImageLocation || "",
+      };
+    }
+
+    console.log("payloas", payload);
 
     const response = await commonAPICall(
       GEOTAGGINGPOST,
@@ -97,12 +110,6 @@ const GeoTagging = () => {
   const [wholedata, setWholeData] = useState([]);
 
   const [status, setStatus] = useState(false);
-
-
-
-  
-
- 
 
   const getGeoTaggingDetails = async () => {
     const response = await commonAPICall(GEOTAGGINGGET, {}, "get", dispatch);
