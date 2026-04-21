@@ -65,7 +65,6 @@ const GeoTagging = () => {
       };
     }
 
-    console.log("payloas", payload);
 
     const response = await commonAPICall(
       GEOTAGGINGPOST,
@@ -73,10 +72,7 @@ const GeoTagging = () => {
       "post",
       dispatch,
     );
-
-    console.log("responseresponse", response);
-
-    if (response.status === 201) {
+    if (response.status === 201 || response.status === 200) {
       formik.resetForm();
       if (roleId === 4) {
         // Refresh existing data to show updated ground truth images
@@ -93,6 +89,7 @@ const GeoTagging = () => {
       frontImage: Yup.string().required("Front image required"),
       backImage: Yup.string().required("Back image required"),
       sideImage: Yup.string().required("Side image required"),
+      landmark: Yup.string().required("Landmark required")
     }),
     ...(roleId === 4 && {
       groundTruthFrontImageLocation: Yup.string().required(
@@ -104,6 +101,7 @@ const GeoTagging = () => {
       groundTruthSideImageLocation: Yup.string().required(
         "Ground truth side image required",
       ),
+      remarks:Yup.string().required("Remarks required")
     }),
   });
 
@@ -121,8 +119,6 @@ const GeoTagging = () => {
         if (roleId === 4) {
           const lat = data.front_image_location.split(" - ")[1].split(":")[1];
           const lon = data.front_image_location.split(" - ")[2].split(":")[1];
-
-          console.log("lattt lonnnn", lat, lon);
 
           formik.setValues({
             districtId: data?.district_id?.toString() || "",
@@ -187,7 +183,7 @@ const GeoTagging = () => {
       groundTruthSideLocation: "",
       remarks: "",
     },
-    // validationSchema,
+    validationSchema,
     onSubmit: SubmitDetails,
   });
 
@@ -361,6 +357,9 @@ const GeoTagging = () => {
               value={formik.values.landmark}
               onChangeText={(text) => formik.setFieldValue("landmark", text)}
             />
+            {formik.touched.landmark && formik.errors.landmark && (
+            <Text style={styles.error}>{formik.errors.landmark}</Text>
+          )}
           </View>
 
           {/* FOR ROLE ID 4 - Normal Image Upload */}
