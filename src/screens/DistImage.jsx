@@ -13,6 +13,7 @@ import {
 import { useFormik, FormikProvider } from "formik";
 import * as Yup from "yup";
 import { Picker } from "@react-native-picker/picker";
+import { Ionicons } from "@expo/vector-icons"; // or react-native-vector-icons/Ionicons
 
 import {
   commonAPICall,
@@ -44,9 +45,12 @@ const GeoTagging = () => {
         groundTruthingBackImage: values.groundTruthBackImageLocation || "",
         groundTruthingSideImage: values.groundTruthSideImageLocation || "",
 
-        groundTruthingFrontLocation: values.groundTruthFrontImageLocationLocation || "",
-        groundTruthingBackLocation: values.groundTruthFrontImageLocationLocation || "",
-        groundTruthingSideLocation: values.groundTruthFrontImageLocationLocation || "",
+        groundTruthingFrontLocation:
+          values.groundTruthFrontImageLocationLocation || "",
+        groundTruthingBackLocation:
+          values.groundTruthFrontImageLocationLocation || "",
+        groundTruthingSideLocation:
+          values.groundTruthFrontImageLocationLocation || "",
 
         remarks: values.remarks || "",
       };
@@ -64,7 +68,6 @@ const GeoTagging = () => {
         sideImageLocation: values.sideImageLocation || "",
       };
     }
-
 
     const response = await commonAPICall(
       GEOTAGGINGPOST,
@@ -89,7 +92,7 @@ const GeoTagging = () => {
       frontImage: Yup.string().required("Front image required"),
       backImage: Yup.string().required("Back image required"),
       sideImage: Yup.string().required("Side image required"),
-      landmark: Yup.string().required("Landmark required")
+      landmark: Yup.string().required("Landmark required"),
     }),
     ...(roleId === 4 && {
       groundTruthFrontImageLocation: Yup.string().required(
@@ -101,7 +104,7 @@ const GeoTagging = () => {
       groundTruthSideImageLocation: Yup.string().required(
         "Ground truth side image required",
       ),
-      remarks:Yup.string().required("Remarks required")
+      remarks: Yup.string().required("Remarks required"),
     }),
   });
 
@@ -358,8 +361,8 @@ const GeoTagging = () => {
               onChangeText={(text) => formik.setFieldValue("landmark", text)}
             />
             {formik.touched.landmark && formik.errors.landmark && (
-            <Text style={styles.error}>{formik.errors.landmark}</Text>
-          )}
+              <Text style={styles.error}>{formik.errors.landmark}</Text>
+            )}
           </View>
 
           {/* FOR ROLE ID 4 - Normal Image Upload */}
@@ -384,9 +387,17 @@ const GeoTagging = () => {
                         );
                       }}
                     >
-                      <Text style={styles.uploadButtonText}>
-                        Capture {label}
-                      </Text>
+                      <View style={styles.uploadButton}>
+                        <Ionicons
+                          name="camera"
+                          size={20}
+                          color="#fff"
+                          style={{ marginRight: 6 }}
+                        />
+                        <Text style={styles.uploadButtonText}>
+                          Capture {label}
+                        </Text>
+                      </View>
                     </TouchableOpacity>
                     {formik.touched[name] && formik.errors[name] && (
                       <Text style={styles.error}>{formik.errors[name]}</Text>
@@ -537,9 +548,17 @@ const GeoTagging = () => {
                               );
                             }}
                           >
-                            <Text style={styles.uploadButtonText}>
-                              Capture Ground Truth {label}
-                            </Text>
+                            <View style={styles.uploadButton}>
+                              <Ionicons
+                                name="camera"
+                                size={20}
+                                color="#fff"
+                                style={{ marginRight: 6 }}
+                              />
+                              <Text style={styles.uploadButtonText}>
+                                Capture {label}
+                              </Text>
+                            </View>
                           </TouchableOpacity>
                           {formik.touched[name] && formik.errors[name] && (
                             <Text style={styles.error}>
@@ -695,10 +714,10 @@ const styles = StyleSheet.create({
 
   uploadButton: {
     backgroundColor: "#0288d1",
-    padding: 10,
+    padding: 2,
     borderRadius: 6,
     alignItems: "center",
-    marginBottom: 5,
+    marginBottom: 3,
   },
 
   uploadButtonText: {
