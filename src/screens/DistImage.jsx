@@ -260,7 +260,7 @@ const GeoTagging = () => {
   };
 
   useEffect(() => {
-    if (roleId === 4 && wholedata?.length > 0 && existingData) {
+    if (roleId === 4 && wholedata?.length > 0 && existingData && status) {
       checkDistance();
     }
   }, [existingData, status]);
