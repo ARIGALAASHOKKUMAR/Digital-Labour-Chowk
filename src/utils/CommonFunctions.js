@@ -134,8 +134,8 @@ export const Commonfeedback = ({ setModalStatus2, label, height = 4 }) => {
 
       <TouchableOpacity style={styles.submitBtn} onPress={submitFeedback}>
         <Text style={styles.submitBtnText}>
-          <FontAwesome name="check" size={16} color="#fff" /> Submit Feedback
-        </Text>
+        <FontAwesome name="check" size={16} color="#fff" /> Submit Feedback
+      </Text>
       </TouchableOpacity>
     </ScrollView>
   );

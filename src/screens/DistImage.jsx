@@ -192,6 +192,63 @@ const GeoTagging = () => {
 
   const [selectedid, setSelectedId] = useState({});
 
+  const [currentLocation, setCurrentLocation] = useState(null);
+
+  const getLocation = async (name) => {
+    console.log("FUNCTION CALLED", name);
+
+    let addressText = "";
+
+    const locPermission = await Location.requestForegroundPermissionsAsync();
+
+    if (!locPermission.granted) {
+      console.log("Permission denied");
+      return;
+    }
+
+    const loc = await Location.getCurrentPositionAsync({});
+
+    const address = await Location.reverseGeocodeAsync({
+      latitude: loc.coords.latitude,
+      longitude: loc.coords.longitude,
+    });
+
+    if (address.length > 0) {
+      const place = address[0];
+
+      addressText = [
+        place.formattedAddress,
+        `Lat:${loc.coords.latitude}`,
+        `Lng:${loc.coords.longitude}`,
+      ]
+        .filter(Boolean)
+        .join(" - ");
+    }
+
+    if (addressText) {
+      formik.setFieldValue(`${name}Location`, addressText);
+    }
+  };
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      for (const name of [
+        "groundTruthFrontImageLocation",
+        "groundTruthBackImageLocation",
+        "groundTruthSideImageLocation",
+        "frontImage",
+        "backImage",
+        "sideImage",
+      ]) {
+        await getLocation(name);
+      }
+    };
+
+    fetchLocations();
+  }, []);
+
+
+
   return (
     <ScrollView
       contentContainerStyle={styles.container}
@@ -240,7 +297,11 @@ const GeoTagging = () => {
                     alignSelf: "center",
                   }}
                 >
-                  <Text style={{ color: "#fff", fontSize: 12 }}>Verify</Text>
+                  <Text style={{ color: "#fff", fontSize: 12 }}>
+                    {item.verification_status === "APPROVED"
+                      ? "Verified"
+                      : "Verify"}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -375,8 +436,9 @@ const GeoTagging = () => {
                     <Text style={styles.label}>{label} Image</Text>
                     <TouchableOpacity
                       style={styles.uploadButton}
-                      onPress={() => {
+                      onPress={async () => {
                         formik.setFieldTouched(name, true);
+
                         ImageBucketRN(
                           formik,
                           "APFD/SAWMILLS/",
@@ -385,6 +447,8 @@ const GeoTagging = () => {
                           "camera",
                           dispatch,
                         );
+
+                        // await getLocation(name);
                       }}
                     >
                       <View style={styles.uploadButton}>

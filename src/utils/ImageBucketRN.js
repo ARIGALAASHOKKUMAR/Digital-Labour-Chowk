@@ -84,8 +84,9 @@ function validateFileTypeAndSize(file, size) {
 }
 
 // ✅ UPLOAD
-async function uploadFile(file, formik, path, name, size) {
+async function uploadFile(file, formik, path, name, size,dispatch) {
   if (!validateFileTypeAndSize(file, size)) return;
+  dispatch(showLoader("Please Wait"))
 
   try {
     const formData = new FormData();
@@ -112,6 +113,8 @@ async function uploadFile(file, formik, path, name, size) {
       "Unfortunately, we encountered an error while uploading"
     );
   }
+    dispatch(hideLoader())
+
 }
 
 // ✅ CAMERA WITH REDUX LOADER
@@ -140,39 +143,39 @@ async function openCamera(formik, path, name, size, dispatch) {
     let addressText = null;
 
     try {
-      const locPermission = await Location.requestForegroundPermissionsAsync();
+      // const locPermission = await Location.requestForegroundPermissionsAsync();
 
-      if (locPermission.granted) {
-        const loc = await Location.getCurrentPositionAsync({});
+      // if (locPermission.granted) {
+      //   const loc = await Location.getCurrentPositionAsync({});
 
-        const address = await Location.reverseGeocodeAsync({
-          latitude: loc.coords.latitude,
-          longitude: loc.coords.longitude,
-        });
+      //   const address = await Location.reverseGeocodeAsync({
+      //     latitude: loc.coords.latitude,
+      //     longitude: loc.coords.longitude,
+      //   });
 
-        if (address.length > 0) {
-          const place = address[0];
+      //   if (address.length > 0) {
+      //     const place = address[0];
 
-          addressText = [
-            place.formattedAddress,
-            `Lat:${loc.coords.latitude}`,
-            `Lng:${loc.coords.longitude}`,
-          ]
-            .filter(Boolean)
-            .join(" - ");
-        }
-      }
+      //     addressText = [
+      //       place.formattedAddress,
+      //       `Lat:${loc.coords.latitude}`,
+      //       `Lng:${loc.coords.longitude}`,
+      //     ]
+      //       .filter(Boolean)
+      //       .join(" - ");
+      //   }
+      // }
     } catch (e) {
       console.log("Location error", e);
     }
 
     dispatch(hideLoader());
 
-    if (addressText) {
-      formik.setFieldValue(`${name}Location`, addressText);
-    }
+    // if (addressText) {
+    //   formik.setFieldValue(`${name}Location`, addressText);
+    // }
 
-    await uploadFile(file, formik, path, name, size);
+    await uploadFile(file, formik, path, name, size,dispatch);
   } catch (err) {
     dispatch(hideLoader());
     Alert.alert("Error", "Something went wrong");
@@ -197,7 +200,7 @@ async function openGallery(formik, path, name, size) {
 
   const file = result.assets[0];
 
-  await uploadFile(file, formik, path, name, size);
+  await uploadFile(file, formik, path, name, size,dispatch);
 }
 
 // ✅ DOCUMENT
@@ -208,7 +211,7 @@ async function pickDocument(formik, path, name, size) {
 
   const file = result.assets[0];
 
-  await uploadFile(file, formik, path, name, size);
+  await uploadFile(file, formik, path, name, size,dispatch);
 }
 
 // ✅ MAIN FUNCTION
