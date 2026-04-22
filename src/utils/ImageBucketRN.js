@@ -61,7 +61,7 @@ function validateFileTypeAndSize(file, size) {
   if (fileSize > size) {
     Alert.alert(
       "Error",
-      `Please check your file size, it should be less than ${maxSizeMB}MB`
+      `Please check your file size, it should be less than ${maxSizeMB}MB`,
     );
     return false;
   }
@@ -75,7 +75,7 @@ function validateFileTypeAndSize(file, size) {
       `Invalid file format. Your file type is ${file.name
         ?.split(".")
         .pop()
-        ?.toLowerCase()}`
+        ?.toLowerCase()}`,
     );
     return false;
   }
@@ -83,10 +83,85 @@ function validateFileTypeAndSize(file, size) {
   return true;
 }
 
+export const getLocation = async (name, formik) => {
+  let addressText = "";
+
+  const locPermission = await Location.requestForegroundPermissionsAsync();
+
+  if (!locPermission.granted) {
+    console.log("Permission denied");
+    return;
+  }
+
+  const loc = await Location.getCurrentPositionAsync({});
+
+  const address = await Location.reverseGeocodeAsync({
+    latitude: loc.coords.latitude,
+    longitude: loc.coords.longitude,
+  });
+
+  if (address.length > 0) {
+    const place = address[0];
+
+    addressText = [
+      place.formattedAddress,
+      `Lat:${loc.coords.latitude}`,
+      `Lng:${loc.coords.longitude}`,
+    ]
+      .filter(Boolean)
+      .join(" - ");
+  }
+
+  if (addressText) {
+    formik.setFieldValue(`${name}Location`, addressText);
+  }
+};
+
+export const getDistanceFromCurrent = async (pastLat, pastLng) => {
+  try {
+    // 1. Permission
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      console.log("Permission denied");
+      return null;
+    }
+
+    // 2. Current location
+    const current = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.High,
+    });
+
+    const { latitude, longitude } = current.coords;
+
+    // 3. Haversine Formula
+    const toRad = (value) => (value * Math.PI) / 180;
+
+    const R = 6371; // Earth radius in KM
+    const dLat = toRad(pastLat - latitude);
+    const dLon = toRad(pastLng - longitude);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(latitude)) *
+        Math.cos(toRad(pastLat)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    const distanceKm = R * c;
+
+    return distanceKm; // in KM
+  } catch (error) {
+    console.log("Error:", error);
+    return null;
+  }
+};
+
 // ✅ UPLOAD
-async function uploadFile(file, formik, path, name, size,dispatch) {
+async function uploadFile(file, formik, path, name, size, dispatch) {
   if (!validateFileTypeAndSize(file, size)) return;
-  dispatch(showLoader("Please Wait"))
+  dispatch(showLoader("Please Wait"));
 
   try {
     const formData = new FormData();
@@ -110,11 +185,10 @@ async function uploadFile(file, formik, path, name, size,dispatch) {
     formik.setFieldValue(name, null);
     Alert.alert(
       "Error",
-      "Unfortunately, we encountered an error while uploading"
+      "Unfortunately, we encountered an error while uploading",
     );
   }
-    dispatch(hideLoader())
-
+  dispatch(hideLoader());
 }
 
 // ✅ CAMERA WITH REDUX LOADER
@@ -144,18 +218,14 @@ async function openCamera(formik, path, name, size, dispatch) {
 
     try {
       // const locPermission = await Location.requestForegroundPermissionsAsync();
-
       // if (locPermission.granted) {
       //   const loc = await Location.getCurrentPositionAsync({});
-
       //   const address = await Location.reverseGeocodeAsync({
       //     latitude: loc.coords.latitude,
       //     longitude: loc.coords.longitude,
       //   });
-
       //   if (address.length > 0) {
       //     const place = address[0];
-
       //     addressText = [
       //       place.formattedAddress,
       //       `Lat:${loc.coords.latitude}`,
@@ -175,7 +245,7 @@ async function openCamera(formik, path, name, size, dispatch) {
     //   formik.setFieldValue(`${name}Location`, addressText);
     // }
 
-    await uploadFile(file, formik, path, name, size,dispatch);
+    await uploadFile(file, formik, path, name, size, dispatch);
   } catch (err) {
     dispatch(hideLoader());
     Alert.alert("Error", "Something went wrong");
@@ -200,7 +270,7 @@ async function openGallery(formik, path, name, size) {
 
   const file = result.assets[0];
 
-  await uploadFile(file, formik, path, name, size,dispatch);
+  await uploadFile(file, formik, path, name, size, dispatch);
 }
 
 // ✅ DOCUMENT
@@ -211,7 +281,7 @@ async function pickDocument(formik, path, name, size) {
 
   const file = result.assets[0];
 
-  await uploadFile(file, formik, path, name, size,dispatch);
+  await uploadFile(file, formik, path, name, size, dispatch);
 }
 
 // ✅ MAIN FUNCTION
@@ -221,7 +291,7 @@ export default async function ImageBucketRN(
   name,
   size = MAX_FILE_SIZE,
   mode = "all",
-  dispatch
+  dispatch,
 ) {
   try {
     if (mode === "document") {
@@ -239,8 +309,7 @@ export default async function ImageBucketRN(
     Alert.alert("Upload", "Choose option", [
       {
         text: "Camera",
-        onPress: () =>
-          openCamera(formik, path, name, size, dispatch),
+        onPress: () => openCamera(formik, path, name, size, dispatch),
       },
       {
         text: "Gallery",

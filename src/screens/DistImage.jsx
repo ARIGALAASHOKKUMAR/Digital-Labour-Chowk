@@ -22,7 +22,11 @@ import {
   GETDISTSAPP,
 } from "../utils/utils";
 import { useDispatch, useSelector } from "react-redux";
-import ImageBucketRN from "../utils/ImageBucketRN";
+import ImageBucketRN, {
+  getCurrentLatLongs,
+  getDistanceFromCurrent,
+  getLocation,
+} from "../utils/ImageBucketRN";
 import { dists28 } from "../utils/CommonFunctions";
 import * as Location from "expo-location";
 
@@ -194,42 +198,6 @@ const GeoTagging = () => {
 
   const [currentLocation, setCurrentLocation] = useState(null);
 
-  const getLocation = async (name) => {
-    console.log("FUNCTION CALLED", name);
-
-    let addressText = "";
-
-    const locPermission = await Location.requestForegroundPermissionsAsync();
-
-    if (!locPermission.granted) {
-      console.log("Permission denied");
-      return;
-    }
-
-    const loc = await Location.getCurrentPositionAsync({});
-
-    const address = await Location.reverseGeocodeAsync({
-      latitude: loc.coords.latitude,
-      longitude: loc.coords.longitude,
-    });
-
-    if (address.length > 0) {
-      const place = address[0];
-
-      addressText = [
-        place.formattedAddress,
-        `Lat:${loc.coords.latitude}`,
-        `Lng:${loc.coords.longitude}`,
-      ]
-        .filter(Boolean)
-        .join(" - ");
-    }
-
-    if (addressText) {
-      formik.setFieldValue(`${name}Location`, addressText);
-    }
-  };
-
   useEffect(() => {
     const fetchLocations = async () => {
       for (const name of [
@@ -240,14 +208,40 @@ const GeoTagging = () => {
         "backImage",
         "sideImage",
       ]) {
-        await getLocation(name);
+        await getLocation(name, formik);
       }
     };
 
     fetchLocations();
-  }, []);
+  }, [
+    "groundTruthFrontImageLocation",
+    "groundTruthBackImageLocation",
+    "groundTruthSideImageLocation",
+    "frontImage",
+    "backImage",
+    "sideImage",
+  ]);
 
+  const checkDistance = async () => {
+    const pastLat = 17.385;
+    const pastLng = 78.4867;
 
+    const lat = existingData.front_image_location.split(" - ")[1].split(":")[1];
+    const lon = existingData.front_image_location.split(" - ")[2].split(":")[1];
+
+    const distance = await getDistanceFromCurrent(lat, lon);
+
+    if (distance !== null) {
+      console.log("Distance (KM):", distance);
+      console.log("Distance (Meters):", distance * 1000);
+    }
+  };
+
+  useEffect(() => {
+    if (roleId === 4 && wholedata?.length > 0 && existingData) {
+      checkDistance();
+    }
+  }, [existingData]);
 
   return (
     <ScrollView
