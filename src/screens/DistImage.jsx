@@ -219,7 +219,7 @@ const GeoTagging = () => {
     };
 
     fetchLocations();
-  }, [roleId]);
+  }, [roleId,existingData]);
 
   const checkDistance = async () => {
     try {
