@@ -29,6 +29,8 @@ import ImageBucketRN, {
 } from "../utils/ImageBucketRN";
 import { dists28 } from "../utils/CommonFunctions";
 import * as Location from "expo-location";
+import { showErrorToast } from "../utils/showToast";
+import { hideLoader, showLoader } from "../actions";
 
 const GeoTagging = () => {
   const dispatch = useDispatch();
@@ -223,17 +225,37 @@ const GeoTagging = () => {
   ]);
 
   const checkDistance = async () => {
-    const pastLat = 17.385;
-    const pastLng = 78.4867;
+    try {
+      dispatch(showLoader("Getting current location..."));
 
-    const lat = existingData.front_image_location.split(" - ")[1].split(":")[1];
-    const lon = existingData.front_image_location.split(" - ")[2].split(":")[1];
+      const pastLat = 17.385;
+      const pastLng = 78.4867;
 
-    const distance = await getDistanceFromCurrent(lat, lon);
+      const lat = existingData?.front_image_location
+        .split(" - ")[1]
+        .split(":")[1];
 
-    if (distance !== null) {
-      console.log("Distance (KM):", distance);
-      console.log("Distance (Meters):", distance * 1000);
+      const lon = existingData?.front_image_location
+        .split(" - ")[2]
+        .split(":")[1];
+
+      const distance = await getDistanceFromCurrent(lat, lon);
+
+      if (distance !== null) {
+        console.log("Distance (KM):", distance);
+        console.log("Distance (Meters):", distance * 1000);
+
+        if (distance * 1000 > 50) {
+          showErrorToast(
+            `You are ${(distance * 1000).toFixed(2)} meters away from current location it should be less than 50m`,
+          );
+          setStatus(false);
+        }
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      dispatch(hideLoader()); // 👈 IMPORTANT
     }
   };
 
@@ -241,7 +263,7 @@ const GeoTagging = () => {
     if (roleId === 4 && wholedata?.length > 0 && existingData) {
       checkDistance();
     }
-  }, [existingData]);
+  }, [existingData, status]);
 
   return (
     <ScrollView
