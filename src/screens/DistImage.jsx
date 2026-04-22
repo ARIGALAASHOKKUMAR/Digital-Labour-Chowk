@@ -124,33 +124,6 @@ const GeoTagging = () => {
     if (response.status === 200) {
       const data = response?.data.Geo_Tagging_Details?.[0];
       setWholeData(response?.data.Geo_Tagging_Details || []);
-      if (data) {
-        if (roleId === 4) {
-          const lat = data.front_image_location.split(" - ")[1].split(":")[1];
-          const lon = data.front_image_location.split(" - ")[2].split(":")[1];
-
-          formik.setValues({
-            districtId: data?.district_id?.toString() || "",
-            categoryId: data?.category_id?.toString() || "",
-            landmark: data?.landmark,
-            // Existing images (read-only)
-            existingFrontImage: data?.front_image || "",
-            existingFrontLocation: data?.front_image_location || "",
-            existingBackImage: data?.back_image || "",
-            existingBackLocation: data?.back_image_location || "",
-            existingSideImage: data?.side_image || "",
-            existingSideLocation: data?.side_image_location || "",
-            // Ground truth images (to be filled)
-            groundTruthFrontImageLocation: "",
-            groundTruthFrontLocation: "",
-            groundTruthBackImageLocation: "",
-            groundTruthBackLocation: "",
-            groundTruthSideImageLocation: "",
-            groundTruthSideLocation: "",
-            remarks: "",
-          });
-        }
-      }
     }
   };
 
@@ -163,6 +136,31 @@ const GeoTagging = () => {
       getGeoTaggingDetails();
     }
   }, []);
+
+  useEffect(() => {
+      if (roleId === 4) {
+        formik.setValues({
+          districtId: existingData?.district_id?.toString() || "",
+          categoryId: existingData?.category_id?.toString() || "",
+          landmark: existingData?.landmark,
+          // Existing images (read-only)
+          existingFrontImage: existingData?.front_image || "",
+          existingFrontLocation: existingData?.front_image_location || "",
+          existingBackImage: existingData?.back_image || "",
+          existingBackLocation: existingData?.back_image_location || "",
+          existingSideImage: existingData?.side_image || "",
+          existingSideLocation: existingData?.side_image_location || "",
+          // Ground truth images (to be filled)
+          groundTruthFrontImageLocation: "",
+          groundTruthFrontLocation: "",
+          groundTruthBackImageLocation: "",
+          groundTruthBackLocation: "",
+          groundTruthSideImageLocation: "",
+          groundTruthSideLocation: "",
+          remarks: "",
+        });
+      }
+  }, [existingData]);
 
   const formik = useFormik({
     initialValues: {
@@ -202,27 +200,25 @@ const GeoTagging = () => {
 
   useEffect(() => {
     const fetchLocations = async () => {
-      for (const name of [
-        "groundTruthFrontImageLocation",
-        "groundTruthBackImageLocation",
-        "groundTruthSideImageLocation",
-        "frontImage",
-        "backImage",
-        "sideImage",
-      ]) {
+      let fields = [];
+
+      if (roleId === 4) {
+        fields = [
+          "groundTruthFrontImageLocation",
+          "groundTruthBackImageLocation",
+          "groundTruthSideImageLocation",
+        ];
+      } else if (roleId === 11) {
+        fields = ["frontImage", "backImage", "sideImage"];
+      }
+
+      for (const name of fields) {
         await getLocation(name, formik);
       }
     };
 
     fetchLocations();
-  }, [
-    "groundTruthFrontImageLocation",
-    "groundTruthBackImageLocation",
-    "groundTruthSideImageLocation",
-    "frontImage",
-    "backImage",
-    "sideImage",
-  ]);
+  }, [roleId]);
 
   const checkDistance = async () => {
     try {
@@ -250,6 +246,7 @@ const GeoTagging = () => {
             `You are ${(distance * 1000).toFixed(2)} meters away from current location it should be less than 50m`,
           );
           setStatus(false);
+          setExistingData({});
         }
       }
     } catch (err) {
