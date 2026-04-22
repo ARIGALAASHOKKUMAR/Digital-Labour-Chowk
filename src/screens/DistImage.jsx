@@ -138,28 +138,28 @@ const GeoTagging = () => {
   }, []);
 
   useEffect(() => {
-      if (roleId === 4) {
-        formik.setValues({
-          districtId: existingData?.district_id?.toString() || "",
-          categoryId: existingData?.category_id?.toString() || "",
-          landmark: existingData?.landmark,
-          // Existing images (read-only)
-          existingFrontImage: existingData?.front_image || "",
-          existingFrontLocation: existingData?.front_image_location || "",
-          existingBackImage: existingData?.back_image || "",
-          existingBackLocation: existingData?.back_image_location || "",
-          existingSideImage: existingData?.side_image || "",
-          existingSideLocation: existingData?.side_image_location || "",
-          // Ground truth images (to be filled)
-          groundTruthFrontImageLocation: "",
-          groundTruthFrontLocation: "",
-          groundTruthBackImageLocation: "",
-          groundTruthBackLocation: "",
-          groundTruthSideImageLocation: "",
-          groundTruthSideLocation: "",
-          remarks: "",
-        });
-      }
+    if (roleId === 4) {
+      formik.setValues({
+        districtId: existingData?.district_id?.toString() || "",
+        categoryId: existingData?.category_id?.toString() || "",
+        landmark: existingData?.landmark,
+        // Existing images (read-only)
+        existingFrontImage: existingData?.front_image || "",
+        existingFrontLocation: existingData?.front_image_location || "",
+        existingBackImage: existingData?.back_image || "",
+        existingBackLocation: existingData?.back_image_location || "",
+        existingSideImage: existingData?.side_image || "",
+        existingSideLocation: existingData?.side_image_location || "",
+        // Ground truth images (to be filled)
+        groundTruthFrontImageLocation: "",
+        groundTruthFrontLocation: "",
+        groundTruthBackImageLocation: "",
+        groundTruthBackLocation: "",
+        groundTruthSideImageLocation: "",
+        groundTruthSideLocation: "",
+        remarks: "",
+      });
+    }
   }, [existingData]);
 
   const formik = useFormik({
@@ -295,19 +295,25 @@ const GeoTagging = () => {
               </View>
 
               <Text style={styles.cell}>{item.landmark}</Text>
-
               <View style={styles.cell}>
                 <TouchableOpacity
+                  disabled={item.verification_status === "APPROVED"}
                   onPress={() => {
-                    setExistingData(item);
-                    setStatus(true);
+                    if (item.verification_status !== "APPROVED") {
+                      setExistingData(item);
+                      setStatus(true);
+                    }
                   }}
                   style={{
-                    backgroundColor: "#28a745",
+                    backgroundColor:
+                      item.verification_status === "APPROVED"
+                        ? "#6c757d"
+                        : "#28a745",
                     paddingVertical: 4,
                     paddingHorizontal: 8,
                     borderRadius: 4,
                     alignSelf: "center",
+                    opacity: item.verification_status === "APPROVED" ? 0.6 : 1,
                   }}
                 >
                   <Text style={{ color: "#fff", fontSize: 12 }}>
