@@ -86,6 +86,7 @@ const GeoTagging = () => {
       if (roleId === 4) {
         // Refresh existing data to show updated ground truth images
         getGeoTaggingDetails();
+        setStatus(false);
       }
     }
   };
@@ -242,8 +243,15 @@ const GeoTagging = () => {
         console.log("Distance (Meters):", distance * 1000);
 
         if (distance * 1000 > 50) {
+          const distanceInMeters = distance * 1000;
+
+          const formattedDistance =
+            distanceInMeters >= 1000
+              ? `${(distanceInMeters / 1000).toFixed(2)} km`
+              : `${distanceInMeters.toFixed(2)} meters`;
+
           showErrorToast(
-            `You are ${(distance * 1000).toFixed(2)} meters away from current location it should be less than 50m`,
+            `You are ${formattedDistance} away from current location, it should be less than 50m`,
           );
           setStatus(false);
           setExistingData({});
@@ -268,63 +276,67 @@ const GeoTagging = () => {
       showsVerticalScrollIndicator={false}
     >
       {roleId === 4 && !status && wholedata.length > 0 && (
-        <View style={{ marginTop: 10 }}>
-          {/* HEADER */}
-          <View style={styles.tableHeader}>
-            {/* <Text style={styles.headerCell}>District</Text>
+        <View>
+          {wholedata.length === 0 && <Text>No Data Found</Text>}
+          <View style={{ marginTop: 10 }}>
+            {/* HEADER */}
+            <View style={styles.tableHeader}>
+              {/* <Text style={styles.headerCell}>District</Text>
       <Text style={styles.headerCell}>Category</Text> */}
-            <Text style={styles.headerCell}>S.NO</Text>
-            <Text style={styles.headerCell}>Image</Text>
-            <Text style={styles.headerCell}>Landmark</Text>
-            <Text style={styles.headerCell}>Action</Text>
-          </View>
-
-          {/* ROWS */}
-          {wholedata.map((item, index) => (
-            <View key={index} style={styles.tableRow}>
-              {/* <Text style={styles.cell}>{item.dist_name}</Text>
-        <Text style={styles.cell}>{item.category_name}</Text> */}
-              <Text style={[styles.cell, { textAlign: "center" }]}>
-                {index + 1}
-              </Text>
-              <View style={styles.cell}>
-                <Image
-                  source={{ uri: item.front_image }}
-                  style={{ width: 50, height: 50, borderRadius: 4 }}
-                />
-              </View>
-
-              <Text style={styles.cell}>{item.landmark}</Text>
-              <View style={styles.cell}>
-                <TouchableOpacity
-                  disabled={item.verification_status === "APPROVED"}
-                  onPress={() => {
-                    if (item.verification_status !== "APPROVED") {
-                      setExistingData(item);
-                      setStatus(true);
-                    }
-                  }}
-                  style={{
-                    backgroundColor:
-                      item.verification_status === "APPROVED"
-                        ? "#6c757d"
-                        : "#28a745",
-                    paddingVertical: 4,
-                    paddingHorizontal: 8,
-                    borderRadius: 4,
-                    alignSelf: "center",
-                    opacity: item.verification_status === "APPROVED" ? 0.6 : 1,
-                  }}
-                >
-                  <Text style={{ color: "#fff", fontSize: 12 }}>
-                    {item.verification_status === "APPROVED"
-                      ? "Verified"
-                      : "Verify"}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              <Text style={styles.headerCell}>S.NO</Text>
+              <Text style={styles.headerCell}>Image</Text>
+              <Text style={styles.headerCell}>Landmark</Text>
+              <Text style={styles.headerCell}>Action</Text>
             </View>
-          ))}
+
+            {/* ROWS */}
+            {wholedata.map((item, index) => (
+              <View key={index} style={styles.tableRow}>
+                {/* <Text style={styles.cell}>{item.dist_name}</Text>
+        <Text style={styles.cell}>{item.category_name}</Text> */}
+                <Text style={[styles.cell, { textAlign: "center" }]}>
+                  {index + 1}
+                </Text>
+                <View style={styles.cell}>
+                  <Image
+                    source={{ uri: item.front_image }}
+                    style={{ width: 50, height: 50, borderRadius: 4 }}
+                  />
+                </View>
+
+                <Text style={styles.cell}>{item.landmark}</Text>
+                <View style={styles.cell}>
+                  <TouchableOpacity
+                    disabled={item.verification_status === "APPROVED"}
+                    onPress={() => {
+                      if (item.verification_status !== "APPROVED") {
+                        setExistingData(item);
+                        setStatus(true);
+                      }
+                    }}
+                    style={{
+                      backgroundColor:
+                        item.verification_status === "APPROVED"
+                          ? "#6c757d"
+                          : "#28a745",
+                      paddingVertical: 4,
+                      paddingHorizontal: 8,
+                      borderRadius: 4,
+                      alignSelf: "center",
+                      opacity:
+                        item.verification_status === "APPROVED" ? 0.6 : 1,
+                    }}
+                  >
+                    <Text style={{ color: "#fff", fontSize: 12 }}>
+                      {item.verification_status === "APPROVED"
+                        ? "Verified"
+                        : "Verify"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </View>
         </View>
       )}
 
