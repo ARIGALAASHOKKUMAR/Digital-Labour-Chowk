@@ -14,6 +14,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Worker from "./Worker";
 import Employer from "./Employer";
 import { commonAPICall, DIGITALLABOURCHOWKDETAILS } from "../utils/utils";
+import FRSRegistration from "./FRSRegistration";
+import FRSLogin from "./FRSLoginScreen";
 
 const HomeScreen = ({ navigation }) => {
   const state = useSelector((state) => state.LoginReducer);
@@ -93,11 +95,11 @@ const HomeScreen = ({ navigation }) => {
       ) : roleId == 13 ? (
         <Employer navigation={navigation} />
       ) : (
-        <View style={{ alignItems: "center", marginTop: 50 }}>
-          <Text style={{ fontSize: 16, color: "#666" }}>
-            Welcome to Labour Department
-          </Text>
-        </View>
+        // <View style={{ alignItems: "center", marginTop: 50 }}>
+        //   <Text style={{ fontSize: 16, color: "#666" }}>
+               <FRSRegistration/>
+        //   </Text>
+        // </View>
       )}
     </>
   );

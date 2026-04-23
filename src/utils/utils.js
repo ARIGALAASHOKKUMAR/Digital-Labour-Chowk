@@ -158,11 +158,14 @@ export const GETSKILLS = "api/user/digital-labour-chowk/skillInfo";
 export const GETDISTSAPP = "/api/user/v1/districts";
 export const GETMANDALSAPP = "/api/user/v1/mandals?distCode=";
 export const GETVILLAGESAPP = "/api/user/v1/villages";
-export const DIGITALLABOURCHOWKDETAILS ="/api/user/digitalLabourChowkRegDetails";
-export const EMPLOYERJOBPOST ="/api/user/digital-labour-chowk/createJobPosting";
+export const DIGITALLABOURCHOWKDETAILS =
+  "/api/user/digitalLabourChowkRegDetails";
+export const EMPLOYERJOBPOST =
+  "/api/user/digital-labour-chowk/createJobPosting";
 export const JOBSEARCH = "/api/user/digitalLabourChowkJobPostings/search";
 export const JOBAPPLY = "/api/user/digital-labour-chowk/applyJob";
 export const FINDWORKER = "/api/user/digitalLabourChowkRegDetails";
 export const MYJOBSOFWORKER = "/api/user/digitalLabourChowkJobPostings";
 export const GEOTAGGINGPOST = "/api/user/createGeoTagging";
 export const GEOTAGGINGGET = "/api/user/geo-tagging-details";
+export const FRSREGISTRATION = "/api/user/createEmployeeRegistration";
