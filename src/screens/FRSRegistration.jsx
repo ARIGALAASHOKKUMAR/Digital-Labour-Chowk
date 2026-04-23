@@ -17,8 +17,10 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import ImageBucketRN from "../utils/ImageBucketRN";
 import { useDispatch } from "react-redux";
 import { commonAPICall, FRSREGISTRATION } from "../utils/utils";
+import { useNavigation } from "@react-navigation/native";
 
 const FRSRegistration = () => {
+  const navigation = useNavigation();
   const dispatch = useDispatch();
   const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -30,9 +32,7 @@ const FRSRegistration = () => {
     mobileNumber: Yup.string()
       .required("Mobile Number is required")
       .matches(/^[0-9]{10}$/, "Enter valid 10-digit mobile number"),
-    email: Yup.string()
-      .email("Invalid email")
-      .required("Email is required"),
+    email: Yup.string().email("Invalid email").required("Email is required"),
     gender: Yup.string().required("Select gender"),
     dateOfBirth: Yup.string().required("Date of Birth is required"),
     department: Yup.string().required("Department is required"),
@@ -47,10 +47,11 @@ const FRSRegistration = () => {
       FRSREGISTRATION,
       values,
       "post",
-      dispatch
+      dispatch,
     );
     if (response.status === 200) {
       formik.resetForm();
+      navigation.navigate("LoginFrs");
     }
   };
 
@@ -113,7 +114,7 @@ const FRSRegistration = () => {
             field,
             20971520,
             "camera",
-            dispatch
+            dispatch,
           );
         }}
       >
@@ -153,7 +154,12 @@ const FRSRegistration = () => {
             <Text style={styles.sectionTitle}>Basic Details</Text>
             {renderInput("person-outline", "Employee Name", "employeeName")}
             {renderInput("card-outline", "Employee Code", "employeeCode")}
-            {renderInput("call-outline", "Mobile Number", "mobileNumber", "numeric")}
+            {renderInput(
+              "call-outline",
+              "Mobile Number",
+              "mobileNumber",
+              "numeric",
+            )}
             {renderInput("mail-outline", "Email", "email")}
           </View>
 
@@ -232,7 +238,10 @@ const FRSRegistration = () => {
           </View>
 
           {/* Submit */}
-          <TouchableOpacity style={styles.submitBtn} onPress={formik.handleSubmit}>
+          <TouchableOpacity
+            style={styles.submitBtn}
+            onPress={formik.handleSubmit}
+          >
             <Text style={styles.submitText}>Register</Text>
           </TouchableOpacity>
         </ScrollView>
