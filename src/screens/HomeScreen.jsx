@@ -97,7 +97,7 @@ const HomeScreen = ({ navigation }) => {
       ) : (
         // <View style={{ alignItems: "center", marginTop: 50 }}>
         //   <Text style={{ fontSize: 16, color: "#666" }}>
-               <FRSRegistration/>
+               <FRSLogin/>
         //   </Text>
         // </View>
       )}

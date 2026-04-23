@@ -42,6 +42,32 @@ const FRSLogin = () => {
     },
   });
 
+  // ✅ Auto camera + dummy API
+  const handleFaceLogin = async () => {
+    setLoginType("face");
+
+    setTimeout(async () => {
+      await ImageBucketRN(
+        formik,
+        "FRS/FACES/",
+        "faceImage",
+        20971520,
+        "camera",
+        dispatch
+      );
+
+      // Dummy API / Alert after capture
+      setTimeout(() => {
+        if (formik.values.faceImage) {
+          alert("Face detected & login success (Dummy API)");
+          console.log("Dummy Face API Call:", formik.values.faceImage);
+        } else {
+          alert("Face capture failed");
+        }
+      }, 1000);
+    }, 300);
+  };
+
   return (
     <ImageBackground
       source={{
@@ -51,14 +77,14 @@ const FRSLogin = () => {
       blurRadius={3}
     >
       <View style={styles.overlay}>
-        {/* 🔵 Face Icon */}
+        {/* Avatar */}
         <View style={styles.avatarCircle}>
           <Ionicons name="person" size={50} color="#007bff" />
         </View>
 
         <Text style={styles.title}>FRS Login</Text>
 
-        {/* 🔐 Password Login (Default UI) */}
+        {/* Employee ID */}
         <TextInput
           placeholder="Enter Employee ID"
           placeholderTextColor="#aaa"
@@ -67,6 +93,7 @@ const FRSLogin = () => {
           onChangeText={formik.handleChange("empId")}
         />
 
+        {/* Password */}
         <View style={{ position: "relative" }}>
           <TextInput
             placeholder="Enter Password"
@@ -84,47 +111,27 @@ const FRSLogin = () => {
           </TouchableOpacity>
         </View>
 
-        {/* 🤳 Face Login Button */}
-        <TouchableOpacity
-          style={styles.faceBtn}
-          onPress={() => setLoginType("face")}
-        >
+        {/* Face Login Button */}
+        <TouchableOpacity style={styles.faceBtn} onPress={handleFaceLogin}>
           <Ionicons name="scan" size={18} color="#fff" />
           <Text style={styles.faceText}>Use Face Login</Text>
         </TouchableOpacity>
 
-        {/* 🤳 Face Section */}
+        {/* Face Preview */}
         {loginType === "face" && (
           <>
-            <TouchableOpacity
-              style={styles.captureBtn}
-              onPress={async () => {
-                await ImageBucketRN(
-                  formik,
-                  "FRS/FACES/",
-                  "faceImage",
-                  20971520,
-                  "camera",
-                  dispatch
-                );
-              }}
-            >
-              <Ionicons name="camera" size={20} color="#fff" />
-              <Text style={styles.captureText}>Capture Face</Text>
-            </TouchableOpacity>
-
             {formik.values.faceImage ? (
               <Image
                 source={{ uri: formik.values.faceImage }}
                 style={styles.preview}
               />
             ) : (
-              <Text style={styles.placeholder}>No face captured</Text>
+              <Text style={styles.placeholder}>Opening camera...</Text>
             )}
           </>
         )}
 
-        {/* ✅ Login */}
+        {/* Login Button */}
         <TouchableOpacity style={styles.loginBtn} onPress={formik.handleSubmit}>
           <Text style={styles.loginText}>Login</Text>
         </TouchableOpacity>
@@ -184,20 +191,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   faceText: {
-    color: "#fff",
-    marginLeft: 8,
-    fontWeight: "600",
-  },
-  captureBtn: {
-    flexDirection: "row",
-    backgroundColor: "#28a745",
-    padding: 12,
-    justifyContent: "center",
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  captureText: {
     color: "#fff",
     marginLeft: 8,
     fontWeight: "600",
