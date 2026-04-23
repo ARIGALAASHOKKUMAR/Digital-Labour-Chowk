@@ -8,6 +8,7 @@ import {
   Image,
   ScrollView,
   Platform,
+  ImageBackground,
 } from "react-native";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -80,6 +81,25 @@ const FRSRegistration = () => {
     }
   };
 
+  const renderInput = (icon, placeholder, field, keyboardType = "default") => (
+    <View>
+      <View style={styles.inputContainer}>
+        <Ionicons name={icon} size={18} color="#64748b" />
+        <TextInput
+          placeholder={placeholder}
+          style={styles.input}
+          keyboardType={keyboardType}
+          value={formik.values[field]}
+          onChangeText={formik.handleChange(field)}
+          onBlur={formik.handleBlur(field)}
+        />
+      </View>
+      {formik.touched[field] && formik.errors[field] && (
+        <Text style={styles.error}>{formik.errors[field]}</Text>
+      )}
+    </View>
+  );
+
   const renderImageBlock = (label, field) => (
     <View style={{ marginBottom: 15 }}>
       <Text style={styles.label}>{label}</Text>
@@ -114,186 +134,187 @@ const FRSRegistration = () => {
   );
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>FRS Registration</Text>
+    <ImageBackground
+      source={{
+        uri: "https://images.unsplash.com/photo-1503387762-592deb58ef4e",
+      }}
+      style={styles.bgImage}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay}>
+        <ScrollView contentContainerStyle={styles.container}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Face Registration</Text>
+          </View>
 
-      {/* Employee Name */}
-      <TextInput
-        placeholder="Employee Name"
-        style={styles.input}
-        value={formik.values.employeeName}
-        onChangeText={formik.handleChange("employeeName")}
-        onBlur={formik.handleBlur("employeeName")}
-      />
-      {formik.touched.employeeName && formik.errors.employeeName && (
-        <Text style={styles.error}>{formik.errors.employeeName}</Text>
-      )}
+          {/* Basic Details */}
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Basic Details</Text>
+            {renderInput("person-outline", "Employee Name", "employeeName")}
+            {renderInput("card-outline", "Employee Code", "employeeCode")}
+            {renderInput("call-outline", "Mobile Number", "mobileNumber", "numeric")}
+            {renderInput("mail-outline", "Email", "email")}
+          </View>
 
-      {/* Employee Code */}
-      <TextInput
-        placeholder="Employee Code"
-        style={styles.input}
-        value={formik.values.employeeCode}
-        onChangeText={formik.handleChange("employeeCode")}
-        onBlur={formik.handleBlur("employeeCode")}
-      />
-      {formik.touched.employeeCode && formik.errors.employeeCode && (
-        <Text style={styles.error}>{formik.errors.employeeCode}</Text>
-      )}
+          {/* Personal Info */}
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Personal Info</Text>
 
-      {/* Mobile */}
-      <TextInput
-        placeholder="Mobile Number"
-        style={styles.input}
-        keyboardType="numeric"
-        maxLength={10}
-        value={formik.values.mobileNumber}
-        onChangeText={formik.handleChange("mobileNumber")}
-        onBlur={formik.handleBlur("mobileNumber")}
-      />
-      {formik.touched.mobileNumber && formik.errors.mobileNumber && (
-        <Text style={styles.error}>{formik.errors.mobileNumber}</Text>
-      )}
-
-      {/* Email */}
-      <TextInput
-        placeholder="Email"
-        style={styles.input}
-        value={formik.values.email}
-        onChangeText={formik.handleChange("email")}
-        onBlur={formik.handleBlur("email")}
-      />
-      {formik.touched.email && formik.errors.email && (
-        <Text style={styles.error}>{formik.errors.email}</Text>
-      )}
-
-      {/* DOB */}
-      <TouchableOpacity
-        style={styles.input}
-        onPress={() => setShowDatePicker(true)}
-      >
-        <Text style={{ color: formik.values.dateOfBirth ? "#000" : "#888" }}>
-          {formik.values.dateOfBirth || "Select Date of Birth"}
-        </Text>
-      </TouchableOpacity>
-      {formik.touched.dateOfBirth && formik.errors.dateOfBirth && (
-        <Text style={styles.error}>{formik.errors.dateOfBirth}</Text>
-      )}
-
-      {showDatePicker && (
-        <DateTimePicker
-          value={
-            formik.values.dateOfBirth
-              ? new Date(formik.values.dateOfBirth)
-              : new Date()
-          }
-          mode="date"
-          display={Platform.OS === "ios" ? "spinner" : "default"}
-          onChange={handleDateChange}
-          maximumDate={new Date()}
-        />
-      )}
-
-      {/* Gender */}
-      <View style={styles.genderContainer}>
-        {["Male", "Female", "Other"].map((g) => (
-          <TouchableOpacity
-            key={g}
-            style={[
-              styles.genderBtn,
-              formik.values.gender === g && styles.genderSelected,
-            ]}
-            onPress={() => formik.setFieldValue("gender", g)}
-          >
-            <Text
-              style={[
-                styles.genderText,
-                formik.values.gender === g && { color: "#fff" },
-              ]}
+            <TouchableOpacity
+              style={styles.dateInput}
+              onPress={() => setShowDatePicker(true)}
             >
-              {g}
-            </Text>
+              <Ionicons name="calendar-outline" size={18} color="#64748b" />
+              <Text style={{ marginLeft: 10 }}>
+                {formik.values.dateOfBirth || "Select Date of Birth"}
+              </Text>
+            </TouchableOpacity>
+
+            {formik.touched.dateOfBirth && formik.errors.dateOfBirth && (
+              <Text style={styles.error}>{formik.errors.dateOfBirth}</Text>
+            )}
+
+            {showDatePicker && (
+              <DateTimePicker
+                value={
+                  formik.values.dateOfBirth
+                    ? new Date(formik.values.dateOfBirth)
+                    : new Date()
+                }
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={handleDateChange}
+                maximumDate={new Date()}
+              />
+            )}
+
+            <View style={styles.genderContainer}>
+              {["Male", "Female", "Other"].map((g) => (
+                <TouchableOpacity
+                  key={g}
+                  style={[
+                    styles.genderBtn,
+                    formik.values.gender === g && styles.genderSelected,
+                  ]}
+                  onPress={() => formik.setFieldValue("gender", g)}
+                >
+                  <Text
+                    style={[
+                      styles.genderText,
+                      formik.values.gender === g && { color: "#fff" },
+                    ]}
+                  >
+                    {g}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {formik.touched.gender && formik.errors.gender && (
+              <Text style={styles.error}>{formik.errors.gender}</Text>
+            )}
+          </View>
+
+          {/* Work Info */}
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Work Details</Text>
+            {renderInput("briefcase-outline", "Department", "department")}
+            {renderInput("location-outline", "Work Location", "workLocation")}
+          </View>
+
+          {/* Face Capture */}
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Face Capture</Text>
+            {renderImageBlock("Front Face", "faceFrontImage")}
+            {renderImageBlock("Left Face", "faceLeftImage")}
+            {renderImageBlock("Right Face", "faceRightImage")}
+          </View>
+
+          {/* Submit */}
+          <TouchableOpacity style={styles.submitBtn} onPress={formik.handleSubmit}>
+            <Text style={styles.submitText}>Register</Text>
           </TouchableOpacity>
-        ))}
+        </ScrollView>
       </View>
-      {formik.touched.gender && formik.errors.gender && (
-        <Text style={styles.error}>{formik.errors.gender}</Text>
-      )}
-
-      {/* Department */}
-      <TextInput
-        placeholder="Department"
-        style={styles.input}
-        value={formik.values.department}
-        onChangeText={formik.handleChange("department")}
-        onBlur={formik.handleBlur("department")}
-      />
-      {formik.touched.department && formik.errors.department && (
-        <Text style={styles.error}>{formik.errors.department}</Text>
-      )}
-
-      {/* Work Location */}
-      <TextInput
-        placeholder="Work Location"
-        style={styles.input}
-        value={formik.values.workLocation}
-        onChangeText={formik.handleChange("workLocation")}
-        onBlur={formik.handleBlur("workLocation")}
-      />
-      {formik.touched.workLocation && formik.errors.workLocation && (
-        <Text style={styles.error}>{formik.errors.workLocation}</Text>
-      )}
-
-      {/* Face Images */}
-      {renderImageBlock("Front Face", "faceFrontImage")}
-      {renderImageBlock("Left Face", "faceLeftImage")}
-      {renderImageBlock("Right Face", "faceRightImage")}
-
-      {/* Submit */}
-      <TouchableOpacity style={styles.submitBtn} onPress={formik.handleSubmit}>
-        <Text style={styles.submitText}>Register</Text>
-      </TouchableOpacity>
-    </ScrollView>
+    </ImageBackground>
   );
 };
 
 export default FRSRegistration;
 
 const styles = StyleSheet.create({
+  bgImage: { flex: 1 },
+
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+  },
+
   container: {
     padding: 16,
-    backgroundColor: "#eef2f7",
     paddingBottom: 120,
   },
 
-  title: {
-    fontSize: 26,
-    fontWeight: "700",
+  header: {
+    backgroundColor: "#4f46e5",
+    padding: 20,
+    borderRadius: 20,
     marginBottom: 20,
-    textAlign: "center",
+  },
+
+  headerTitle: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "700",
+  },
+
+  headerSub: {
+    color: "#c7d2fe",
+    fontSize: 13,
+    marginTop: 4,
+  },
+
+  card: {
+    backgroundColor: "rgba(255,255,255,0.95)",
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 15,
+    elevation: 5,
+  },
+
+  sectionTitle: {
+    fontWeight: "700",
+    marginBottom: 12,
     color: "#1e293b",
   },
 
-  input: {
-    backgroundColor: "#fff",
-    padding: 14,
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f8fafc",
     borderRadius: 12,
+    paddingHorizontal: 10,
     marginBottom: 6,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    fontSize: 14,
   },
 
-  label: {
-    fontWeight: "600",
-    marginBottom: 6,
-    color: "#334155",
+  input: {
+    flex: 1,
+    padding: 12,
+  },
+
+  dateInput: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f8fafc",
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 10,
   },
 
   genderContainer: {
     flexDirection: "row",
-    marginBottom: 10,
-    justifyContent: "space-between",
+    marginTop: 10,
   },
 
   genderBtn: {
@@ -301,15 +322,12 @@ const styles = StyleSheet.create({
     padding: 12,
     marginHorizontal: 4,
     borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#cbd5f5",
+    backgroundColor: "#eef2ff",
     alignItems: "center",
-    backgroundColor: "#f8fafc",
   },
 
   genderSelected: {
     backgroundColor: "#4f46e5",
-    borderColor: "#4f46e5",
   },
 
   genderText: {
@@ -317,61 +335,55 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
+  label: {
+    fontWeight: "600",
+    marginBottom: 6,
+  },
+
   captureBtn: {
     flexDirection: "row",
-    backgroundColor: "#22c55e",
-    padding: 10,
-    borderRadius: 10,
-    alignItems: "center",
+    backgroundColor: "#16a34a",
+    padding: 12,
+    borderRadius: 12,
     justifyContent: "center",
-    marginTop: 4,
+    alignItems: "center",
   },
 
   captureText: {
     color: "#fff",
     marginLeft: 6,
-    fontWeight: "600",
+    fontWeight: "700",
   },
 
   preview: {
-    width: 110,
-    height: 110,
-    borderRadius: 12,
+    width: 120,
+    height: 120,
+    borderRadius: 16,
     marginTop: 10,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
   },
 
   placeholder: {
     color: "#94a3b8",
     marginTop: 6,
-    fontStyle: "italic",
   },
 
   submitBtn: {
     backgroundColor: "#4f46e5",
-    padding: 16,
-    borderRadius: 14,
+    padding: 18,
+    borderRadius: 16,
     marginTop: 25,
-    shadowColor: "#4f46e5",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 6,
   },
 
   submitText: {
     color: "#fff",
     textAlign: "center",
-    fontWeight: "700",
+    fontWeight: "800",
     fontSize: 16,
-    letterSpacing: 0.5,
   },
 
   error: {
     color: "#ef4444",
     fontSize: 12,
     marginBottom: 6,
-    marginLeft: 4,
   },
 });

@@ -95,11 +95,11 @@ const HomeScreen = ({ navigation }) => {
       ) : roleId == 13 ? (
         <Employer navigation={navigation} />
       ) : (
-        // <View style={{ alignItems: "center", marginTop: 50 }}>
-        //   <Text style={{ fontSize: 16, color: "#666" }}>
-               <FRSLogin/>
-        //   </Text>
-        // </View>
+        <View style={{ alignItems: "center", marginTop: 50 }}>
+          <Text style={{ fontSize: 16, color: "#666" }}>
+            Welcome to Labour Department
+          </Text>
+        </View>
       )}
     </>
   );

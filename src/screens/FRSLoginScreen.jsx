@@ -12,9 +12,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFormik } from "formik";
 import { useDispatch } from "react-redux";
 import ImageBucketRN from "../utils/ImageBucketRN";
+import { useNavigation } from "@react-navigation/native";
 
 const FRSLogin = () => {
   const dispatch = useDispatch();
+
+  const navigation = useNavigation()
 
   const [loginType, setLoginType] = useState("password");
   const [showPassword, setShowPassword] = useState(false);
@@ -53,7 +56,7 @@ const FRSLogin = () => {
         "faceImage",
         20971520,
         "camera",
-        dispatch
+        dispatch,
       );
 
       // Dummy API / Alert after capture
@@ -132,8 +135,15 @@ const FRSLogin = () => {
         )}
 
         {/* Login Button */}
+
         <TouchableOpacity style={styles.loginBtn} onPress={formik.handleSubmit}>
           <Text style={styles.loginText}>Login</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.registerBtn}
+          onPress={()=>navigation.navigate("RegisterFrs")}
+        >
+          <Text style={styles.registerText}>New user? Register here</Text>
         </TouchableOpacity>
       </View>
     </ImageBackground>
@@ -219,5 +229,15 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#fff",
     fontWeight: "bold",
+  },
+  registerBtn: {
+    marginTop: 15,
+    alignItems: "center",
+  },
+
+  registerText: {
+    color: "#fff",
+    fontSize: 14,
+    textDecorationLine: "underline",
   },
 });

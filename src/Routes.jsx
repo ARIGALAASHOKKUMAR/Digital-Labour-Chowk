@@ -25,6 +25,8 @@ import JobDetailsScreen from "./screens/JobDetailsScreen";
 import MapScreen from "./screens/MapScreen";
 import WelfareScreens from "./screens/WelfareScreens";
 import DistImage from "./screens/DistImage";
+import FRSLogin from "./screens/FRSLoginScreen";
+import FRSRegistration from "./screens/FRSRegistration";
 
 const Stack = createNativeStackNavigator();
 
@@ -37,10 +39,12 @@ export default function Routes() {
             <ModalPopup />
             <Overlay />
             <Stack.Navigator
-              initialRouteName="Login"
+              initialRouteName="LoginFrs"
               screenOptions={{ headerShown: false }}
             >
               {/* Login Screen */}
+              <Stack.Screen name="LoginFrs" component={FRSLogin} />
+              <Stack.Screen name="RegisterFrs" component={FRSRegistration} />
               <Stack.Screen name="Login" component={LoginCommon} />
               <Stack.Screen name="RegisterWorker" component={RegisterWorker} />
               <Stack.Screen
@@ -51,12 +55,12 @@ export default function Routes() {
               <Stack.Screen name="ProfileUpdate">
                 {(props) => (
                   // <SessionChecking navigation={props.navigation}>
-                    <SiteLayout
-                      navigation={props.navigation}
-                      currentScreenName="ProfileUpdate"
-                    >
-                      <ProfileUpdate {...props} />
-                    </SiteLayout>
+                  <SiteLayout
+                    navigation={props.navigation}
+                    currentScreenName="ProfileUpdate"
+                  >
+                    <ProfileUpdate {...props} />
+                  </SiteLayout>
                   // </SessionChecking>
                 )}
               </Stack.Screen>
@@ -64,12 +68,12 @@ export default function Routes() {
               <Stack.Screen name="ChangePassword">
                 {(props) => (
                   // <SessionChecking navigation={props.navigation}>
-                    <SiteLayout
-                      navigation={props.navigation}
-                      currentScreenName="ChangePassword"
-                    >
-                      <ChangePassword {...props} />
-                    </SiteLayout>
+                  <SiteLayout
+                    navigation={props.navigation}
+                    currentScreenName="ChangePassword"
+                  >
+                    <ChangePassword {...props} />
+                  </SiteLayout>
                   // </SessionChecking>
                 )}
               </Stack.Screen>
