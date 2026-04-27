@@ -201,33 +201,6 @@ const PostJob = ({ route, navigation }) => {
     facilities: Yup.array().min(1, "Select at least one facility"),
   });
 
-  // const formik = useFormik({
-  //   enableReinitialize: true,
-  //   initialValues: {
-  //     jobTitle: "",
-  //     jobCategory: [],
-  //     startDate: "",
-  //     endDate: "",
-  //     workDuration: "",
-  //     district: "",
-  //     mandal: "",
-  //     village: "",
-  //     doorNo: "",
-  //     landmark: "",
-  //     pincode: "",
-  //     latitude: "",
-  //     longitude: "",
-  //     jobDescription: "",
-  //     toolsRequired: "",
-  //     requiredPeople: "",
-  //     workTime: "",
-  //     preferredWorkType: "",
-  //     workRatePerDay: "",
-  //     facilities: [],
-  //   },
-  //   validationSchema,
-  //   onSubmit: handleSubmit,
-  // });
 
   const formik = useFormik({
     enableReinitialize: true,

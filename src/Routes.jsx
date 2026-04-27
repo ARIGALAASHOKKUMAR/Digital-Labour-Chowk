@@ -27,6 +27,7 @@ import WelfareScreens from "./screens/WelfareScreens";
 import DistImage from "./screens/DistImage";
 import FRSLogin from "./screens/FRSLoginScreen";
 import FRSRegistration from "./screens/FRSRegistration";
+import WorkerRegistration from "./screens/WorkerRegistrationForm";
 
 const Stack = createNativeStackNavigator();
 
@@ -86,7 +87,7 @@ export default function Routes() {
                       currentScreenName="HOME"
                       scrollEnabled={false}
                     >
-                      <HomeScreen {...props} />
+                      <WorkerRegistration {...props} />
                     </SiteLayout>
                   </SessionChecking>
                 )}
