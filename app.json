@@ -13,7 +13,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ashokarigala.digitallabourchowk",
+      "bundleIdentifier": "org.indusaction.dlcap",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -23,7 +23,7 @@
         "foregroundImage": "./assets/labour_log.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.ashokarigala.digitallabourchowk"
+      "package": "org.indusaction.dlcap"
     },
     "web": {
       "favicon": "./assets/favicon.png"
