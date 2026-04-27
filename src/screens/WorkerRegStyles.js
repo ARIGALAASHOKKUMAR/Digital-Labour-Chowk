@@ -348,7 +348,7 @@ export const  styles = StyleSheet.create({
   },
   modalSubtitle: {
     fontSize: 14,
-    color: '#666',
+    color: 'white',
     textAlign: 'center',
     paddingHorizontal: 20,
     marginBottom: 20,
