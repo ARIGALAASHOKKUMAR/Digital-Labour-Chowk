@@ -25,8 +25,6 @@ import JobDetailsScreen from "./screens/JobDetailsScreen";
 import MapScreen from "./screens/MapScreen";
 import WelfareScreens from "./screens/WelfareScreens";
 import DistImage from "./screens/DistImage";
-import FRSLogin from "./screens/FRSLoginScreen";
-import FRSRegistration from "./screens/FRSRegistration";
 import WorkerRegistration from "./screens/WorkerRegistrationForm";
 
 const Stack = createNativeStackNavigator();
@@ -40,12 +38,10 @@ export default function Routes() {
             <ModalPopup />
             <Overlay />
             <Stack.Navigator
-              initialRouteName="LoginFrs"
+              initialRouteName="Login"
               screenOptions={{ headerShown: false }}
             >
               {/* Login Screen */}
-              <Stack.Screen name="LoginFrs" component={FRSLogin} />
-              <Stack.Screen name="RegisterFrs" component={FRSRegistration} />
               <Stack.Screen name="Login" component={LoginCommon} />
               <Stack.Screen name="RegisterWorker" component={RegisterWorker} />
               <Stack.Screen
