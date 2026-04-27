@@ -12,6 +12,7 @@ import {
   Modal,
   Linking,
   Alert,
+  Dimensions,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -40,6 +41,7 @@ import {
 import { showErrorToast, showInfoToast } from "../utils/showToast";
 import { dists28 } from "../utils/CommonFunctions";
 import { styles } from "./WorkerRegStyles";
+import Icon from "react-native-vector-icons/MaterialIcons";
 
 const WorkerRegistration = ({ route, navigation }) => {
   const dispatch = useDispatch();
@@ -116,8 +118,6 @@ const WorkerRegistration = ({ route, navigation }) => {
         "POST",
         dispatch,
       );
-
-      console.log("gggggggggg", response);
 
       const isSuccess = response?.status === 200;
 
@@ -2957,10 +2957,10 @@ const WorkerRegistration = ({ route, navigation }) => {
         message.forEach((msg) => errorMessages.push(`• ${msg}`));
       } else {
         // Get human-readable field name
-        const fieldName = field
-          .replace(/([A-Z])/g, " $1")
-          .replace(/^./, (str) => str.toUpperCase())
-          .replace(/(\d+)/g, " #$1");
+        const fieldName = getFieldLabel(field);
+        // .replace(/([A-Z])/g, " $1")
+        // .replace(/^./, (str) => str.toUpperCase())
+        // .replace(/(\d+)/g, " #$1");
         errorMessages.push(`• ${fieldName}: ${message}`);
       }
     }
@@ -2968,17 +2968,79 @@ const WorkerRegistration = ({ route, navigation }) => {
     return errorMessages;
   };
 
+  const { width, height } = Dimensions.get("window");
+
   // Show error modal
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [errorMessagesList, setErrorMessagesList] = useState([]);
+
+  // Updated showErrorModal function with custom modal
   const showErrorModal = (errorMessages) => {
-    Alert.alert(
-      "Validation Error",
-      `Please fix the following errors in the current tab:\n\n${errorMessages.join("\n")}`,
-      [{ text: "OK", style: "cancel" }],
-    );
+    setErrorMessagesList(errorMessages);
+    setErrorModalVisible(true);
   };
+
+  // Error Modal Component
+  const ErrorModalComponent = () => (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={errorModalVisible}
+      onRequestClose={() => setErrorModalVisible(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          {/* Header Section */}
+          <View style={styles.modalHeader}>
+            <View style={styles.iconContainer}>
+              <Icon name="error-outline" size={45} color="#FF3B30" />
+            </View>
+            <TouchableOpacity
+              onPress={() => setErrorModalVisible(false)}
+              style={styles.closeBtn}
+            >
+              <Icon name="close" size={22} color="#666" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Title */}
+          <Text style={styles.modalTitle}>Validation Error</Text>
+          <Text style={styles.modalSubtitle}>
+            Please fix the following errors in the current tab:
+          </Text>
+
+          {/* Error List */}
+          <ScrollView
+            style={styles.errorScroll}
+            showsVerticalScrollIndicator={false}
+          >
+            {errorMessagesList.map((error, index) => (
+              <View key={index} style={styles.errorItem}>
+                <View style={styles.errorBullet}>
+                  <Text style={styles.bulletText}>{index + 1}</Text>
+                </View>
+                <Text style={styles.errorMsg}>{getFieldLabel(error)}</Text>
+              </View>
+            ))}
+          </ScrollView>
+
+          {/* Action Button */}
+          <TouchableOpacity
+            style={styles.okButton}
+            onPress={() => setErrorModalVisible(false)}
+          >
+            <Text style={styles.okButtonText}>OK, I'll Fix It</Text>
+            <Icon name="check" size={18} color="#FFF" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
 
   return (
     <FormikProvider value={formik}>
+      <ErrorModalComponent />
+
       <View style={styles.container}>
         <Text style={styles.mainTitle}>
           {currentLanguageData?.title || "Worker Registration"}
