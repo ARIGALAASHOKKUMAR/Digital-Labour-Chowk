@@ -158,11 +158,36 @@ export const GETSKILLS = "api/user/digital-labour-chowk/skillInfo";
 export const GETDISTSAPP = "/api/user/v1/districts";
 export const GETMANDALSAPP = "/api/user/v1/mandals?distCode=";
 export const GETVILLAGESAPP = "/api/user/v1/villages";
-export const DIGITALLABOURCHOWKDETAILS ="/api/user/digitalLabourChowkRegDetails";
-export const EMPLOYERJOBPOST ="/api/user/digital-labour-chowk/createJobPosting";
+export const DIGITALLABOURCHOWKDETAILS =
+  "/api/user/digitalLabourChowkRegDetails";
+export const EMPLOYERJOBPOST =
+  "/api/user/digital-labour-chowk/createJobPosting";
 export const JOBSEARCH = "/api/user/digitalLabourChowkJobPostings/search";
 export const JOBAPPLY = "/api/user/digital-labour-chowk/applyJob";
 export const FINDWORKER = "/api/user/digitalLabourChowkRegDetails";
 export const MYJOBSOFWORKER = "/api/user/digitalLabourChowkJobPostings";
 export const GEOTAGGINGPOST = "/api/user/createGeoTagging";
 export const GEOTAGGINGGET = "/api/user/geo-tagging-details";
+
+// worker reg api
+
+export const GET_DISTRICTS = "/api/open/new-villages"; // Note: This seems to be for villages, you may need a dedicated districts API
+export const GET_MANDALS = "api/open/mandals?";
+export const GET_VILLAGES = "/api/open/new-villages";
+
+// Aadhaar Verification APIs
+export const GENERATE_AADHAAR_OTP = "api/open/generateOtp";
+export const VERIFY_AADHAAR_OTP = "api/open/ekycOtp";
+
+// Worker Registration API
+export const WORKER_REGISTRATION = "/api/worker/worker-registration";
+export const AADHAAR_OTP = "api/open/generateOtp";
+export const GET_STATES_API = "/api/open/states";
+export const CASTE_API = "api/worker/api/open/castesubcaste";
+export const BANK_DETAILS = "/api/worker/api/open/rbibanks";
+export const GET_DISTRICT_REPORT = "api/open/listofdistricts"
+export const GET_VILLAGESs = "/api/open/new-villages";
+
+
+
+
