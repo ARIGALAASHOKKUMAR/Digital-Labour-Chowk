@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Modal,
   Linking,
+  Alert,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -38,6 +39,7 @@ import {
 } from "../utils/utils";
 import { showErrorToast, showInfoToast } from "../utils/showToast";
 import { dists28 } from "../utils/CommonFunctions";
+import { styles } from "./WorkerRegStyles";
 
 const WorkerRegistration = ({ route, navigation }) => {
   const dispatch = useDispatch();
@@ -2779,6 +2781,202 @@ const WorkerRegistration = ({ route, navigation }) => {
     }
   };
 
+  const getFieldsForTab = (tabIndex) => {
+    const tabFields = {
+      0: [
+        // PERSONAL INFORMATION
+        "aadhaarNo",
+        "firstName",
+        "soWo",
+        "fatherName",
+        "gender",
+        "dob",
+        "phoneNo",
+        "religion",
+        "caste",
+        "casteText",
+        "subCaste",
+        "subCasteText",
+        "maritalStatus",
+      ],
+      1: [
+        // FAMILY DETAILS
+        "familyDetails",
+      ],
+      2: [
+        // BANK DETAILS
+        "ifscCode",
+        "bankName",
+        "branchName",
+        "bankAccountNo",
+        "rbankAccountNo",
+        "nameInBank",
+      ],
+      3: [
+        // ADDRESS DETAILS
+        "permanentState",
+        "permanentDistrictCode",
+        "permanentMadalCode",
+        "permanentVillageCode",
+        "permanentPincode",
+        "permanentDoorNo",
+        "permanentAddress",
+        "permanentDivision",
+        "permanentLandMark",
+        "permanentCity",
+        "isPermanent",
+        "presentState",
+        "presentDistrictCode",
+        "presentMadalCode",
+        "presentVillageCode",
+        "presentPincode",
+        "presentDoorNo",
+        "presentAddress",
+        "presentDivision",
+        "presentLandMark",
+        "presentCity",
+      ],
+      4: [
+        // EMPLOYMENT DETAILS
+        "isNregs",
+        "jobCardNo",
+        "isUnionMember",
+        "unionName",
+        "regNo",
+      ],
+      5: [
+        // WORK DETAILS
+        "empName",
+        "presentOfficeName",
+        "typeOfWork",
+        "otherTradeWork",
+        "workCapability",
+        "isMigrant",
+        "workDistrict",
+        "workMandal",
+        "workVillage",
+        "workDoorNo",
+        "workPincode",
+      ],
+      6: [
+        // DOCUMENTS
+        "photoDesc",
+        "signatureDesc",
+        "selfAffidavitDesc",
+      ],
+      7: [
+        // PAYMENT & DECLARATION
+        "years",
+        "amount",
+        "selfDeclaration",
+      ],
+    };
+    return tabFields[tabIndex] || [];
+  };
+
+  // Function to validate specific fields
+  const validateTabFields = async (tabIndex) => {
+    const fieldsToValidate = getFieldsForTab(tabIndex);
+    const values = formik.values;
+    const errors = {};
+
+    for (const field of fieldsToValidate) {
+      try {
+        if (field === "familyDetails") {
+          // Special validation for familyDetails array
+          if (values.familyDetails && values.familyDetails.length > 0) {
+            for (let i = 0; i < values.familyDetails.length; i++) {
+              const memberErrors = await Yup.object()
+                .shape({
+                  familyMemberName: Yup.string()
+                    .required("Member name is required")
+                    .min(2, "Name must be at least 2 characters")
+                    .max(100, "Name must not exceed 100 characters"),
+                  relation: Yup.string()
+                    .required("Relation is required")
+                    .min(2, "Relation must be at least 2 characters"),
+                  memberDob: Yup.string()
+                    .required("Date of birth is required")
+                    .matches(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
+                  aadhaarNo: Yup.string()
+                    .required("Aadhaar number is required")
+                    .matches(
+                      /^\d{12}$/,
+                      "Aadhaar number must be exactly 12 digits",
+                    ),
+                  isNomine: Yup.string()
+                    .required("Please select whether this member is a nominee")
+                    .oneOf(["yes", "no"], "Invalid selection"),
+                  nominePer: Yup.string().test({
+                    name: "nominePer-validation",
+                    message:
+                      "Nominee percentage is required when member is a nominee",
+                    test: function (value) {
+                      const { isNomine } = this.parent;
+                      if (isNomine === "yes") {
+                        if (!value) return false;
+                        const num = parseInt(value, 10);
+                        if (isNaN(num) || num < 5 || num > 100 || num % 5 !== 0)
+                          return false;
+                      }
+                      return true;
+                    },
+                  }),
+                })
+                .validate(values.familyDetails[i], { abortEarly: false });
+
+              if (memberErrors?.errors?.length) {
+                errors[`familyDetails[${i}]`] = memberErrors.errors;
+              }
+            }
+          }
+        } else {
+          await validationSchema.validateAt(field, values);
+        }
+      } catch (error) {
+        if (error?.path) {
+          errors[error.path] = error.message;
+        } else if (error?.inner) {
+          error.inner.forEach((err) => {
+            errors[err.path] = err.message;
+          });
+        }
+      }
+    }
+
+    return errors;
+  };
+
+  // Format error messages for modal display
+  const formatErrorsForModal = (errors) => {
+    const errorMessages = [];
+
+    for (const [field, message] of Object.entries(errors)) {
+      if (Array.isArray(message)) {
+        // Handle array errors (family details)
+        message.forEach((msg) => errorMessages.push(`• ${msg}`));
+      } else {
+        // Get human-readable field name
+        const fieldName = field
+          .replace(/([A-Z])/g, " $1")
+          .replace(/^./, (str) => str.toUpperCase())
+          .replace(/(\d+)/g, " #$1");
+        errorMessages.push(`• ${fieldName}: ${message}`);
+      }
+    }
+
+    return errorMessages;
+  };
+
+  // Show error modal
+  const showErrorModal = (errorMessages) => {
+    Alert.alert(
+      "Validation Error",
+      `Please fix the following errors in the current tab:\n\n${errorMessages.join("\n")}`,
+      [{ text: "OK", style: "cancel" }],
+    );
+  };
+
   return (
     <FormikProvider value={formik}>
       <View style={styles.container}>
@@ -2817,17 +3015,24 @@ const WorkerRegistration = ({ route, navigation }) => {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.sectionCard}>{renderTabContent()}</View>
-
           <TouchableOpacity
-            style={[
-              styles.submitButton,
-            ]}
-            onPress={() => {
+            style={[styles.submitButton]}
+            onPress={async () => {
               if (activeTab === 7) {
+                // Final submission - validate all fields
                 formik.handleSubmit();
               } else {
-                formik.handleSubmit();
-                // setActiveTab((curr) => curr + 1);
+                // Validate only current tab fields
+                const tabErrors = await validateTabFields(activeTab);
+
+                if (Object.keys(tabErrors).length === 0) {
+                  // No errors, move to next tab
+                  setActiveTab((curr) => curr + 1);
+                } else {
+                  // Show errors in modal
+                  const formattedErrors = formatErrorsForModal(tabErrors);
+                  showErrorModal(formattedErrors);
+                }
               }
             }}
           >
@@ -2854,299 +3059,5 @@ const WorkerRegistration = ({ route, navigation }) => {
     </FormikProvider>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-    paddingBottom: 50,
-  },
-  mainTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    textAlign: "center",
-    padding: 16,
-    backgroundColor: "#fff",
-    color: "#333",
-  },
-  tabBar: {
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-    flexDirection: "row",
-    flexWrap: "wrap",
-    width: 450,
-  },
-  tab: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginHorizontal: 4,
-    borderBottomWidth: 2,
-    borderBottomColor: "transparent",
-    width: "43%",
-  },
-  activeTab: {
-    borderBottomColor: "#007AFF",
-  },
-  tabText: {
-    fontSize: 14,
-    color: "#666",
-    marginLeft: 6,
-  },
-  activeTabText: {
-    color: "#007AFF",
-    fontWeight: "600",
-  },
-  contentContainer: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  sectionCard: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 16,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 16,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-  },
-  tabContent: {
-    paddingBottom: 20,
-  },
-  inputBlock: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#333",
-    marginBottom: 8,
-  },
-  requiredStar: {
-    color: "red",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    backgroundColor: "#fff",
-  },
-  inputError: {
-    borderColor: "red",
-  },
-  errorText: {
-    color: "red",
-    fontSize: 12,
-    marginTop: 4,
-  },
-  successText: {
-    color: "green",
-    fontSize: 12,
-    marginTop: 4,
-  },
-  selectBox: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    backgroundColor: "#fff",
-    overflow: "hidden",
-  },
-  datePickerButton: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: "#fff",
-  },
-  dateText: {
-    fontSize: 14,
-    color: "#333",
-  },
-  radioGroup: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  radioOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 20,
-  },
-  radioCircle: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
-    borderColor: "#007AFF",
-    marginRight: 8,
-  },
-  radioSelected: {
-    backgroundColor: "#007AFF",
-  },
-  radioLabel: {
-    fontSize: 14,
-    color: "#333",
-  },
-  switchContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  familyCard: {
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    backgroundColor: "#fafafa",
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 12,
-  },
-  uploadButton: {
-    backgroundColor: "#007AFF",
-    borderRadius: 8,
-    padding: 12,
-    alignItems: "center",
-  },
-  uploadButtonContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  uploadButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  addButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: "#007AFF",
-    borderRadius: 8,
-    marginTop: 8,
-  },
-  addButtonText: {
-    color: "#007AFF",
-    fontSize: 14,
-    fontWeight: "500",
-    marginLeft: 8,
-  },
-  removeButton: {
-    alignItems: "center",
-    paddingVertical: 8,
-    marginTop: 8,
-  },
-  removeButtonText: {
-    color: "red",
-    fontSize: 14,
-  },
-  otpContainer: {
-    marginTop: 8,
-  },
-  otpInput: {
-    marginBottom: 8,
-  },
-  verifyButton: {
-    backgroundColor: "#28a745",
-    borderRadius: 8,
-    padding: 10,
-    alignItems: "center",
-  },
-  verifyButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  submitButton: {
-    backgroundColor: "#007AFF",
-    borderRadius: 12,
-    padding: 16,
-    alignItems: "center",
-    marginBottom: 30,
-  },
-  disabledButton: {
-    backgroundColor: "#ccc",
-  },
-  submitButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  loadingModal: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  loadingContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: "#333",
-  },
-  feeText: {
-    fontSize: 14,
-    color: "#666",
-    padding: 8,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 8,
-  },
-  checkboxContainer: {
-    marginTop: 8,
-  },
-  checkbox: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  checkboxBox: {
-    width: 20,
-    height: 20,
-    borderWidth: 2,
-    borderColor: "#007AFF",
-    borderRadius: 4,
-    marginRight: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  checkboxChecked: {
-    backgroundColor: "#007AFF",
-  },
-  checkboxLabel: {
-    fontSize: 14,
-    color: "#333",
-    flex: 1,
-  },
-});
 
 export default WorkerRegistration;
