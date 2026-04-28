@@ -296,8 +296,8 @@ const WorkerRegistration = ({ route, navigation }) => {
             .max(100, "Name must not exceed 100 characters"),
 
           relation: Yup.string()
-            .required("Relation is required")
-            .min(2, "Relation must be at least 2 characters"),
+            .required("Relation is required"),
+            // .min(2, "Relation must be at least 2 characters"),
 
           memberDob: Yup.string().required("Date of birth is required"),
 
