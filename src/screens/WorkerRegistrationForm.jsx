@@ -299,9 +299,7 @@ const WorkerRegistration = ({ route, navigation }) => {
             .required("Relation is required")
             .min(2, "Relation must be at least 2 characters"),
 
-          memberDob: Yup.string()
-            .required("Date of birth is required")
-            .matches(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
+          memberDob: Yup.string().required("Date of birth is required"),
 
           aadhaarNo: Yup.string()
             .required("Aadhaar number is required")
@@ -430,7 +428,7 @@ const WorkerRegistration = ({ route, navigation }) => {
     presentCity: Yup.string().nullable(),
 
     // ========== TAB 4: EMPLOYMENT DETAILS ==========
-    isNregs: Yup.string(),
+    // isNregs: Yup.string().required("required"),
 
     jobCardNo: Yup.string().when("isNregs", {
       is: "Y",
@@ -2953,39 +2951,39 @@ const WorkerRegistration = ({ route, navigation }) => {
       </View>
 
       <View style={styles.inputBlock}>
-  <Text style={styles.label}>{getFieldLabel("years")}</Text>
+        <Text style={styles.label}>{getFieldLabel("years")}</Text>
 
-  <View style={styles.input}>
-    <Picker
-      selectedValue={formik.values.years}
-      onValueChange={(value) => {
-        formik.setFieldValue("years", value);
+        <View style={styles.input}>
+          <Picker
+            selectedValue={formik.values.years}
+            onValueChange={(value) => {
+              formik.setFieldValue("years", value);
 
-        // ✅ calculate amount here
-        const amount = value ? Number(value) * 12 + 50 : "";
-        formik.setFieldValue("amount", amount.toString());
-      }}
-    >
-      <Picker.Item label="--- Select ---" value="" />
-      <Picker.Item label="1 Year" value="1" />
-      <Picker.Item label="2 Years" value="2" />
-      <Picker.Item label="3 Years" value="3" />
-      <Picker.Item label="4 Years" value="4" />
-      <Picker.Item label="5 Years" value="5" />
-    </Picker>
-  </View>
-</View>
-{console.log("formikkkkkkkkkkk",formik.values.amount)}
-<View style={styles.inputBlock}>
-  <Text style={styles.label}>{getFieldLabel("amount")}</Text>
+              // ✅ calculate amount here
+              const amount = value ? Number(value) * 12 + 50 : "";
+              formik.setFieldValue("amount", amount.toString());
+            }}
+          >
+            <Picker.Item label="--- Select ---" value="" />
+            <Picker.Item label="1 Year" value="1" />
+            <Picker.Item label="2 Years" value="2" />
+            <Picker.Item label="3 Years" value="3" />
+            <Picker.Item label="4 Years" value="4" />
+            <Picker.Item label="5 Years" value="5" />
+          </Picker>
+        </View>
+      </View>
+      {console.log("formikkkkkkkkkkk", formik.values.amount)}
+      <View style={styles.inputBlock}>
+        <Text style={styles.label}>{getFieldLabel("amount")}</Text>
 
-  <TextInput
-    style={[styles.input, { backgroundColor: "#eee" }]}
-    value={formik.values.amount}
-    editable={false}   // ✅ prevent manual editing
-    placeholder={`Enter ${getFieldLabel("amount")}`}
-  />
-</View>
+        <TextInput
+          style={[styles.input, { backgroundColor: "#eee" }]}
+          value={formik.values.amount}
+          editable={false} // ✅ prevent manual editing
+          placeholder={`Enter ${getFieldLabel("amount")}`}
+        />
+      </View>
 
       <View style={styles.inputBlock}>
         <View style={styles.checkboxContainer}>
