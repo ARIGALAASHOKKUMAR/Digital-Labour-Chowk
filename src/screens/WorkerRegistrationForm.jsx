@@ -42,6 +42,7 @@ import { showErrorToast, showInfoToast } from "../utils/showToast";
 import { dists28 } from "../utils/CommonFunctions";
 import { styles } from "./WorkerRegStyles";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import { Image } from "react-native";
 
 const WorkerRegistration = ({ route, navigation }) => {
   const dispatch = useDispatch();
@@ -2467,6 +2468,8 @@ const WorkerRegistration = ({ route, navigation }) => {
     </View>
   );
 
+  console.log("formik.values.photoDesc", formik.values.photoDesc);
+
   // Render Documents Tab
   const renderDocumentsTab = () => {
     const openPDF = (url) => {
@@ -2535,8 +2538,7 @@ const WorkerRegistration = ({ route, navigation }) => {
               <TouchableOpacity
                 style={styles.uploadButton}
                 onPress={async () => {
-                  formik.setFieldTouched("photoDesc", true);
-                  await ImageBucketRN(
+                  ImageBucketRN(
                     formik,
                     "APFD/WORKER/PHOTO/",
                     "photoDesc",
@@ -2563,12 +2565,15 @@ const WorkerRegistration = ({ route, navigation }) => {
                 <Text style={styles.errorText}>{formik.errors.photoDesc}</Text>
               )}
 
-              {formik.values.photoDesc &&
-                typeof formik.values.photoDesc === "string" && (
+              {formik?.values?.photoDesc &&
+                typeof formik?.values?.photoDesc === "string" && (
                   <View style={styles.previewContainer}>
                     <Image
-                      source={{ uri: getImageUrl(formik.values.photoDesc) }}
-                      style={styles.previewImage}
+                      source={{ uri: formik.values.photoDesc }}
+                      style={{ width: 150, height: 150, borderRadius: 8 }}
+                      onError={(e) =>
+                        console.log("Image load error:", e.nativeEvent)
+                      }
                     />
                   </View>
                 )}
@@ -2620,8 +2625,8 @@ const WorkerRegistration = ({ route, navigation }) => {
                 typeof formik.values.signatureDesc === "string" && (
                   <View style={styles.previewContainer}>
                     <Image
-                      source={{ uri: getImageUrl(formik.values.signatureDesc) }}
-                      style={styles.previewImage}
+                      source={{ uri: formik.values.signatureDesc }}
+                      style={{ width: 150, height: 150, borderRadius: 8 }}
                     />
                   </View>
                 )}
@@ -2645,7 +2650,7 @@ const WorkerRegistration = ({ route, navigation }) => {
                     "APFD/WORKER/DECLARATION/",
                     "selfAffidavitDesc",
                     20971520,
-                    "all",
+                    "file",
                     dispatch,
                   );
                 }}
@@ -2674,9 +2679,22 @@ const WorkerRegistration = ({ route, navigation }) => {
                 typeof formik.values.selfAffidavitDesc === "string" && (
                   <TouchableOpacity
                     style={styles.viewButton}
-                    onPress={() =>
-                      viewBucketImage(formik.values.selfAffidavitDesc)
-                    }
+                    onPress={async () => {
+                      const url = formik.values.selfAffidavitDesc;
+
+                      if (!url) {
+                        console.log("No URL found");
+                        return;
+                      }
+
+                      const supported = await Linking.canOpenURL(url);
+
+                      if (supported) {
+                        await Linking.openURL(url);
+                      } else {
+                        console.log("Invalid URL:", url);
+                      }
+                    }}
                   >
                     <Text style={styles.viewButtonText}>View File</Text>
                   </TouchableOpacity>
