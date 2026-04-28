@@ -191,6 +191,7 @@ export const CASTE_API = "api/worker/api/open/castesubcaste";
 export const BANK_DETAILS = "/api/worker/api/open/rbibanks";
 export const GET_DISTRICT_REPORT = "api/open/listofdistricts"
 export const GET_VILLAGESs = "/api/open/new-villages";
+export const WORKER_REG_API = "/api/worker/worker-registration";
 
 
 

@@ -519,7 +519,7 @@ const WorkerRegistration = ({ route, navigation }) => {
       fatherName: "",
       gender: "",
       dob: "",
-      phoneNo: loginData?.mobile || "",
+      phoneNo: loginData?.mobile || "9999999999",
       otherContactNo: "",
       religion: "",
       caste: "",
@@ -697,58 +697,30 @@ const WorkerRegistration = ({ route, navigation }) => {
           entryBy: "ADMIN",
           registeredBy: "OWN",
 
-          workerId: isEditMode ? data?.[0]?.worker_id : null,
-          workerRegId: isEditMode ? data?.[0]?.worker_reg_id : null,
+          workerId: null,
+          workerRegId: null,
+          // workerId: isEditMode ? data?.[0]?.worker_id : null,
+          // workerRegId: isEditMode ? data?.[0]?.worker_reg_id : null,
         };
 
-        const formData = new FormData();
+        // const formData = new FormData();
 
-        // ✅ SEND PAYLOAD
-        formData.append("data", JSON.stringify(payload));
+        // // ✅ SEND PAYLOAD
+        // formData.append("data", JSON.stringify(payload));
 
         // ✅ FILES
-        if (values.photoDesc) {
-          formData.append("photoDesc", {
-            uri: values.photoDesc.uri,
-            type: values.photoDesc.type,
-            name: values.photoDesc.fileName || `photo_${Date.now()}.jpg`,
-          });
-        }
 
-        if (values.aadhaarPhotoDesc) {
-          formData.append("aadhaarPhotoDesc", {
-            uri: values.aadhaarPhotoDesc.uri,
-            type: values.aadhaarPhotoDesc.type,
-            name:
-              values.aadhaarPhotoDesc.fileName || `aadhaar_${Date.now()}.jpg`,
-          });
-        }
+        const response = await commonAPICall(
+          WORKER_REGISTRATION,
+          payload,
+          "post",
+          dispatch,
+        );
 
-        if (values.selfAffidavitDesc) {
-          formData.append("selfAffidavitDesc", {
-            uri: values.selfAffidavitDesc.uri,
-            type: values.selfAffidavitDesc.type,
-            name:
-              values.selfAffidavitDesc.fileName ||
-              `affidavit_${Date.now()}.jpg`,
-          });
-        }
+        console.log("reee", payload);
+        console.log("reseeeponse0", response);
 
-        if (values.bankPhotoDesc) {
-          formData.append("bankPhotoDesc", {
-            uri: values.bankPhotoDesc.uri,
-            type: values.bankPhotoDesc.type,
-            name: values.bankPhotoDesc.fileName || `bank_${Date.now()}.jpg`,
-          });
-        }
-
-        const response = await axios.post(WORKER_REGISTRATION, formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
-
-        if (response.data.success) {
+        if (response.status === 200) {
           navigation.goBack();
         }
       } catch (error) {
@@ -3257,28 +3229,84 @@ const WorkerRegistration = ({ route, navigation }) => {
         </Text>
 
         {/* Tab Bar */}
-        <View style={styles.tabBar}>
-          {tabs.map((tab) => (
-            <TouchableOpacity
-              key={tab.id}
-              style={[styles.tab, activeTab === tab.id && styles.activeTab]}
-              onPress={() => setActiveTab(tab.id)}
-            >
-              <Ionicons
-                name={tab.icon}
-                size={20}
-                color={activeTab === tab.id ? "#007AFF" : "#666"}
-              />
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === tab.id && styles.activeTabText,
-                ]}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingHorizontal: 10,
+            paddingVertical: 8,
+            backgroundColor: "#fff",
+          }}
+        >
+          {tabs.map((tab, index) => {
+            const isActive = activeTab === tab.id;
+
+            return (
+              <View
+                key={tab.id}
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                }}
               >
-                {tab.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                {/* Step Circle */}
+                <TouchableOpacity
+                  onPress={() => setActiveTab(tab.id)}
+                  style={{
+                    width: 35,
+                    height: 35,
+                    borderRadius: 18,
+                    // backgroundColor: isActive ? "#007AFF" : "#ddd",
+                    borderColor: isActive ? "#007AFF" : "#ddd",
+                    borderWidth:1,
+                    padding:3,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: isActive ? "#fff" : "#333",
+                      fontSize: 12,
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {/* {index + 1} */}
+                    <Ionicons name={tab.icon} size={20} color={activeTab === tab.id ? "#007AFF" : "#666"} />
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Label */}
+                <Text
+                  style={{
+                    fontSize: 10,
+                    marginTop: 4,
+                    color: isActive ? "#007AFF" : "#666",
+                    textAlign: "center",
+                  }}
+                  numberOfLines={1}
+                >
+                  {tab.name}
+                </Text>
+
+                {/* Line Connector */}
+                {index !== tabs.length - 1 && (
+                  <View
+                    style={{
+                      position: "absolute",
+                      right: -25,
+                      top: 14,
+                      width: 50,
+                      height: 2,
+                      backgroundColor: "#ccc",
+                      zIndex: -1,
+                    }}
+                  />
+                )}
+              </View>
+            );
+          })}
         </View>
 
         {/* Tab Content */}
