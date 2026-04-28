@@ -222,7 +222,7 @@ const WorkerRegistration = ({ route, navigation }) => {
 
     firstName: Yup.string().required("Required"),
 
-    soWo: Yup.string().required("Required"),
+    // soWo: Yup.string().required("Required"),
 
     fatherName: Yup.string().required("Required"),
 
