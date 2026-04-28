@@ -1437,28 +1437,43 @@ const WorkerRegistration = ({ route, navigation }) => {
           </View>
 
           <View style={styles.inputBlock}>
-            <Text style={styles.label}>{getFieldLabel("relation")}*</Text>
-            <TextInput
+            <Text style={styles.label}>{getFieldLabel("relation")} *</Text>
+
+            <View
               style={[
                 styles.input,
                 formik.errors.familyDetails?.[index]?.relation &&
                   formik.touched.familyDetails?.[index]?.relation &&
                   styles.errorInput,
               ]}
-              value={member.relation}
-              onChangeText={(text) => {
-                const familyDetails = [...formik.values.familyDetails];
-                familyDetails[index].relation = text;
-                formik.setFieldValue("familyDetails", familyDetails);
-              }}
-              onBlur={() => {
-                formik.setFieldTouched(
-                  `familyDetails[${index}].relation`,
-                  true,
-                );
-              }}
-              placeholder={`Enter ${getFieldLabel("relation")}`}
-            />
+            >
+              <Picker
+                selectedValue={member.relation}
+                onValueChange={(value) => {
+                  const familyDetails = [...formik.values.familyDetails];
+                  familyDetails[index].relation = value;
+                  formik.setFieldValue("familyDetails", familyDetails);
+                }}
+                onBlur={() => {
+                  formik.setFieldTouched(
+                    `familyDetails[${index}].relation`,
+                    true,
+                  );
+                }}
+              >
+                <Picker.Item label="--- Select ---" value="" />
+                <Picker.Item label="Mother" value="1" />
+                <Picker.Item label="Father" value="2" />
+                <Picker.Item label="Brother" value="3" />
+                <Picker.Item label="Sister" value="4" />
+                <Picker.Item label="Grand Father" value="5" />
+                <Picker.Item label="Grand Mother" value="6" />
+                <Picker.Item label="Spouse" value="7" />
+                <Picker.Item label="Daughter" value="8" />
+                <Picker.Item label="Son" value="9" />
+              </Picker>
+            </View>
+
             {formik.errors.familyDetails?.[index]?.relation &&
               formik.touched.familyDetails?.[index]?.relation && (
                 <Text style={styles.errorText}>
@@ -2938,32 +2953,39 @@ const WorkerRegistration = ({ route, navigation }) => {
       </View>
 
       <View style={styles.inputBlock}>
-        <Text style={styles.label}>{getFieldLabel("years")}</Text>
-        <TextInput
-          style={styles.input}
-          value={formik.values.years}
-          onChangeText={(text) => {
-            const value = text.replace(/\D/g, "");
-            formik.setFieldValue("years", value);
-          }}
-          placeholder={`Enter ${getFieldLabel("years")}`}
-          keyboardType="numeric"
-        />
-      </View>
+  <Text style={styles.label}>{getFieldLabel("years")}</Text>
 
-      <View style={styles.inputBlock}>
-        <Text style={styles.label}>{getFieldLabel("amount")}</Text>
-        <TextInput
-          style={styles.input}
-          value={formik.values.amount}
-          onChangeText={(text) => {
-            const value = text.replace(/\D/g, "");
-            formik.setFieldValue("amount", value);
-          }}
-          placeholder={`Enter ${getFieldLabel("amount")}`}
-          keyboardType="numeric"
-        />
-      </View>
+  <View style={styles.input}>
+    <Picker
+      selectedValue={formik.values.years}
+      onValueChange={(value) => {
+        formik.setFieldValue("years", value);
+
+        // ✅ calculate amount here
+        const amount = value ? Number(value) * 12 + 50 : "";
+        formik.setFieldValue("amount", amount.toString());
+      }}
+    >
+      <Picker.Item label="--- Select ---" value="" />
+      <Picker.Item label="1 Year" value="1" />
+      <Picker.Item label="2 Years" value="2" />
+      <Picker.Item label="3 Years" value="3" />
+      <Picker.Item label="4 Years" value="4" />
+      <Picker.Item label="5 Years" value="5" />
+    </Picker>
+  </View>
+</View>
+{console.log("formikkkkkkkkkkk",formik.values.amount)}
+<View style={styles.inputBlock}>
+  <Text style={styles.label}>{getFieldLabel("amount")}</Text>
+
+  <TextInput
+    style={[styles.input, { backgroundColor: "#eee" }]}
+    value={formik.values.amount}
+    editable={false}   // ✅ prevent manual editing
+    placeholder={`Enter ${getFieldLabel("amount")}`}
+  />
+</View>
 
       <View style={styles.inputBlock}>
         <View style={styles.checkboxContainer}>
