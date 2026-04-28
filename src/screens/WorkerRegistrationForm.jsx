@@ -503,6 +503,10 @@ const WorkerRegistration = ({ route, navigation }) => {
     workerId: Yup.string().nullable(),
   });
 
+  const loginData = useSelector((state) => state.LoginReducer);
+
+  const mobileNo = loginData?.mobile;
+console.log(mobileNo, loginData?.mobile)
   // Formik initialization
   const formik = useFormik({
     enableReinitialize: true,
@@ -519,7 +523,7 @@ const WorkerRegistration = ({ route, navigation }) => {
       fatherName: "",
       gender: "",
       dob: "",
-      phoneNo: loginData?.mobile || "9999999999",
+      phoneNo: String(loginData?.mobile )|| "",
       otherContactNo: "",
       religion: "",
       caste: "",
@@ -769,10 +773,6 @@ const WorkerRegistration = ({ route, navigation }) => {
   const [allCastes, setAllCastes] = useState([]);
   const [showerror, setShowerror] = useState("");
   const [religionList, setReligionList] = useState([]);
-
-  const loginData = useSelector((state) => state.LoginReducer);
-
-  const mobileNo = loginData?.mobile;
 
   const AadharClearValues = (setFieldValue) => {
     setFieldValue("firstName", "");
@@ -3172,20 +3172,6 @@ const WorkerRegistration = ({ route, navigation }) => {
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
-          {/* Header Section */}
-          {/* <View style={styles.modalHeader}>
-            <View style={styles.iconContainer}>
-              <Icon name="error-outline" size={45} color="#FF3B30" />
-            </View>
-            <TouchableOpacity
-              onPress={() => setErrorModalVisible(false)}
-              style={styles.closeBtn}
-            >
-              <Icon name="close" size={22} color="#666" />
-            </TouchableOpacity>
-          </View> */}
-
-          {/* Title */}
           <Text style={styles.modalTitle}>Validation Error</Text>
           <Text style={styles.modalSubtitle}>
             Please fix the following errors in the current tab:
@@ -3229,85 +3215,67 @@ const WorkerRegistration = ({ route, navigation }) => {
         </Text>
 
         {/* Tab Bar */}
-        <View
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingHorizontal: 10,
-            paddingVertical: 8,
             backgroundColor: "#fff",
+            maxHeight: 80,
+            minWidth:120,
+            padding:10
           }}
         >
-          {tabs.map((tab, index) => {
+          {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
 
             return (
-              <View
+              <TouchableOpacity
                 key={tab.id}
+                onPress={() => setActiveTab(tab.id)}
                 style={{
-                  flex: 1,
                   alignItems: "center",
+                  justifyContent: "center",
+                  paddingHorizontal: 2,
+                  paddingVertical: 8,
+                  marginHorizontal: 1,
                 }}
               >
-                {/* Step Circle */}
-                <TouchableOpacity
-                  onPress={() => setActiveTab(tab.id)}
+                {/* Circle container */}
+                <View
                   style={{
-                    width: 35,
-                    height: 35,
-                    borderRadius: 18,
-                    // backgroundColor: isActive ? "#007AFF" : "#ddd",
-                    borderColor: isActive ? "#007AFF" : "#ddd",
-                    borderWidth:1,
-                    padding:3,
+                    width: 40,
+                    height: 40,
+                    borderRadius: 22.5, // Half of width/height for perfect circle
+                    backgroundColor: isActive ? "#007AFF" : "#f0f0f0",
                     justifyContent: "center",
                     alignItems: "center",
+                    marginBottom: 4,
+                    minHeight:30
                   }}
                 >
-                  <Text
-                    style={{
-                      color: isActive ? "#fff" : "#333",
-                      fontSize: 12,
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {/* {index + 1} */}
-                    <Ionicons name={tab.icon} size={20} color={activeTab === tab.id ? "#007AFF" : "#666"} />
-                  </Text>
-                </TouchableOpacity>
+                  <Ionicons
+                    name={tab.icon}
+                    size={18}
+                    color={isActive ? "#fff" : "#666"}
+                  />
+                </View>
 
-                {/* Label */}
                 <Text
                   style={{
                     fontSize: 10,
-                    marginTop: 4,
                     color: isActive ? "#007AFF" : "#666",
                     textAlign: "center",
+                    width:75,
+                    flexWrap:"wrap",
+                    minHeight:30
                   }}
-                  numberOfLines={1}
                 >
                   {tab.name}
                 </Text>
-
-                {/* Line Connector */}
-                {index !== tabs.length - 1 && (
-                  <View
-                    style={{
-                      position: "absolute",
-                      right: -25,
-                      top: 14,
-                      width: 50,
-                      height: 2,
-                      backgroundColor: "#ccc",
-                      zIndex: -1,
-                    }}
-                  />
-                )}
-              </View>
+              </TouchableOpacity>
             );
           })}
-        </View>
+        </ScrollView>
 
         {/* Tab Content */}
         <ScrollView
