@@ -301,7 +301,7 @@ export const  styles = StyleSheet.create({
   modalContainer: {
     // width: width * 0.85,
     // maxHeight: height * 0.7,
-    backgroundColor: '#a5c15e',
+    backgroundColor: 'white',
     borderRadius: 24,
     overflow: 'hidden',
     shadowColor: '#000',
@@ -312,6 +312,7 @@ export const  styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 15,
     elevation: 10,
+    padding:10
   },
   modalHeader: {
     flexDirection: 'row',
@@ -348,7 +349,7 @@ export const  styles = StyleSheet.create({
   },
   modalSubtitle: {
     fontSize: 14,
-    color: 'white',
+    color: 'black',
     textAlign: 'center',
     paddingHorizontal: 20,
     marginBottom: 20,

@@ -2991,7 +2991,7 @@ const WorkerRegistration = ({ route, navigation }) => {
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
           {/* Header Section */}
-          <View style={styles.modalHeader}>
+          {/* <View style={styles.modalHeader}>
             <View style={styles.iconContainer}>
               <Icon name="error-outline" size={45} color="#FF3B30" />
             </View>
@@ -3001,7 +3001,7 @@ const WorkerRegistration = ({ route, navigation }) => {
             >
               <Icon name="close" size={22} color="#666" />
             </TouchableOpacity>
-          </View>
+          </View> */}
 
           {/* Title */}
           <Text style={styles.modalTitle}>Validation Error</Text>
