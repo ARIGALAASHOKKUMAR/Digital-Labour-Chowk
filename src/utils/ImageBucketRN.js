@@ -253,7 +253,7 @@ async function openCamera(formik, path, name, size, dispatch) {
 }
 
 // ✅ GALLERY
-async function openGallery(formik, path, name, size) {
+async function openGallery(formik, path, name, size,dispatch) {
   const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
   if (!permission.granted) {
@@ -274,7 +274,7 @@ async function openGallery(formik, path, name, size) {
 }
 
 // ✅ DOCUMENT
-async function pickDocument(formik, path, name, size) {
+async function pickDocument(formik, path, name, size,dispatch) {
   const result = await DocumentPicker.getDocumentAsync({});
 
   if (result.canceled) return;
@@ -295,7 +295,7 @@ export default async function ImageBucketRN(
 ) {
   try {
     if (mode === "document") {
-      return pickDocument(formik, path, name, size);
+      return pickDocument(formik, path, name, size,dispatch);
     }
 
     if (mode === "camera") {
@@ -303,7 +303,7 @@ export default async function ImageBucketRN(
     }
 
     if (mode === "gallery") {
-      return openGallery(formik, path, name, size);
+      return openGallery(formik, path, name, size,dispatch);
     }
 
     Alert.alert("Upload", "Choose option", [
@@ -313,11 +313,11 @@ export default async function ImageBucketRN(
       },
       {
         text: "Gallery",
-        onPress: () => openGallery(formik, path, name, size),
+        onPress: () => openGallery(formik, path, name, size,dispatch),
       },
       {
         text: "Files",
-        onPress: () => pickDocument(formik, path, name, size),
+        onPress: () => pickDocument(formik, path, name, size,dispatch),
       },
       { text: "Cancel", style: "cancel" },
     ]);

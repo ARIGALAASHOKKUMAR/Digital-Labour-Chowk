@@ -20,7 +20,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFormik, FormikProvider } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { currentLanguageData } from "../utils/te";
 import ImageBucketRN from "../utils/ImageBucketRN";
 import {
@@ -111,8 +111,6 @@ const WorkerRegistration = ({ route, navigation }) => {
 
   const generateOtpForAadhaar = async (aadhaarNo) => {
     try {
-      console.log("Generating OTP for:", aadhaarNo);
-
       const response = await commonAPICall(
         AADHAAR_OTP,
         { aadharNo: aadhaarNo },
@@ -140,47 +138,76 @@ const WorkerRegistration = ({ route, navigation }) => {
     }
   };
 
-  const verifyOtp = async (aadhaarNumber, setFieldValue) => {
+  const verifyOtp = async (aadhaarNumber, setFieldValue, value) => {
     if (!aadhaarOtp) {
       showInfoToast("Please enter OTP", "error");
       return;
     }
 
     setIsLoading(true);
+
     try {
       const response = await commonAPICall(
         VERIFY_AADHAAR_OTP,
         {
           txnNo,
-          otp: aadhaarOtp.toString(),
+          otp: value.toString(),
           aadharNo: aadhaarNumber || "",
         },
         "post",
         dispatch,
       );
-      console.log("rrrrrrrr", {
-        txnNo,
-        otp: aadhaarOtp.toString(),
-        aadharNo: aadhaarNumber || "",
-      });
-
-      if (response.status === 200) {
-        setOtpVerified(true);
+      if (response?.status === 200 && response?.data?.status === "success") {
+        setOtpVerified(true); // ✅ mark OTP verified
         setOtpVisible(false);
-        setFieldValue("aadhaarVerified", true);
-        if (response.data.name) {
-          setFieldValue("name", response.data.name);
+
+        // 🔥 parse ekyc response
+        let ekycData = {};
+
+        try {
+          ekycData =
+            typeof response?.data?.response === "string"
+              ? JSON.parse(response.data.response)
+              : response.data.response || {};
+        } catch (err) {
+          console.error("EKYC JSON parse error:", err);
         }
-        if (response.data.dob) {
-          setFieldValue("dob", formatDateToApi(response.data.dob));
+
+        // name
+        setFieldValue("firstName", ekycData?.name || "");
+
+        // father name cleanup
+        let father = ekycData?.co || "";
+        father = father
+          .replace("S/O,", "")
+          .replace("D/O,", "")
+          .replace("W/O,", "");
+
+        setFieldValue("fatherName", father);
+
+        // gender
+        const genderMap = {
+          M: "M",
+          F: "F",
+          MALE: "M",
+          FEMALE: "F",
+          O: "O",
+        };
+
+        setFieldValue(
+          "gender",
+          genderMap?.[ekycData?.gender?.toUpperCase()] || "",
+        );
+        // DOB convert (01-07-2002 → 2002-07-01)
+        let formattedDob = "";
+        if (ekycData?.dob?.includes("-")) {
+          const [dd, mm, yyyy] = ekycData.dob.split("-");
+          formattedDob = `${yyyy}-${mm}-${dd}`;
         }
-        setAadhaarOtp("");
-      } else {
+        setFieldValue("dob", formattedDob);
       }
     } catch (error) {
-      console.error("Error verifying OTP:", error);
-    } finally {
-      setIsLoading(false);
+      console.error("OTP verify error:", error);
     }
   };
 
@@ -479,26 +506,30 @@ const WorkerRegistration = ({ route, navigation }) => {
   // Formik initialization
   const formik = useFormik({
     enableReinitialize: true,
+
     initialValues: {
-      // Personal Details
       workerId: "",
+      workerRegId: "",
+
+      // ===== PERSONAL =====
       aadhaarNo: "",
       firstName: "",
-      soWo: "", // Son of / Wife of / Daughter of
+      lastName: "",
+      soWo: "",
       fatherName: "",
       gender: "",
       dob: "",
-      phoneNo: "",
+      phoneNo: loginData?.mobile || "",
       otherContactNo: "",
       religion: "",
       caste: "",
-      casteText: "", // For "Other" religion
+      casteText: "",
       subCaste: "",
-      subCasteText: "", // For "Other" religion
+      subCasteText: "",
       maritalStatus: "",
       aadhaarVerified: false,
 
-      // ========== TAB 1: FAMILY DETAILS ==========
+      // ===== FAMILY (OLD NAMES KEPT) =====
       familyDetails: [
         {
           familyMemberName: "",
@@ -510,15 +541,16 @@ const WorkerRegistration = ({ route, navigation }) => {
         },
       ],
 
-      // ========== TAB 2: BANK DETAILS ==========
+      // ===== BANK =====
       ifscCode: "",
       bankName: "",
       branchName: "",
       bankAccountNo: "",
       rbankAccountNo: "",
       nameInBank: "",
+      bankPhotoDesc: null,
 
-      // ========== TAB 3: PERMANENT ADDRESS ==========
+      // ===== PERMANENT ADDRESS =====
       permanentState: "",
       permanentDistrictCode: "",
       permanentMadalCode: "",
@@ -530,7 +562,7 @@ const WorkerRegistration = ({ route, navigation }) => {
       permanentLandMark: "",
       permanentCity: "",
 
-      // ========== TAB 3: PRESENT ADDRESS ==========
+      // ===== PRESENT ADDRESS =====
       isPermanent: false,
       presentState: "",
       presentDistrictCode: "",
@@ -543,72 +575,172 @@ const WorkerRegistration = ({ route, navigation }) => {
       presentLandMark: "",
       presentCity: "",
 
-      // ========== TAB 4: EMPLOYMENT DETAILS ==========
-      isNregs: "", // "Y" or "N"
+      // ===== FLAGS =====
+      isNregs: "",
       jobCardNo: "",
-      isUnionMember: "", // "Y" or "N"
+      wordDaysCopyDesc: "",
+      isUnionMember: "",
       unionName: "",
       regNo: "",
 
-      // ========== TAB 5: WORK DETAILS ==========
+      // ===== WORK =====
       empName: "",
       presentOfficeName: "",
       typeOfWork: "",
       otherTradeWork: "",
-      workCapability: "", // "yes" or "no"
+      workCapability: "",
       isMigrant: "",
 
-      // Work Location Fields (from Work Tab UI)
+      // OLD WORK LOCATION NAMES
       workDistrict: "",
       workMandal: "",
       workVillage: "",
       workDoorNo: "",
       workPincode: "",
 
-      // ========== TAB 6: DOCUMENTS ==========
+      // ===== FILES =====
       photoDesc: null,
-      signatureDesc: null,
+      aadhaarPhotoDesc: null,
       selfAffidavitDesc: null,
 
-      // ========== TAB 7: PAYMENT & DECLARATION ==========
+      // ===== PAYMENT =====
       years: "",
       amount: "",
       selfDeclaration: false,
     },
+
     validationSchema,
+
     onSubmit: async (values) => {
       setIsLoading(true);
+
       try {
+        // ✅ MAPPING OLD → NEW
+        const mappedValues = {
+          ...values,
+
+          // FAMILY MAPPING
+          familydetails: (values.familyDetails || []).map((f) => ({
+            memberName: f.familyMemberName,
+            relation: f.relation,
+            memberDob: f.memberDob,
+            memberUid: f.aadhaarNo,
+            isNomine: f.isNomine,
+            nominePer: f.nominePer,
+          })),
+
+          // WORK LOCATION MAPPING
+          officeDistrictCode: values.workDistrict,
+          officeMadalCode: values.workMandal,
+          officeVillageCode: values.workVillage,
+          officeDoorNo: values.workDoorNo,
+          officePincode: values.workPincode,
+
+          // PAYMENT MAPPING
+          workYears: values.years,
+          selfCheck: values.selfDeclaration,
+
+          // STATE FIX
+          state: values.permanentState || "AP",
+        };
+
+        // ✅ FINAL PAYLOAD
+        const payload = {
+          ...mappedValues,
+
+          otherContactNo: values.otherContactNo
+            ? Number(values.otherContactNo)
+            : null,
+
+          phoneNo: values.phoneNo ? Number(values.phoneNo) : null,
+          caste: values.caste ? Number(values.caste) : null,
+          subCaste: values.subCaste ? Number(values.subCaste) : null,
+          state: mappedValues.state ? Number(mappedValues.state) : null,
+
+          permanentDistrictCode: values.permanentDistrictCode
+            ? Number(values.permanentDistrictCode)
+            : null,
+
+          permanentMadalCode: values.permanentMadalCode
+            ? Number(values.permanentMadalCode)
+            : null,
+
+          permanentVillageCode: values.permanentVillageCode
+            ? Number(values.permanentVillageCode)
+            : null,
+
+          officeDistrictCode: mappedValues.officeDistrictCode
+            ? Number(mappedValues.officeDistrictCode)
+            : null,
+
+          officeMadalCode: mappedValues.officeMadalCode
+            ? Number(mappedValues.officeMadalCode)
+            : null,
+
+          officeVillageCode: mappedValues.officeVillageCode
+            ? Number(mappedValues.officeVillageCode)
+            : null,
+
+          workYears: mappedValues.workYears
+            ? Number(mappedValues.workYears)
+            : null,
+
+          amount: values.amount ? String(values.amount) : "0",
+
+          familydetails: mappedValues.familydetails.map((f) => ({
+            ...f,
+            relation: f.relation ? Number(f.relation) : null,
+            memberUid: f.memberUid ? Number(f.memberUid) : null,
+            nominePer: Number(f.nominePer || 0),
+          })),
+
+          entryBy: "ADMIN",
+          registeredBy: "OWN",
+
+          workerId: isEditMode ? data?.[0]?.worker_id : null,
+          workerRegId: isEditMode ? data?.[0]?.worker_reg_id : null,
+        };
+
         const formData = new FormData();
 
-        Object.keys(values).forEach((key) => {
-          if (key === "photoDesc" && values.photoDesc) {
-            formData.append(key, {
-              uri: values.photoDesc.uri,
-              type: values.photoDesc.type,
-              name: values.photoDesc.fileName || `photo_${Date.now()}.jpg`,
-            });
-          } else if (key === "signatureDesc" && values.signatureDesc) {
-            formData.append(key, {
-              uri: values.signatureDesc.uri,
-              type: values.signatureDesc.type,
-              name:
-                values.signatureDesc.fileName || `signature_${Date.now()}.jpg`,
-            });
-          } else if (key === "selfAffidavitDesc" && values.selfAffidavitDesc) {
-            formData.append(key, {
-              uri: values.selfAffidavitDesc.uri,
-              type: values.selfAffidavitDesc.type,
-              name:
-                values.selfAffidavitDesc.fileName ||
-                `declaration_${Date.now()}.jpg`,
-            });
-          } else if (key === "familyDetails") {
-            formData.append(key, JSON.stringify(values[key]));
-          } else if (key !== "aadhaarVerified") {
-            formData.append(key, values[key]);
-          }
-        });
+        // ✅ SEND PAYLOAD
+        formData.append("data", JSON.stringify(payload));
+
+        // ✅ FILES
+        if (values.photoDesc) {
+          formData.append("photoDesc", {
+            uri: values.photoDesc.uri,
+            type: values.photoDesc.type,
+            name: values.photoDesc.fileName || `photo_${Date.now()}.jpg`,
+          });
+        }
+
+        if (values.aadhaarPhotoDesc) {
+          formData.append("aadhaarPhotoDesc", {
+            uri: values.aadhaarPhotoDesc.uri,
+            type: values.aadhaarPhotoDesc.type,
+            name:
+              values.aadhaarPhotoDesc.fileName || `aadhaar_${Date.now()}.jpg`,
+          });
+        }
+
+        if (values.selfAffidavitDesc) {
+          formData.append("selfAffidavitDesc", {
+            uri: values.selfAffidavitDesc.uri,
+            type: values.selfAffidavitDesc.type,
+            name:
+              values.selfAffidavitDesc.fileName ||
+              `affidavit_${Date.now()}.jpg`,
+          });
+        }
+
+        if (values.bankPhotoDesc) {
+          formData.append("bankPhotoDesc", {
+            uri: values.bankPhotoDesc.uri,
+            type: values.bankPhotoDesc.type,
+            name: values.bankPhotoDesc.fileName || `bank_${Date.now()}.jpg`,
+          });
+        }
 
         const response = await axios.post(WORKER_REGISTRATION, formData, {
           headers: {
@@ -617,19 +749,19 @@ const WorkerRegistration = ({ route, navigation }) => {
         });
 
         if (response.data.success) {
-          //   showToast("Worker registered successfully!", "success");
           navigation.goBack();
-        } else {
-          //   showToast(response.data.message || "Registration failed", "error");
         }
       } catch (error) {
         console.error("Error submitting form:", error);
-        // showToast("Failed to register worker", "error");
       } finally {
         setIsLoading(false);
       }
     },
   });
+
+  console.log("formikkkk", formik.values.phoneNo);
+
+  console.log("lpgindata", loginData);
 
   // Handle adding/removing family members
   const addFamilyMember = () => {
@@ -666,12 +798,16 @@ const WorkerRegistration = ({ route, navigation }) => {
   const [showerror, setShowerror] = useState("");
   const [religionList, setReligionList] = useState([]);
 
+  const loginData = useSelector((state) => state.LoginReducer);
+
+  const mobileNo = loginData?.mobile;
+
   const AadharClearValues = (setFieldValue) => {
     setFieldValue("firstName", "");
     setFieldValue("fatherName", "");
     setFieldValue("gender", "");
     setFieldValue("dob", "");
-    setFieldValue("phoneNo", "");
+    // setFieldValue("phoneNo", "");
     setOtpVerified(false);
   };
 
@@ -778,72 +914,109 @@ const WorkerRegistration = ({ route, navigation }) => {
       </Text>
 
       {/* Aadhaar Number Field */}
+      {/* Aadhaar Field */}
       <View style={styles.inputBlock}>
         <Text style={styles.label}>
           {getFieldLabel("aadhaarNo")}{" "}
           <Text style={styles.requiredStar}>*</Text>
         </Text>
-        <TextInput
-          style={[
-            styles.input,
-            formik.errors.aadhaarNo &&
-              formik.touched.aadhaarNo &&
-              styles.inputError,
-          ]}
-          value={formik.values.aadhaarNo}
-          onChangeText={(text) => {
-            const value = text.replace(/\D/g, "").slice(0, 12);
-            AadharClearValues(formik.setFieldValue);
-            formik.setFieldValue("aadhaarNo", value);
-            setOtpVerified(false);
 
-            // Reset when user deletes
-            if (value.length < 12) {
-              setOtpVisible(false);
-              setIsOtpSent(false);
-              setTxnNo("");
-              return;
-            }
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <TextInput
+            style={[
+              styles.input,
+              { flex: 1 },
+              formik.errors.aadhaarNo &&
+                formik.touched.aadhaarNo &&
+                styles.inputError,
+            ]}
+            value={formik.values.aadhaarNo}
+            onChangeText={(text) => {
+              const value = text.replace(/\D/g, "").slice(0, 12);
+              AadharClearValues(formik.setFieldValue);
+              formik.setFieldValue("aadhaarNo", value);
+              setOtpVerified(false);
 
-            // Call OTP once when reaches 12 digits
-            if (value.length === 12 && !isOtpSent) {
+              if (value.length < 12) {
+                setOtpVisible(false);
+                setIsOtpSent(false);
+                setTxnNo("");
+              }
+            }}
+            onBlur={formik.handleBlur("aadhaarNo")}
+            placeholder={`Enter ${getFieldLabel("aadhaarNo")}`}
+            keyboardType="numeric"
+            maxLength={12}
+          />
+
+          <TouchableOpacity
+            style={{
+              marginLeft: 8,
+              backgroundColor: "#007BFF",
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              borderRadius: 6,
+              opacity: formik.values.aadhaarNo?.length === 12 ? 1 : 0.5,
+            }}
+            disabled={formik.values.aadhaarNo?.length !== 12 || isOtpSent}
+            onPress={() => {
               setIsOtpSent(true);
-              generateOtpForAadhaar(value);
-            }
-          }}
-          onBlur={formik.handleBlur("aadhaarNo")}
-          placeholder={`Enter ${getFieldLabel("aadhaarNo")}`}
-          keyboardType="numeric"
-          maxLength={12}
-        />
+              generateOtpForAadhaar(formik.values.aadhaarNo);
+            }}
+          >
+            <Text style={{ color: "#fff", fontSize: 12 }}>
+              {isOtpSent ? "OTP Sent" : "Get OTP"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {formik.errors.aadhaarNo && formik.touched.aadhaarNo && (
           <Text style={styles.errorText}>{formik.errors.aadhaarNo}</Text>
         )}
       </View>
 
-      {/* OTP Field - Only visible after OTP is sent */}
+      {/* OTP Field */}
       {otpVisible && (
         <View style={styles.inputBlock}>
           <Text style={styles.label}>
             Enter OTP <Text style={styles.requiredStar}>*</Text>
           </Text>
-          <View style={styles.otpContainer}>
+
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
             <TextInput
-              style={[styles.input, styles.otpInput]}
+              style={[styles.input, { flex: 1 }]}
               value={aadhaarOtp}
               onChangeText={(text) => {
                 const value = text.replace(/\D/g, "").slice(0, 6);
                 setAadhaarOtp(value);
-
-                if (value.length === 6) {
-                  verifyOtp(formik.values.aadhaarNo, formik.setFieldValue);
-                }
               }}
               placeholder="Enter OTP"
               keyboardType="numeric"
               maxLength={6}
             />
+
+            <TouchableOpacity
+              style={{
+                marginLeft: 8,
+                backgroundColor: "green",
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                borderRadius: 6,
+                opacity: aadhaarOtp?.length === 6 ? 1 : 0.5,
+              }}
+              disabled={aadhaarOtp?.length !== 6}
+              onPress={() =>
+                verifyOtp(
+                  formik.values.aadhaarNo,
+                  formik.setFieldValue,
+                  aadhaarOtp,
+                )
+              }
+            >
+              <Text style={{ color: "#fff", fontSize: 12 }}>Verify OTP</Text>
+            </TouchableOpacity>
           </View>
+
           {showerror !== "" && (
             <Text style={styles.errorText}>{showerror}</Text>
           )}
@@ -852,7 +1025,9 @@ const WorkerRegistration = ({ route, navigation }) => {
 
       {/* Verified Badge */}
       {otpVerified && (
-        <Text style={styles.successText}>✓ Aadhaar Verified</Text>
+        <Text style={[styles.successText, { marginTop: 8 }]}>
+          ✓ Aadhaar Verified
+        </Text>
       )}
 
       {/* First Name - Disabled until Aadhaar verified */}
@@ -992,10 +1167,6 @@ const WorkerRegistration = ({ route, navigation }) => {
               styles.inputError,
           ]}
           value={formik.values.phoneNo}
-          onChangeText={(text) => {
-            const value = text.replace(/\D/g, "").slice(0, 10);
-            formik.setFieldValue("phoneNo", value);
-          }}
           onBlur={formik.handleBlur("phoneNo")}
           placeholder={`Enter ${getFieldLabel("phoneNo")}`}
           keyboardType="numeric"
@@ -1971,11 +2142,25 @@ const WorkerRegistration = ({ route, navigation }) => {
 
       {/* Same as Permanent Address Switch */}
       <View style={styles.inputBlock}>
-        <View style={styles.switchContainer}>
-          <Text style={styles.label}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+          }}
+        >
+          <Text
+            style={{
+              flex: 1,
+              flexShrink: 1,
+              fontSize: 14,
+              marginRight: 10,
+            }}
+          >
             {getFieldLabel("isPermanent") ||
               "ప్రస్తుత చిరునామా శాశ్వత చిరునామా లాగే ఉందా?"}
           </Text>
+
           <Switch
             value={formik.values.isPermanent}
             onValueChange={(value) => {
@@ -2468,8 +2653,6 @@ const WorkerRegistration = ({ route, navigation }) => {
     </View>
   );
 
-  console.log("formik.values.photoDesc", formik.values.photoDesc);
-
   // Render Documents Tab
   const renderDocumentsTab = () => {
     const openPDF = (url) => {
@@ -2696,7 +2879,16 @@ const WorkerRegistration = ({ route, navigation }) => {
                       }
                     }}
                   >
-                    <Text style={styles.viewButtonText}>View File</Text>
+                    <Text
+                      style={{
+                        marginTop: 10,
+                        textAlign: "center",
+                        color: "blue",
+                        textDecorationLine: "underline",
+                      }}
+                    >
+                      Download File
+                    </Text>
                   </TouchableOpacity>
                 )}
             </View>
@@ -3128,14 +3320,6 @@ const WorkerRegistration = ({ route, navigation }) => {
       </View>
 
       {/* Loading Modal */}
-      <Modal transparent visible={isLoading} animationType="fade">
-        <View style={styles.loadingModal}>
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#007AFF" />
-            <Text style={styles.loadingText}>Processing...</Text>
-          </View>
-        </View>
-      </Modal>
     </FormikProvider>
   );
 };
