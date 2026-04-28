@@ -506,7 +506,6 @@ const WorkerRegistration = ({ route, navigation }) => {
   const loginData = useSelector((state) => state.LoginReducer);
 
   const mobileNo = loginData?.mobile;
-console.log(mobileNo, loginData?.mobile)
   // Formik initialization
   const formik = useFormik({
     enableReinitialize: true,
@@ -523,7 +522,7 @@ console.log(mobileNo, loginData?.mobile)
       fatherName: "",
       gender: "",
       dob: "",
-      phoneNo: String(loginData?.mobile )|| "",
+      phoneNo: String(loginData?.mobile) || "",
       otherContactNo: "",
       religion: "",
       caste: "",
@@ -735,9 +734,8 @@ console.log(mobileNo, loginData?.mobile)
     },
   });
 
-  console.log("formikkkk", formik.values.phoneNo);
-
-  console.log("lpgindata", loginData);
+  console.log("formikkkk", formik.values.permanentState);
+  console.log("satteliost", statesList);
 
   // Handle adding/removing family members
   const addFamilyMember = () => {
@@ -942,9 +940,9 @@ console.log(mobileNo, loginData?.mobile)
           </TouchableOpacity>
         </View>
 
-        {formik.errors.aadhaarNo && formik.touched.aadhaarNo && (
+        {/* {formik.errors.aadhaarNo && formik.touched.aadhaarNo && (
           <Text style={styles.errorText}>{formik.errors.aadhaarNo}</Text>
-        )}
+        )} */}
       </View>
 
       {/* OTP Field */}
@@ -1021,9 +1019,9 @@ console.log(mobileNo, loginData?.mobile)
           placeholder={`Enter ${getFieldLabel("firstName")}`}
           editable={false}
         />
-        {formik.errors.firstName && formik.touched.firstName && (
+        {/* {formik.errors.firstName && formik.touched.firstName && (
           <Text style={styles.errorText}>{formik.errors.firstName}</Text>
-        )}
+        )} */}
       </View>
 
       {/* Father Name - Disabled until Aadhaar verified */}
@@ -1045,9 +1043,9 @@ console.log(mobileNo, loginData?.mobile)
           placeholder={`Enter ${getFieldLabel("fatherName")}`}
           editable={false}
         />
-        {formik.errors.fatherName && formik.touched.fatherName && (
+        {/* {formik.errors.fatherName && formik.touched.fatherName && (
           <Text style={styles.errorText}>{formik.errors.fatherName}</Text>
-        )}
+        )} */}
       </View>
 
       {/* Gender - Disabled until Aadhaar verified */}
@@ -1096,9 +1094,9 @@ console.log(mobileNo, loginData?.mobile)
             <Text style={styles.radioLabel}>{getFieldLabel("others")}</Text>
           </TouchableOpacity>
         </View>
-        {formik.errors.gender && formik.touched.gender && (
+        {/* {formik.errors.gender && formik.touched.gender && (
           <Text style={styles.errorText}>{formik.errors.gender}</Text>
-        )}
+        )} */}
       </View>
 
       {/* Date of Birth - Disabled until Aadhaar verified */}
@@ -1121,9 +1119,9 @@ console.log(mobileNo, loginData?.mobile)
           </Text>
           <Ionicons name="calendar-outline" size={20} color="#555" />
         </TouchableOpacity>
-        {formik.errors.dob && formik.touched.dob && (
+        {/* {formik.errors.dob && formik.touched.dob && (
           <Text style={styles.errorText}>{formik.errors.dob}</Text>
-        )}
+        )} */}
       </View>
 
       {/* Phone Number - Disabled until Aadhaar verified */}
@@ -1145,9 +1143,9 @@ console.log(mobileNo, loginData?.mobile)
           maxLength={10}
           editable={false}
         />
-        {formik.errors.phoneNo && formik.touched.phoneNo && (
+        {/* {formik.errors.phoneNo && formik.touched.phoneNo && (
           <Text style={styles.errorText}>{formik.errors.phoneNo}</Text>
-        )}
+        )} */}
       </View>
 
       {/* Religion Field */}
@@ -1198,9 +1196,9 @@ console.log(mobileNo, loginData?.mobile)
             )}
           </Picker>
         </View>
-        {formik.errors.religion && formik.touched.religion && (
+        {/* {formik.errors.religion && formik.touched.religion && (
           <Text style={styles.errorText}>{formik.errors.religion}</Text>
-        )}
+        )} */}
       </View>
 
       {/* Caste Field */}
@@ -1247,9 +1245,9 @@ console.log(mobileNo, loginData?.mobile)
             </Picker>
           </View>
         )}
-        {formik.errors.caste && formik.touched.caste && (
+        {/* {formik.errors.caste && formik.touched.caste && (
           <Text style={styles.errorText}>{formik.errors.caste}</Text>
-        )}
+        )} */}
         {formik.values.religion === "Other" &&
           formik.errors.casteText &&
           formik.touched.casteText && (
@@ -1301,9 +1299,9 @@ console.log(mobileNo, loginData?.mobile)
             </Picker>
           </View>
         )}
-        {formik.errors.subCaste && formik.touched.subCaste && (
+        {/* {formik.errors.subCaste && formik.touched.subCaste && (
           <Text style={styles.errorText}>{formik.errors.subCaste}</Text>
-        )}
+        )} */}
         {formik.values.religion === "Other" &&
           formik.errors.subCasteText &&
           formik.touched.subCasteText && (
@@ -1333,9 +1331,9 @@ console.log(mobileNo, loginData?.mobile)
             <Picker.Item label="Widow" value="Widow" />
           </Picker>
         </View>
-        {formik.errors.maritalStatus && formik.touched.maritalStatus && (
+        {/* {formik.errors.maritalStatus && formik.touched.maritalStatus && (
           <Text style={styles.errorText}>{formik.errors.maritalStatus}</Text>
-        )}
+        )} */}
       </View>
 
       {/* Other Contact Number */}
@@ -1357,9 +1355,9 @@ console.log(mobileNo, loginData?.mobile)
           keyboardType="numeric"
           maxLength={10}
         />
-        {formik.errors.otherContactNo && formik.touched.otherContactNo && (
+        {/* {formik.errors.otherContactNo && formik.touched.otherContactNo && (
           <Text style={styles.errorText}>{formik.errors.otherContactNo}</Text>
-        )}
+        )} */}
       </View>
 
       {/* Date Picker Modal */}
@@ -1948,111 +1946,141 @@ console.log(mobileNo, loginData?.mobile)
             <Picker.Item label="---Select State---" value="" />
             {statesList.map((state) => (
               <Picker.Item
-                key={state.state_code}
+                key={state.state_id}
                 label={state.state_name}
-                value={String(state.state_code)}
+                value={String(state.state_id)}
               />
             ))}
           </Picker>
         </View>
       </View>
 
-      {/* District */}
+      {/* District - Conditional rendering based on state code */}
       <View style={styles.inputBlock}>
         <Text style={styles.label}>
           {getFieldLabel("permanentDistrictCode") || "జిల్లా"}{" "}
           <Text style={styles.requiredStar}>*</Text>
         </Text>
-        <View style={styles.selectBox}>
-          <Picker
-            selectedValue={formik.values.permanentDistrictCode}
-            onValueChange={(itemValue) => {
-              formik.setFieldValue("permanentDistrictCode", itemValue);
-              formik.setFieldValue("permanentMadalCode", "");
-              formik.setFieldValue("permanentVillageCode", "");
+        {formik.values.permanentState === "2" ? (
+          <View style={styles.selectBox}>
+            <Picker
+              selectedValue={formik.values.permanentDistrictCode}
+              onValueChange={(itemValue) => {
+                formik.setFieldValue("permanentDistrictCode", itemValue);
+                formik.setFieldValue("permanentMadalCode", "");
+                formik.setFieldValue("permanentVillageCode", "");
 
-              setMandals([]);
-              setVillages([]);
+                setMandals([]);
+                setVillages([]);
 
-              if (itemValue) {
-                getMandals(itemValue, "per");
-              }
-            }}
-            enabled={!!formik.values.permanentState}
-          >
-            <Picker.Item label="---Select District---" value="" />
-            {dists28.map((district) => (
-              <Picker.Item
-                key={district.dist_code}
-                label={district.dist_name}
-                value={String(district.dist_code)}
-              />
-            ))}
-          </Picker>
-        </View>
+                if (itemValue) {
+                  getMandals(itemValue, "per");
+                }
+              }}
+              enabled={!!formik.values.permanentState}
+            >
+              <Picker.Item label="---Select District---" value="" />
+              {dists28.map((district) => (
+                <Picker.Item
+                  key={district.dist_code}
+                  label={district.dist_name}
+                  value={String(district.dist_code)}
+                />
+              ))}
+            </Picker>
+          </View>
+        ) : (
+          <TextInput
+            style={styles.input}
+            value={formik.values.permanentDistrictCode}
+            onChangeText={formik.handleChange("permanentDistrictCode")}
+            placeholder="Enter District"
+            editable={!!formik.values.permanentState}
+          />
+        )}
       </View>
 
-      {/* Mandal */}
+      {/* Mandal - Conditional rendering based on state code */}
       <View style={styles.inputBlock}>
         <Text style={styles.label}>
           {getFieldLabel("permanentMadalCode") || "మండలం"}{" "}
           <Text style={styles.requiredStar}>*</Text>
         </Text>
-        <View style={styles.selectBox}>
-          <Picker
-            selectedValue={formik.values.permanentMadalCode}
-            onValueChange={(itemValue) => {
-              formik.setFieldValue("permanentMadalCode", itemValue);
-              formik.setFieldValue("permanentVillageCode", "");
+        {formik.values.permanentState === "2" ? (
+          <View style={styles.selectBox}>
+            <Picker
+              selectedValue={formik.values.permanentMadalCode}
+              onValueChange={(itemValue) => {
+                formik.setFieldValue("permanentMadalCode", itemValue);
+                formik.setFieldValue("permanentVillageCode", "");
 
-              setVillages([]);
+                setVillages([]);
 
-              if (itemValue && formik.values.permanentDistrictCode) {
-                getVillages(
-                  itemValue,
-                  formik.values.permanentDistrictCode,
-                  "per",
-                );
-              }
-            }}
-            enabled={!!formik.values.permanentDistrictCode}
-          >
-            <Picker.Item label="---Select Mandal---" value="" />
-            {mandals.map((mandal) => (
-              <Picker.Item
-                key={mandal.mandalCode}
-                label={mandal.mandalName}
-                value={String(mandal.mandalCode)}
-              />
-            ))}
-          </Picker>
-        </View>
+                if (itemValue && formik.values.permanentDistrictCode) {
+                  getVillages(
+                    itemValue,
+                    formik.values.permanentDistrictCode,
+                    "per",
+                  );
+                }
+              }}
+              enabled={!!formik.values.permanentDistrictCode}
+            >
+              <Picker.Item label="---Select Mandal---" value="" />
+              {mandals.map((mandal) => (
+                <Picker.Item
+                  key={mandal.mandalCode}
+                  label={mandal.mandalName}
+                  value={String(mandal.mandalCode)}
+                />
+              ))}
+            </Picker>
+          </View>
+        ) : (
+          <TextInput
+            style={styles.input}
+            value={formik.values.permanentMadalCode}
+            onChangeText={formik.handleChange("permanentMadalCode")}
+            placeholder="Enter Mandal"
+            editable={!!formik.values.permanentDistrictCode}
+          />
+        )}
       </View>
 
-      {/* Village */}
+      {/* Village - Conditional rendering based on state code */}
       <View style={styles.inputBlock}>
         <Text style={styles.label}>
           {getFieldLabel("permanentVillageCode") || "గ్రామం"}{" "}
           <Text style={styles.requiredStar}>*</Text>
         </Text>
-        <View style={styles.selectBox}>
-          <Picker
-            selectedValue={formik.values.permanentVillageCode}
-            onValueChange={(itemValue) => {
-              formik.setFieldValue("permanentVillageCode", itemValue);
-            }}
-            enabled={!!formik.values.permanentMadalCode}
-          >
-            <Picker.Item label="---Select Village---" value="" />
-            {villages.map((village) => (
-              <Picker.Item
-                key={village.village_code}
-                label={village.village_name}
-                value={String(village.village_code)}
-              />
-            ))}
-          </Picker>
-        </View>
+        {formik.values.permanentState === "2" ? (
+          <View style={styles.selectBox}>
+            <Picker
+              selectedValue={formik.values.permanentVillageCode}
+              onValueChange={(itemValue) => {
+                formik.setFieldValue("permanentVillageCode", itemValue);
+              }}
+              enabled={!!formik.values.permanentMadalCode}
+            >
+              <Picker.Item label="---Select Village---" value="" />
+              {villages.map((village) => (
+                <Picker.Item
+                  key={village.village_code}
+                  label={village.village_name}
+                  value={String(village.village_code)}
+                />
+              ))}
+            </Picker>
+          </View>
+        ) : (
+          <TextInput
+            style={styles.input}
+            value={formik.values.permanentVillageCode}
+            onChangeText={formik.handleChange("permanentVillageCode")}
+            placeholder="Enter Village"
+            editable={!!formik.values.permanentMadalCode}
+          />
+        )}
       </View>
 
       {/* Pincode */}
@@ -2168,9 +2196,9 @@ console.log(mobileNo, loginData?.mobile)
                 <Picker.Item label="---Select State---" value="" />
                 {statesList.map((state) => (
                   <Picker.Item
-                    key={state.state_code}
+                    key={state.state_id}
                     label={state.state_name}
-                    value={String(state.state_code)}
+                    value={String(state.state_id)}
                   />
                 ))}
               </Picker>
@@ -2181,82 +2209,109 @@ console.log(mobileNo, loginData?.mobile)
             <Text style={styles.label}>
               {getFieldLabel("permanentDistrictCode") || "జిల్లా"}
             </Text>
-            <View style={styles.selectBox}>
-              <Picker
-                selectedValue={formik.values.presentDistrictCode}
-                onValueChange={(itemValue) => {
-                  formik.setFieldValue("presentDistrictCode", itemValue);
-                  formik.setFieldValue("presentMadalCode", "");
-                  formik.setFieldValue("presentVillageCode", "");
-                  if (itemValue) {
-                    getMandals(itemValue, "pre");
-                  }
-                }}
-              >
-                <Picker.Item label="---Select District---" value="" />
-                {dists28.map((district) => (
-                  <Picker.Item
-                    key={district.dist_code}
-                    label={district.dist_name}
-                    value={String(district.dist_code)}
-                  />
-                ))}
-              </Picker>
-            </View>
+            {formik.values.presentState === "2" ? (
+              <View style={styles.selectBox}>
+                <Picker
+                  selectedValue={formik.values.presentDistrictCode}
+                  onValueChange={(itemValue) => {
+                    formik.setFieldValue("presentDistrictCode", itemValue);
+                    formik.setFieldValue("presentMadalCode", "");
+                    formik.setFieldValue("presentVillageCode", "");
+                    if (itemValue) {
+                      getMandals(itemValue, "pre");
+                    }
+                  }}
+                >
+                  <Picker.Item label="---Select District---" value="" />
+                  {dists28.map((district) => (
+                    <Picker.Item
+                      key={district.dist_code}
+                      label={district.dist_name}
+                      value={String(district.dist_code)}
+                    />
+                  ))}
+                </Picker>
+              </View>
+            ) : (
+              <TextInput
+                style={styles.input}
+                value={formik.values.presentDistrictCode}
+                onChangeText={formik.handleChange("presentDistrictCode")}
+                placeholder="Enter District"
+              />
+            )}
           </View>
 
           <View style={styles.inputBlock}>
             <Text style={styles.label}>
               {getFieldLabel("presentMadalCode") || "మండలం"}
             </Text>
-            <View style={styles.selectBox}>
-              <Picker
-                selectedValue={formik.values.presentMadalCode}
-                onValueChange={(itemValue) => {
-                  formik.setFieldValue("presentMadalCode", itemValue);
-                  formik.setFieldValue("presentVillageCode", "");
-                  if (itemValue && formik.values.presentDistrictCode) {
-                    getVillages(
-                      itemValue,
-                      formik.values.presentDistrictCode,
-                      "pre",
-                    );
-                  }
-                }}
-              >
-                <Picker.Item label="---Select Mandal---" value="" />
-                {mandals2.map((mandal) => (
-                  <Picker.Item
-                    key={mandal.mandalCode}
-                    label={mandal.mandalName}
-                    value={String(mandal.mandalCode)}
-                  />
-                ))}
-              </Picker>
-            </View>
+            {formik.values.presentState === "2" ? (
+              <View style={styles.selectBox}>
+                <Picker
+                  selectedValue={formik.values.presentMadalCode}
+                  onValueChange={(itemValue) => {
+                    formik.setFieldValue("presentMadalCode", itemValue);
+                    formik.setFieldValue("presentVillageCode", "");
+                    if (itemValue && formik.values.presentDistrictCode) {
+                      getVillages(
+                        itemValue,
+                        formik.values.presentDistrictCode,
+                        "pre",
+                      );
+                    }
+                  }}
+                >
+                  <Picker.Item label="---Select Mandal---" value="" />
+                  {mandals2.map((mandal) => (
+                    <Picker.Item
+                      key={mandal.mandalCode}
+                      label={mandal.mandalName}
+                      value={String(mandal.mandalCode)}
+                    />
+                  ))}
+                </Picker>
+              </View>
+            ) : (
+              <TextInput
+                style={styles.input}
+                value={formik.values.presentMadalCode}
+                onChangeText={formik.handleChange("presentMadalCode")}
+                placeholder="Enter Mandal"
+              />
+            )}
           </View>
 
           <View style={styles.inputBlock}>
             <Text style={styles.label}>
               {getFieldLabel("presentVillageCode") || "గ్రామం"}
             </Text>
-            <View style={styles.selectBox}>
-              <Picker
-                selectedValue={formik.values.presentVillageCode}
-                onValueChange={(itemValue) => {
-                  formik.setFieldValue("presentVillageCode", itemValue);
-                }}
-              >
-                <Picker.Item label="---Select Village---" value="" />
-                {villages2.map((village) => (
-                  <Picker.Item
-                    key={village.village_code}
-                    label={village.village_name}
-                    value={String(village.village_code)}
-                  />
-                ))}
-              </Picker>
-            </View>
+            {formik.values.presentState === "2" ? (
+              <View style={styles.selectBox}>
+                <Picker
+                  selectedValue={formik.values.presentVillageCode}
+                  onValueChange={(itemValue) => {
+                    formik.setFieldValue("presentVillageCode", itemValue);
+                  }}
+                >
+                  <Picker.Item label="---Select Village---" value="" />
+                  {villages2.map((village) => (
+                    <Picker.Item
+                      key={village.village_code}
+                      label={village.village_name}
+                      value={String(village.village_code)}
+                    />
+                  ))}
+                </Picker>
+              </View>
+            ) : (
+              <TextInput
+                style={styles.input}
+                value={formik.values.presentVillageCode}
+                onChangeText={formik.handleChange("presentVillageCode")}
+                placeholder="Enter Village"
+              />
+            )}
           </View>
 
           <View style={styles.inputBlock}>
@@ -3221,8 +3276,8 @@ console.log(mobileNo, loginData?.mobile)
           style={{
             backgroundColor: "#fff",
             maxHeight: 80,
-            minWidth:120,
-            padding:10
+            minWidth: 120,
+            padding: 10,
           }}
         >
           {tabs.map((tab) => {
@@ -3250,7 +3305,7 @@ console.log(mobileNo, loginData?.mobile)
                     justifyContent: "center",
                     alignItems: "center",
                     marginBottom: 4,
-                    minHeight:30
+                    minHeight: 30,
                   }}
                 >
                   <Ionicons
@@ -3265,9 +3320,9 @@ console.log(mobileNo, loginData?.mobile)
                     fontSize: 10,
                     color: isActive ? "#007AFF" : "#666",
                     textAlign: "center",
-                    width:75,
-                    flexWrap:"wrap",
-                    minHeight:30
+                    width: 75,
+                    flexWrap: "wrap",
+                    minHeight: 30,
                   }}
                 >
                   {tab.name}
