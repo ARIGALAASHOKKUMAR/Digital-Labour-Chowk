@@ -431,7 +431,7 @@ const LoginCommon = ({ navigation }) => {
 
       <TouchableOpacity
         style={styles.backBtn}
-        onPress={goBackToActionSelection}
+        onPress={goBackToRoleSelection}
         activeOpacity={0.8}
       >
         <Ionicons name="arrow-back" size={20} color="#1e3a5f" />
