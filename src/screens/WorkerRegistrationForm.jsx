@@ -2860,7 +2860,7 @@ const WorkerRegistration = ({ route, navigation }) => {
                     "APFD/WORKER/DECLARATION/",
                     "selfAffidavitDesc",
                     20971520,
-                    "file",
+                    "document",
                     dispatch,
                   );
                 }}
