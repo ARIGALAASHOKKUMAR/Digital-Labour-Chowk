@@ -79,6 +79,8 @@ const SiteLayout = ({
 
   const userName = username || "User";
 
+  
+
   const [profileVisible, setProfileVisible] = useState(false);
   const [logoutVisible, setLogoutVisible] = useState(false);
   const [notificationVisible, setNotificationVisible] = useState(false);
@@ -608,7 +610,8 @@ const SiteLayout = ({
                   item?.menuitemname === "User Services" ||
                   item?.menuitemname === "Services" ||
                   item?.menuitemname === "Reports" ||
-                  item?.menuitemname === "GEO TAGGING",
+                  item?.menuitemname === "GEO TAGGING" ||
+                  item?.menuitemname === "Worker Registration",
               )
               .map((item, index) => {
                 const active = isParentActive(item);
@@ -625,6 +628,8 @@ const SiteLayout = ({
                       return "document-text-outline";
                     case "GEO TAGGING":
                       return "business-outline"; // or "add-circle-outline"
+                    case "Worker Registration":
+                      return "person-add-outline";
                     default:
                       return "apps-outline";
                   }

@@ -33,6 +33,7 @@ import {
 import { profileMenu } from "../utils/CommonFunctions";
 import ImageBucketRN from "../utils/ImageBucketRN";
 import OldProfileUpdate from "./OldProfileUpdate";
+import { globalStyes } from "../screens/GlobalStyles";
 
 // ==================== Basic Details Component ====================
 
@@ -373,13 +374,14 @@ const BasicDetails = ({ userData, onUpdateSuccess }) => {
               </Text>
               <View
                 style={[
-                  styles.selectBox,
+                  globalStyes.selectBox,
                   formik.errors.employerTypeId &&
                     formik.touched.employerTypeId &&
                     styles.inputError,
                 ]}
               >
                 <Picker
+                  style={globalStyes.pickerText}
                   selectedValue={formik.values.employerTypeId}
                   onValueChange={(itemValue) => {
                     formik.setFieldTouched("employerTypeId", true);
@@ -528,13 +530,14 @@ const IdentityVerification = ({ userData, onUpdateSuccess }) => {
           </Text>
           <View
             style={[
-              styles.selectBox,
+              globalStyes.selectBox,
               formik.errors.documentType &&
                 formik.touched.documentType &&
                 styles.inputError,
             ]}
           >
             <Picker
+              style={globalStyes.pickerText}
               selectedValue={formik.values.documentType}
               onValueChange={(itemValue) => {
                 formik.setFieldTouched("documentType", true);
@@ -935,13 +938,14 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
           </Text>
           <View
             style={[
-              styles.selectBox,
+              globalStyes.selectBox,
               formik.errors.district &&
                 formik.touched.district &&
                 styles.inputError,
             ]}
           >
             <Picker
+              style={globalStyes.pickerText}
               selectedValue={formik.values.district}
               onValueChange={(itemValue) => {
                 formik.setFieldTouched("district", true);
@@ -980,13 +984,14 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
           </Text>
           <View
             style={[
-              styles.selectBox,
+              globalStyes.selectBox,
               formik.errors.mandal &&
                 formik.touched.mandal &&
                 styles.inputError,
             ]}
           >
             <Picker
+              style={globalStyes.pickerText}
               selectedValue={formik.values.mandal}
               onValueChange={(itemValue) => {
                 formik.setFieldTouched("mandal", true);
@@ -1024,13 +1029,14 @@ const LocationInformation = ({ userData, onUpdateSuccess }) => {
           </Text>
           <View
             style={[
-              styles.selectBox,
+              globalStyes.selectBox,
               formik.errors.village &&
                 formik.touched.village &&
                 styles.inputError,
             ]}
           >
             <Picker
+              style={globalStyes.pickerText}
               selectedValue={formik.values.village}
               onValueChange={(itemValue) => {
                 formik.setFieldTouched("village", true);
@@ -1496,13 +1502,14 @@ const SkillDetails = ({ userData, onUpdateSuccess }) => {
           </Text>
           <View
             style={[
-              styles.selectBox,
+              globalStyes.selectBox,
               formik.errors.workType &&
                 formik.touched.workType &&
                 styles.inputError,
             ]}
           >
             <Picker
+              style={globalStyes.pickerText}
               selectedValue={formik.values.workType}
               onValueChange={(itemValue) => {
                 formik.setFieldTouched("workType", true);
@@ -2295,7 +2302,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
               </Text>
               <View
                 style={[
-                  styles.selectBox,
+                  globalStyes.selectBox,
                   formik.touched.workerExperienceList?.[index]?.paymentStatus &&
                     formik.errors.workerExperienceList?.[index]
                       ?.paymentStatus &&
@@ -2303,6 +2310,7 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
                 ]}
               >
                 <Picker
+                  style={globalStyes.pickerText}
                   selectedValue={item.paymentStatus}
                   onValueChange={(itemValue) => {
                     formik.setFieldTouched(
@@ -2372,13 +2380,14 @@ const WorkExperience = ({ userData, onUpdateSuccess }) => {
               </Text>
               <View
                 style={[
-                  styles.selectBox,
+                  globalStyes.selectBox,
                   formik.touched.workerExperienceList?.[index]?.rating &&
                     formik.errors.workerExperienceList?.[index]?.rating &&
                     styles.inputError,
                 ]}
               >
                 <Picker
+                  style={globalStyes.pickerText}
                   selectedValue={item.rating}
                   onValueChange={(itemValue) => {
                     formik.setFieldTouched(
@@ -2692,13 +2701,14 @@ const EmployerWorkDetails = ({ userData, onUpdateSuccess }) => {
 
           <View
             style={[
-              styles.selectBox,
+              globalStyes.selectBox,
               formik.errors.averageWorkersHiredPerMonth &&
                 formik.touched.averageWorkersHiredPerMonth &&
                 styles.inputError,
             ]}
           >
             <Picker
+              style={globalStyes.pickerText}
               selectedValue={formik.values.averageWorkersHiredPerMonth}
               onValueChange={(itemValue) => {
                 formik.setFieldTouched("averageWorkersHiredPerMonth", true);
@@ -2873,12 +2883,13 @@ const Education = ({ userData, onUpdateSuccess }) => {
                       </Text>
                       <View
                         style={[
-                          styles.selectBox,
+                          globalStyes.selectBox,
                           getError(index, "educationLevel") &&
                             styles.inputError,
                         ]}
                       >
                         <Picker
+                          style={globalStyes.pickerText}
                           selectedValue={item.educationLevel}
                           onValueChange={(itemValue) => {
                             formik.setFieldTouched(
@@ -3229,7 +3240,10 @@ const ProfileUpdate = () => {
   };
 
   useEffect(() => {
-    {(state.roleName == "DLC Employer" || state.roleName === "DLC Worker") && overalldetails()}
+    {
+      (state.roleName == "DLC Employer" || state.roleName === "DLC Worker") &&
+        overalldetails();
+    }
   }, [refreshKey]);
 
   const handleRefreshProfile = () => {
@@ -3359,9 +3373,7 @@ const ProfileUpdate = () => {
     );
   };
 
-
-  console.log("state.roleName state.roleName ",state.roleId );
-  
+  console.log("state.roleName state.roleName ", state.roleId);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

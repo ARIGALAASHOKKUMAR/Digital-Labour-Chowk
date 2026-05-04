@@ -31,6 +31,7 @@ import { dists28 } from "../utils/CommonFunctions";
 import * as Location from "expo-location";
 import { showErrorToast } from "../utils/showToast";
 import { hideLoader, showLoader } from "../actions";
+import { globalStyes } from "./GlobalStyles";
 
 const GeoTagging = () => {
   const dispatch = useDispatch();
@@ -219,7 +220,7 @@ const GeoTagging = () => {
     };
 
     fetchLocations();
-  }, [roleId,existingData]);
+  }, [roleId, existingData]);
 
   const checkDistance = async () => {
     try {
@@ -250,7 +251,8 @@ const GeoTagging = () => {
               ? `${(distanceInMeters / 1000).toFixed(2)} km`
               : `${distanceInMeters.toFixed(2)} meters`;
 
-          showErrorToast(
+          Alert.alert(
+            "Distance Alert",
             `You are ${formattedDistance} away from current location, it should be less than 50m`,
           );
           setStatus(false);
@@ -384,12 +386,13 @@ const GeoTagging = () => {
 
           {/* DISTRICT */}
           <Text style={styles.label}>District / జిల్లా</Text>
-          <View style={styles.selectBox}>
+          <View style={globalStyes.selectBox}>
             <Picker
               selectedValue={formik.values.districtId}
               onValueChange={(value) =>
                 formik.setFieldValue("districtId", value)
               }
+              style={globalStyes.pickerText}
               enabled={roleId !== 4 || !existingData} // Disable for roleId 11 if data exists
             >
               <Picker.Item label="Select District" value="" />
@@ -408,12 +411,13 @@ const GeoTagging = () => {
 
           {/* CATEGORY */}
           <Text style={styles.label}>Category / వర్గం</Text>
-          <View style={styles.selectBox}>
+          <View style={globalStyes.selectBox}>
             <Picker
               selectedValue={formik.values.categoryId}
               onValueChange={(value) =>
                 formik.setFieldValue("categoryId", value)
               }
+              style={globalStyes.pickerText}
               enabled={roleId !== 4 || !existingData} // Disable for roleId 11 if data exists
             >
               <Picker.Item label="Select Category" value="" />
@@ -805,6 +809,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 6,
+    backgroundColor: "#fff",
   },
 
   uploadButton: {
@@ -862,5 +867,8 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 12,
     marginTop: 2,
+  },
+  pickerText: {
+    color: "#000", // Force black text in all modes
   },
 });

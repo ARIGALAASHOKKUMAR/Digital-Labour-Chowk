@@ -23,6 +23,8 @@ import {
   GETSKILLS,
   GETVILLAGESAPP,
 } from "../utils/utils";
+import { globalStyes } from "./GlobalStyles";
+
 
 const PostJob = ({ route, navigation }) => {
   const dispatch = useDispatch();
@@ -475,7 +477,7 @@ const PostJob = ({ route, navigation }) => {
             </Text>
             <View
               style={[
-                styles.selectBox,
+                globalStyes.selectBox,
                 formik.errors.district &&
                   formik.touched.district &&
                   styles.inputError,
@@ -517,7 +519,7 @@ const PostJob = ({ route, navigation }) => {
             </Text>
             <View
               style={[
-                styles.selectBox,
+                globalStyes.selectBox,
                 formik.errors.mandal &&
                   formik.touched.mandal &&
                   styles.inputError,
@@ -558,7 +560,7 @@ const PostJob = ({ route, navigation }) => {
             </Text>
             <View
               style={[
-                styles.selectBox,
+                globalStyes.selectBox,
                 formik.errors.village &&
                   formik.touched.village &&
                   styles.inputError,
@@ -795,7 +797,7 @@ const PostJob = ({ route, navigation }) => {
             </Text>
             <View
               style={[
-                styles.selectBox,
+                globalStyes.selectBox,
                 formik.errors.preferredWorkType &&
                   formik.touched.preferredWorkType &&
                   styles.inputError,

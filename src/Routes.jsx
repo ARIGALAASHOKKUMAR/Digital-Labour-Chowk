@@ -27,6 +27,7 @@ import WelfareScreens from "./screens/WelfareScreens";
 import DistImage from "./screens/DistImage";
 import WorkerRegistration from "./screens/WorkerRegistrationForm";
 
+
 const Stack = createNativeStackNavigator();
 
 export default function Routes() {
@@ -81,6 +82,20 @@ export default function Routes() {
                     <SiteLayout
                       navigation={props.navigation}
                       currentScreenName="HOME"
+                      scrollEnabled={false}
+                    >
+                      <HomeScreen {...props} />
+                    </SiteLayout>
+                  </SessionChecking>
+                )}
+              </Stack.Screen>
+
+              <Stack.Screen name="WorkerTabs">
+                {(props) => (
+                  <SessionChecking navigation={props.navigation}>
+                    <SiteLayout
+                      navigation={props.navigation}
+                      currentScreenName="WorkerTabs"
                       scrollEnabled={false}
                     >
                       <WorkerRegistration {...props} />

@@ -43,6 +43,7 @@ import { dists28 } from "../utils/CommonFunctions";
 import { styles } from "./WorkerRegStyles";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { Image } from "react-native";
+import { globalStyes } from "./GlobalStyles";
 
 const WorkerRegistration = ({ route, navigation }) => {
   const dispatch = useDispatch();
@@ -295,9 +296,8 @@ const WorkerRegistration = ({ route, navigation }) => {
             .min(2, "Name must be at least 2 characters")
             .max(100, "Name must not exceed 100 characters"),
 
-          relation: Yup.string()
-            .required("Relation is required"),
-            // .min(2, "Relation must be at least 2 characters"),
+          relation: Yup.string().required("Relation is required"),
+          // .min(2, "Relation must be at least 2 characters"),
 
           memberDob: Yup.string().required("Date of birth is required"),
 
@@ -1151,8 +1151,9 @@ const WorkerRegistration = ({ route, navigation }) => {
         <Text style={styles.label}>
           {getFieldLabel("religion")} <Text style={styles.requiredStar}>*</Text>
         </Text>
-        <View style={styles.selectBox}>
+        <View style={globalStyes.selectBox}>
           <Picker
+            style={globalStyes.pickerText}
             selectedValue={formik.values.religion}
             onValueChange={(itemValue) => {
               formik.setFieldTouched("religion", true);
@@ -1219,8 +1220,9 @@ const WorkerRegistration = ({ route, navigation }) => {
             placeholder="Enter Caste"
           />
         ) : (
-          <View style={styles.selectBox}>
+          <View style={globalStyes.selectBox}>
             <Picker
+              style={globalStyes.pickerText}
               selectedValue={formik.values.caste}
               onValueChange={(itemValue) => {
                 handleCasteChange(itemValue, formik.setFieldValue);
@@ -1273,8 +1275,9 @@ const WorkerRegistration = ({ route, navigation }) => {
             placeholder="Enter Sub Caste"
           />
         ) : (
-          <View style={styles.selectBox}>
+          <View style={globalStyes.selectBox}>
             <Picker
+              style={globalStyes.pickerText}
               selectedValue={formik.values.subCaste}
               onValueChange={(itemValue) => {
                 formik.setFieldValue("subCaste", itemValue);
@@ -1313,8 +1316,9 @@ const WorkerRegistration = ({ route, navigation }) => {
           {getFieldLabel("maritalStatus")}{" "}
           <Text style={styles.requiredStar}>*</Text>
         </Text>
-        <View style={styles.selectBox}>
+        <View style={globalStyes.selectBox}>
           <Picker
+            style={globalStyes.pickerText}
             selectedValue={formik.values.maritalStatus}
             onValueChange={(itemValue) => {
               formik.setFieldTouched("maritalStatus", true);
@@ -1552,7 +1556,7 @@ const WorkerRegistration = ({ route, navigation }) => {
             <Text style={styles.label}>{getFieldLabel("isNomine")}*</Text>
             <View
               style={[
-                styles.selectBox,
+                globalStyes.selectBox,
                 formik.errors.familyDetails?.[index]?.isNomine &&
                   formik.touched.familyDetails?.[index]?.isNomine &&
                   styles.errorSelect,
@@ -1591,7 +1595,7 @@ const WorkerRegistration = ({ route, navigation }) => {
               <Text style={styles.label}>{getFieldLabel("nominePer")}*</Text>
               <View
                 style={[
-                  styles.selectBox,
+                  globalStyes.selectBox,
                   formik.errors.familyDetails?.[index]?.nominePer &&
                     formik.touched.familyDetails?.[index]?.nominePer &&
                     styles.errorSelect,
@@ -1943,8 +1947,9 @@ const WorkerRegistration = ({ route, navigation }) => {
           {getFieldLabel("state") || "రాష్ట్రం"}{" "}
           <Text style={styles.requiredStar}>*</Text>
         </Text>
-        <View style={styles.selectBox}>
+        <View style={globalStyes.selectBox}>
           <Picker
+            style={globalStyes.pickerText}
             selectedValue={formik.values.permanentState}
             onValueChange={(itemValue) => {
               formik.setFieldValue("permanentState", itemValue);
@@ -1975,8 +1980,9 @@ const WorkerRegistration = ({ route, navigation }) => {
           <Text style={styles.requiredStar}>*</Text>
         </Text>
         {formik.values.permanentState === "2" ? (
-          <View style={styles.selectBox}>
+          <View style={globalStyes.selectBox}>
             <Picker
+              style={globalStyes.pickerText}
               selectedValue={formik.values.permanentDistrictCode}
               onValueChange={(itemValue) => {
                 formik.setFieldValue("permanentDistrictCode", itemValue);
@@ -2020,8 +2026,9 @@ const WorkerRegistration = ({ route, navigation }) => {
           <Text style={styles.requiredStar}>*</Text>
         </Text>
         {formik.values.permanentState === "2" ? (
-          <View style={styles.selectBox}>
+          <View style={globalStyes.selectBox}>
             <Picker
+              style={globalStyes.pickerText}
               selectedValue={formik.values.permanentMadalCode}
               onValueChange={(itemValue) => {
                 formik.setFieldValue("permanentMadalCode", itemValue);
@@ -2067,8 +2074,9 @@ const WorkerRegistration = ({ route, navigation }) => {
           <Text style={styles.requiredStar}>*</Text>
         </Text>
         {formik.values.permanentState === "2" ? (
-          <View style={styles.selectBox}>
+          <View style={globalStyes.selectBox}>
             <Picker
+              style={globalStyes.pickerText}
               selectedValue={formik.values.permanentVillageCode}
               onValueChange={(itemValue) => {
                 formik.setFieldValue("permanentVillageCode", itemValue);
@@ -2196,8 +2204,9 @@ const WorkerRegistration = ({ route, navigation }) => {
             <Text style={styles.label}>
               {getFieldLabel("state") || "రాష్ట్రం"}
             </Text>
-            <View style={styles.selectBox}>
+            <View style={globalStyes.selectBox}>
               <Picker
+                style={globalStyes.pickerText}
                 selectedValue={formik.values.presentState}
                 onValueChange={(itemValue) => {
                   formik.setFieldValue("presentState", itemValue);
@@ -2223,8 +2232,9 @@ const WorkerRegistration = ({ route, navigation }) => {
               {getFieldLabel("permanentDistrictCode") || "జిల్లా"}
             </Text>
             {formik.values.presentState === "2" ? (
-              <View style={styles.selectBox}>
+              <View style={globalStyes.selectBox}>
                 <Picker
+                  style={globalStyes.pickerText}
                   selectedValue={formik.values.presentDistrictCode}
                   onValueChange={(itemValue) => {
                     formik.setFieldValue("presentDistrictCode", itemValue);
@@ -2260,8 +2270,9 @@ const WorkerRegistration = ({ route, navigation }) => {
               {getFieldLabel("presentMadalCode") || "మండలం"}
             </Text>
             {formik.values.presentState === "2" ? (
-              <View style={styles.selectBox}>
+              <View style={globalStyes.selectBox}>
                 <Picker
+                  style={globalStyes.pickerText}
                   selectedValue={formik.values.presentMadalCode}
                   onValueChange={(itemValue) => {
                     formik.setFieldValue("presentMadalCode", itemValue);
@@ -2300,8 +2311,9 @@ const WorkerRegistration = ({ route, navigation }) => {
               {getFieldLabel("presentVillageCode") || "గ్రామం"}
             </Text>
             {formik.values.presentState === "2" ? (
-              <View style={styles.selectBox}>
+              <View style={globalStyes.selectBox}>
                 <Picker
+                  style={globalStyes.pickerText}
                   selectedValue={formik.values.presentVillageCode}
                   onValueChange={(itemValue) => {
                     formik.setFieldValue("presentVillageCode", itemValue);
@@ -2536,8 +2548,9 @@ const WorkerRegistration = ({ route, navigation }) => {
 
       <View style={styles.inputBlock}>
         <Text style={styles.label}>{getFieldLabel("typeOfWork")}</Text>
-        <View style={styles.selectBox}>
+        <View style={globalStyes.selectBox}>
           <Picker
+            style={globalStyes.pickerText}
             selectedValue={formik.values.typeOfWork}
             onValueChange={(itemValue) => {
               formik.setFieldTouched("typeOfWork", true);
@@ -2586,8 +2599,9 @@ const WorkerRegistration = ({ route, navigation }) => {
 
       <View style={styles.inputBlock}>
         <Text style={styles.label}>{getFieldLabel("district")}</Text>
-        <View style={styles.selectBox}>
+        <View style={globalStyes.selectBox}>
           <Picker
+            style={globalStyes.pickerText}
             selectedValue={formik.values.workDistrict}
             onValueChange={(itemValue) => {
               formik.setFieldValue("workDistrict", itemValue);
@@ -2612,8 +2626,9 @@ const WorkerRegistration = ({ route, navigation }) => {
 
       <View style={styles.inputBlock}>
         <Text style={styles.label}>{getFieldLabel("mandal")}</Text>
-        <View style={styles.selectBox}>
+        <View style={globalStyes.selectBox}>
           <Picker
+            style={globalStyes.pickerText}
             selectedValue={formik.values.workMandal}
             onValueChange={(itemValue) => {
               formik.setFieldValue("workMandal", itemValue);
@@ -2638,8 +2653,9 @@ const WorkerRegistration = ({ route, navigation }) => {
 
       <View style={styles.inputBlock}>
         <Text style={styles.label}>{getFieldLabel("village")}</Text>
-        <View style={styles.selectBox}>
+        <View style={globalStyes.selectBox}>
           <Picker
+            style={globalStyes.pickerText}
             selectedValue={formik.values.workVillage}
             onValueChange={(itemValue) => {
               formik.setFieldValue("workVillage", itemValue);
@@ -2953,9 +2969,10 @@ const WorkerRegistration = ({ route, navigation }) => {
       <View style={styles.inputBlock}>
         <Text style={styles.label}>{getFieldLabel("years")}</Text>
 
-        <View style={styles.input}>
+        <View style={globalStyes.selectBox}>
           <Picker
             selectedValue={formik.values.years}
+            style={globalStyes.pickerText}
             onValueChange={(value) => {
               formik.setFieldValue("years", value);
 

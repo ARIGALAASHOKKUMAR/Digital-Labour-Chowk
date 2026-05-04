@@ -30,6 +30,7 @@ import { showModal } from "../actions";
 import JobDetailsCard from "./JobDetailsScreen";
 import UserInfoDisplay from "./UserInfoDisplay";
 import MapScreen from "./MapScreen";
+import { globalStyes } from "./GlobalStyles";
 
 const JobSearchScreen = ({ navigation }) => {
   const [showMap, setShowMap] = useState(false);
@@ -470,8 +471,9 @@ const JobSearchScreen = ({ navigation }) => {
           <View style={styles.row}>
             <View style={styles.halfWidth}>
               <Text style={styles.fieldLabel}>District / జిల్లా</Text>
-              <View style={styles.selectBox}>
+              <View style={globalStyes.selectBox}>
                 <Picker
+                  style={globalStyes.pickerText}
                   selectedValue={districtId}
                   onValueChange={(itemValue) => {
                     setDistrictId(itemValue);
@@ -502,8 +504,9 @@ const JobSearchScreen = ({ navigation }) => {
 
             <View style={styles.halfWidth}>
               <Text style={styles.fieldLabel}>Mandal / మండలం</Text>
-              <View style={styles.selectBox}>
+              <View style={globalStyes.selectBox}>
                 <Picker
+                 style={globalStyes.pickerText}
                   selectedValue={mandalId}
                   enabled={!!districtId}
                   onValueChange={(itemValue) => {
@@ -535,8 +538,9 @@ const JobSearchScreen = ({ navigation }) => {
           <View style={styles.row}>
             <View style={styles.halfWidth}>
               <Text style={styles.fieldLabel}>Village / గ్రామం</Text>
-              <View style={styles.selectBox}>
+              <View style={globalStyes.selectBox}>
                 <Picker
+                 style={globalStyes.pickerText}
                   selectedValue={villageId}
                   enabled={!!mandalId}
                   onValueChange={(itemValue) => {
@@ -589,7 +593,7 @@ const JobSearchScreen = ({ navigation }) => {
 
             <TouchableOpacity
               style={[
-                styles.selectBox,
+                globalStyes.selectBox,
                 styles.skillsSelectBoxNew,
                 showSkillsDropdown && styles.skillsSelectBoxOpenNew,
               ]}
