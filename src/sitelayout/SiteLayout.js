@@ -439,7 +439,7 @@ const handleParentPress = (item) => {
 };
 
 const handleChildPress = (child, index) => {
-  showInfoToastBottom(child?.targeturl_c)
+  // showInfoToastBottom(child?.targeturl_c)
   console.log("handleChildPress called with child:", child, "index:", index);
   resetActivity();
 
