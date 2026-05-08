@@ -17,6 +17,7 @@ import {
   TouchableOpacity,
   View,
   StatusBar,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
@@ -40,10 +41,11 @@ import SessionTime from "./SessionTime";
 import Icon from "react-native-vector-icons/Feather";
 import { Ionicons } from "@expo/vector-icons";
 import UserMessage from "./UserMessage";
-import { showErrorToast, showSuccessToast } from "../utils/showToast";
+import { showErrorToast, showInfoToastBottom, showSuccessToast } from "../utils/showToast";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import IconFA from "react-native-vector-icons/FontAwesome";
 import labour_logo from "../../assets/labour_log.png";
+import { WebView } from 'react-native-webview';
 
 const FALLBACK_PROFILE =
   "https://cdn-icons-png.flaticon.com/512/149/149071.png";
@@ -78,8 +80,6 @@ const SiteLayout = ({
   } = state;
 
   const userName = username || "User";
-
-  
 
   const [profileVisible, setProfileVisible] = useState(false);
   const [logoutVisible, setLogoutVisible] = useState(false);
@@ -404,44 +404,87 @@ const SiteLayout = ({
     });
   };
 
-  const handleParentPress = (item) => {
-    resetActivity();
 
-    if (item?.childs && item.childs.length > 0) {
-      setSelectedParent(item);
-      setExpandedChildIndex(null);
-      setBottomMenuVisible(true);
-      return;
-    }
 
-    if (item?.targeturl) {
+// Add state for WebView
+const [webViewVisible, setWebViewVisible] = useState(false);
+const [currentUrl, setCurrentUrl] = useState('');
+
+const handleParentPress = (item) => {
+  console.log("handleParentPress called with item:", item);
+  resetActivity();
+
+  if (item?.childs && item.childs.length > 0) {
+    console.log("Parent has children, showing bottom menu");
+    setSelectedParent(item);
+    setExpandedChildIndex(null);
+    setBottomMenuVisible(true);
+    return;
+  }
+
+  if (item?.targeturl) {
+    console.log("Parent targeturl:", item.targeturl);
+    if (item.targeturl.startsWith("https")) {
+      console.log("Opening HTTPS URL:", item.targeturl);
+      // Navigate to the link in the same tab
+      navigation?.navigate?.('WebViewScreen', { url: item.targeturl });
+    } else {
+      console.log("Navigating within app to:", item.targeturl);
+      // Navigate within the app
       navigation?.navigate?.(item.targeturl);
     }
-  };
+  } else {
+    console.log("No targeturl found for parent item");
+  }
+};
 
-  const handleChildPress = (child, index) => {
-    resetActivity();
+const handleChildPress = (child, index) => {
+  showInfoToastBottom(child?.targeturl_c)
+  console.log("handleChildPress called with child:", child, "index:", index);
+  resetActivity();
 
-    if (child?.subchilds && child.subchilds.length > 0) {
-      setExpandedChildIndex((prev) => (prev === index ? null : index));
-      return;
-    }
+  if (child?.subchilds && child.subchilds.length > 0) {
+    console.log("Child has subchildren, toggling expansion for index:", index);
+    setExpandedChildIndex((prev) => (prev === index ? null : index));
+    return;
+  }
 
-    if (child?.targeturl_c) {
-      setBottomMenuVisible(false);
+  if (child?.targeturl_c) {
+    console.log("Child targeturl_c:", child.targeturl_c);
+    
+    if (child.targeturl_c.toLowerCase().startsWith("https")) {
+      console.log("Opening HTTPS URL:", child.targeturl_c);
+      // Navigate to the link in the same tab
+      navigation?.navigate?.('WebViewScreen', { url: child.targeturl_c });
+    } else {
+      console.log("Navigating within app to:", child.targeturl_c);
       navigation?.navigate?.(child.targeturl_c);
     }
-  };
+  } else {
+    console.log("No targeturl_c found for child item");
+  }
+};
 
-  const handleSubChildPress = (subchild) => {
-    resetActivity();
-    setBottomMenuVisible(false);
+const handleSubChildPress = (subchild) => {
+  console.log("handleSubChildPress called with subchild:", subchild);
+  resetActivity();
+  setBottomMenuVisible(false);
+  console.log("Bottom menu closed");
 
-    if (subchild?.targeturl_sc) {
+  if (subchild?.targeturl_sc) {
+    console.log("Subchild targeturl_sc:", subchild.targeturl_sc);
+    if (subchild.targeturl_sc.startsWith("https")) {
+      console.log("Opening HTTPS URL:", subchild.targeturl_sc);
+      // Navigate to the link in the same tab
+      navigation?.navigate?.('WebViewScreen', { url: subchild.targeturl_sc });
+    } else {
+      console.log("Navigating within app to:", subchild.targeturl_sc);
       navigation?.navigate?.(subchild.targeturl_sc);
     }
-  };
-
+  } else {
+    console.log("No targeturl_sc found for subchild item");
+  }
+};
   const [blink, setBlink] = useState(true);
 
   useEffect(() => {

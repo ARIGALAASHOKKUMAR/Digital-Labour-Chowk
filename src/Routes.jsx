@@ -26,7 +26,7 @@ import MapScreen from "./screens/MapScreen";
 import WelfareScreens from "./screens/WelfareScreens";
 import DistImage from "./screens/DistImage";
 import WorkerRegistration from "./screens/WorkerRegistrationForm";
-
+import WebViewScreen from "./sitelayout/WebViewScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -49,6 +49,16 @@ export default function Routes() {
                 name="RegisterEmployer"
                 component={RegisterEmployer}
               />
+              <Stack.Screen name="WebViewScreen">
+                {(props) => (
+                  <SiteLayout
+                    navigation={props.navigation}
+                    currentScreenName="WebViewScreen"
+                  >
+                    <WebViewScreen {...props} />
+                  </SiteLayout>
+                )}
+              </Stack.Screen>
 
               <Stack.Screen name="ProfileUpdate">
                 {(props) => (
