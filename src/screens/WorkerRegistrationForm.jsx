@@ -1444,12 +1444,14 @@ const WorkerRegistration = ({ route, navigation }) => {
             <View
               style={[
                 styles.input,
+                globalStyes.selectBox,
                 formik.errors.familyDetails?.[index]?.relation &&
                   formik.touched.familyDetails?.[index]?.relation &&
                   styles.errorInput,
               ]}
             >
               <Picker
+              style={globalStyes.pickerText}
                 selectedValue={member.relation}
                 onValueChange={(value) => {
                   const familyDetails = [...formik.values.familyDetails];
@@ -3167,8 +3169,8 @@ const WorkerRegistration = ({ route, navigation }) => {
                     .min(2, "Name must be at least 2 characters")
                     .max(100, "Name must not exceed 100 characters"),
                   relation: Yup.string()
-                    .required("Relation is required")
-                    .min(2, "Relation must be at least 2 characters"),
+                    .required("Relation is required"),
+                    // .min(2, "Relation must be at least 2 characters"),
                   memberDob: Yup.string()
                     .required("Date of birth is required")
                     .matches(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),

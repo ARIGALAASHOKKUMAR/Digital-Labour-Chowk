@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useSelector } from 'react-redux';
 
 const WebViewScreen = () => {
   const navigation = useNavigation();
@@ -28,12 +29,29 @@ const WebViewScreen = () => {
     </View>
   );
 
+
+  const token = useSelector((state) => state.LoginReducer.token);
+
+    const getSource = () => {
+    if (token) {
+      return {
+        uri: url,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'X-Auth-Token': token,
+        }
+      };
+    }
+    return { uri: url };
+  };
+  
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <WebView
           ref={webViewRef}
-          source={{ uri: url }}
+          ource={getSource()}
           startInLoadingState={true}
           renderLoading={LoadingIndicator}
           onLoadStart={() => setLoading(true)}
