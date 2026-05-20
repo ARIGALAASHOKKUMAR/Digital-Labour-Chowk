@@ -27,6 +27,7 @@ import WelfareScreens from "./screens/WelfareScreens";
 import DistImage from "./screens/DistImage";
 import WorkerRegistration from "./screens/WorkerRegistrationForm";
 import WebViewScreen from "./sitelayout/WebViewScreen";
+import PaymentScreen from "./screens/PaymentTest";
 
 const Stack = createNativeStackNavigator();
 
@@ -80,7 +81,7 @@ export default function Routes() {
                     navigation={props.navigation}
                     currentScreenName="ChangePassword"
                   >
-                    <ChangePassword {...props} />
+                    <PaymentScreen {...props} />
                   </SiteLayout>
                   // </SessionChecking>
                 )}
