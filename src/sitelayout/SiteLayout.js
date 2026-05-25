@@ -6,22 +6,19 @@ import React, {
   useState,
 } from "react";
 import {
-  Alert,
   AppState,
+  Dimensions,
   Image,
   Modal,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
   StatusBar,
-  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
-import BreadCrumb from "./BreadCrumb";
 import {
   hideLoader,
   hideMessage,
@@ -29,6 +26,7 @@ import {
   showModal,
   hideModal,
 } from "../actions";
+
 import {
   LOGOUT_ALL_END_POINT,
   LOGOUT_ALL_EXCEPT_THIS_END_POINT,
@@ -37,15 +35,18 @@ import {
   commonAPICall,
   myAxios,
 } from "../utils/utils";
+
 import SessionTime from "./SessionTime";
-import Icon from "react-native-vector-icons/Feather";
-import { Ionicons } from "@expo/vector-icons";
 import UserMessage from "./UserMessage";
-import { showErrorToast, showInfoToastBottom, showSuccessToast } from "../utils/showToast";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import IconFA from "react-native-vector-icons/FontAwesome";
+
+import Icon from "react-native-vector-icons/Feather";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+
 import labour_logo from "../../assets/labour_log.png";
-import { WebView } from 'react-native-webview';
+
+const { width } = Dimensions.get("window");
+
+const CARD_WIDTH = (width - 52) / 4;
 
 const FALLBACK_PROFILE =
   "https://cdn-icons-png.flaticon.com/512/149/149071.png";
@@ -55,20 +56,17 @@ const SiteLayout = ({
   navigation,
   currentScreenName = "HOME",
   showProfile = true,
-  scrollEnabled = true,
 }) => {
   const dispatch = useDispatch();
-  const state = useSelector((s) => s.LoginReducer);
 
-  const [randomTrigger, setRandomTrigger] = useState(Math.random());
+  const state = useSelector((s) => s.LoginReducer);
 
   const {
     username,
     userId,
     roleName,
     roleId,
-    parents,
-    services = [],
+    parents = [],
     photoPath,
     lastLoginTime,
     lastLogoutTime,
@@ -79,32 +77,21 @@ const SiteLayout = ({
     uuid,
   } = state;
 
-  const userName = username || "User";
-
-  const [profileVisible, setProfileVisible] = useState(false);
-  const [logoutVisible, setLogoutVisible] = useState(false);
-  const [notificationVisible, setNotificationVisible] = useState(false);
-  const [sessionAlertVisible, setSessionAlertVisible] = useState(false);
-  const [profileMenuVisible, setProfileMenuVisible] = useState(false);
-
-  const [bottomMenuVisible, setBottomMenuVisible] = useState(false);
   const [selectedParent, setSelectedParent] = useState(null);
-  const [expandedChildIndex, setExpandedChildIndex] = useState(null);
+  const [selectedChild, setSelectedChild] = useState(null);
+  const [profileMenuVisible, setProfileMenuVisible] = useState(false);
+  const [logoutVisible, setLogoutVisible] = useState(false);
 
   const [activeUsersCount, setActiveUsersCount] = useState(
     Number(activeUsers || 0),
   );
-  const [sessionDetails, setSessionDetails] = useState("");
+
   const [remainingTime, setRemainingTime] = useState(0);
 
-  const [lastActivity, setLastActivity] = useState(Date.now());
-  const idlePopupShownRef = useRef(false);
-  const appState = useRef(AppState.currentState);
+  const [randomTrigger, setRandomTrigger] = useState(Math.random());
+
   const profileButtonRef = useRef(null);
-  const [profileMenuPosition, setProfileMenuPosition] = useState({
-    top: 0,
-    left: 0,
-  });
+  const intervalRef = useRef(null);
 
   const profileSource = useMemo(() => {
     if (photoPath && typeof photoPath === "string") {
@@ -113,12 +100,10 @@ const SiteLayout = ({
     return { uri: FALLBACK_PROFILE };
   }, [photoPath]);
 
-  const formatSessionDetails = (value) => {
-    if (!value) return "No session details available.";
-    return String(value)
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/<\/?[^>]+(>|$)/g, "");
-  };
+  useEffect(() => {
+    dispatch(hideLoader());
+    dispatch(hideMessage());
+  }, []);
 
   const formatSimpleHtmlText = (value) => {
     if (!value) return "-";
@@ -127,37 +112,10 @@ const SiteLayout = ({
       .replace(/<\/?[^>]+(>|$)/g, "");
   };
 
-  const resetActivity = useCallback(() => {
-    setLastActivity(Date.now());
-    idlePopupShownRef.current = false;
-  }, []);
-
-  useEffect(() => {
-    dispatch(hideLoader());
-    dispatch(hideMessage());
-  }, [dispatch]);
-
-  const serviceChecking = useCallback(() => {
-    if (!Array.isArray(services) || services.length === 0) return true;
-
-    const pathName = String(currentScreenName || "").toUpperCase();
-
-    for (let i = 0; i < services.length; i++) {
-      const service = services[i];
-      if (service?.[2]?.toUpperCase() === pathName) {
-        return true;
-      }
-    }
-    return false;
-  }, [services, currentScreenName]);
-
-  const [isConcurrentLoginDetected, setIsConcurrentLoginDetected] =
-    useState(false);
-  const intervalRef = useRef(null);
-
   const serviceAuthentication = useCallback(async () => {
     try {
       const response = await myAxios.get(SERVICE_AUTH_END_POINT);
+
       if (response.status === 200) {
         const usersCount = parseInt(
           response?.data?.activeusers?.count || 0,
@@ -167,7 +125,6 @@ const SiteLayout = ({
         let remainingSeconds = parseInt(response.data.remainingSeconds);
 
         setActiveUsersCount(usersCount);
-        setSessionDetails(response?.data?.activeusers?.sessionDetails || "");
         setRemainingTime(remainingSeconds);
         setRandomTrigger(Math.random());
       }
@@ -182,89 +139,19 @@ const SiteLayout = ({
           response?.data?.activeusers?.count || 0,
           10,
         );
-        const serverSessionDetails =
-          response?.data?.activeusers?.sessionDetails || "";
-
         setActiveUsersCount(activeCount);
-        setSessionDetails(serverSessionDetails);
       }
     } catch (error) {
       const message =
         error?.response?.data?.message ||
         error?.message ||
         "Something went wrong";
-
-      showErrorToast(`${message}`);
       navigation?.reset?.({
         index: 0,
         routes: [{ name: "Login" }],
       });
     }
-  }, []);
-
-  // Idle Timeout Effect
-  // useEffect(() => {
-  //   const resetActivityTimeout = () => {
-  //     setLastActivity(Date.now());
-  //     idlePopupShownRef.current = false;
-  //   };
-
-  //   const subscription = AppState.addEventListener('change', (nextAppState) => {
-  //     if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-  //       resetActivityTimeout();
-  //     }
-  //     appState.current = nextAppState;
-  //   });
-
-  //   const intervalId = setInterval(() => {
-  //     if (Date.now() - lastActivity >= 1 * 60 * 1000 && !idlePopupShownRef.current) {
-  //       showLogoutPopupWarning();
-  //     }
-  //   }, 1000);
-
-  //   return () => {
-  //     clearInterval(intervalId);
-  //     subscription.remove();
-  //   };
-  // }, [lastActivity, dispatch]);
-
-  const showLogoutPopupWarning = () => {
-    idlePopupShownRef.current = true;
-
-    dispatch(
-      showModal(
-        <View style={styles.idleModalContent}>
-          <Text style={styles.idleModalIcon}>⚠️</Text>
-          <Text style={styles.idleModalText}>
-            It seems you've been idle for more than 15 minutes. Click 'Stay
-            Connected' to stay logged in or 'Logout' to log out.
-          </Text>
-          <View style={styles.idleModalButtons}>
-            <TouchableOpacity
-              style={[styles.idleButton, styles.logoutButton]}
-              onPress={handleLogout}
-            >
-              <IconFA name="power-off" size={16} color="black" />
-              <Text style={styles.buttonText}> Logout</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.idleButton, styles.stayConnectedButton]}
-              onPress={() => {
-                serviceAuthentication();
-                idlePopupShownRef.current = false;
-                dispatch(hideModal());
-                resetActivity();
-              }}
-            >
-              <IconFA name="check" size={16} color="black" />
-              <Text style={styles.buttonText}> Stay Connected</Text>
-            </TouchableOpacity>
-          </View>
-        </View>,
-      ),
-    );
-  };
+  }, [navigation]);
 
   useEffect(() => {
     if (intervalRef.current) {
@@ -286,697 +173,430 @@ const SiteLayout = ({
     serviceAuthentication();
   }, []);
 
-  useEffect(() => {
-    if (sessionAlertVisible && intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    } else if (!sessionAlertVisible && !intervalRef.current) {
-      intervalRef.current = setInterval(() => {
-        concurrentLoginDetection();
-      }, 3000);
-    }
-  }, [sessionAlertVisible]);
-
-  // useEffect(() => {
-  //   if (!serviceChecking()) {
-  //     Alert.alert("Access Denied", "You are not authorized for this screen.");
-  //     navigation?.reset?.({
-  //       index: 0,
-  //       routes: [{ name: "HOME" }],
-  //     });
-  //   }
-  // }, [serviceChecking, navigation]);
-
   const handleLogout = async () => {
-    const response = await myAxios.get(
-      `${LOGOUT_END_POINT}?uuid=${uuid}&roleName=${roleName}&type=USER`,
-      { headers: { Authorization: `Bearer ${token}` } },
-    );
-
-    dispatch(logOut());
-    setLogoutVisible(false);
-    setProfileMenuVisible(false);
-    dispatch(hideModal());
-    navigation?.reset?.({
-      index: 0,
-      routes: [{ name: "Login" }],
-    });
-  };
-
-  const logoutAll = async (type) => {
-    let response;
-
-    if (type === "A") {
-      response = await commonAPICall(
-        LOGOUT_ALL_END_POINT,
-        {},
-        "POST",
-        dispatch,
+    try {
+      await myAxios.get(
+        `${LOGOUT_END_POINT}?uuid=${uuid}&roleName=${roleName}&type=USER`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
-      if (response?.status === 200) {
-        dispatch(logOut());
-        navigation?.reset?.({
-          index: 0,
-          routes: [{ name: "Login" }],
-        });
-      }
-    } else if (type === "E") {
-      response = await commonAPICall(
-        LOGOUT_ALL_EXCEPT_THIS_END_POINT,
-        {},
-        "POST",
-        dispatch,
-      );
-      if (response?.status === 200) {
-        setSessionAlertVisible(false);
-        serviceAuthentication();
-      }
-    }
-  };
 
-  const toggleProfileMenu = () => {
-    resetActivity();
-    if (profileButtonRef.current) {
-      profileButtonRef.current.measure((x, y, width, height, pageX, pageY) => {
-        setProfileMenuPosition({
-          top: 62,
-          right: 5,
-        });
+      dispatch(logOut());
+      setLogoutVisible(false);
+      setProfileMenuVisible(false);
+      dispatch(hideModal());
+      navigation?.reset?.({
+        index: 0,
+        routes: [{ name: "Login" }],
       });
-    }
-    setProfileMenuVisible(!profileMenuVisible);
+    } catch (e) {}
   };
 
-  const openProfile = () => {
-    resetActivity();
-    setProfileVisible(true);
-    setProfileMenuVisible(false);
+  const getIconName = (menuName) => {
+    const iconMap = {
+      Home: "home",
+      "Grievance Registration": "alert-circle",
+      "Trade Union Registration": "users",
+      "Online Cess Payment": "credit-card",
+      "Skill Development": "briefcase",
+      "Worker Registration": "user-plus",
+      "Establishment Registration": "building",
+      "User Services": "user",
+      "Change Password": "lock",
+      "Profile Update": "edit",
+    };
+
+    return iconMap[menuName] || "grid";
+  };
+
+  const parentColors = [
+    "#4F46E5",
+    "#0EA5E9",
+    "#10B981",
+    "#F97316",
+    "#EC4899",
+    "#14B8A6",
+    "#8B5CF6",
+    "#E11D48",
+    "#06B6D4",
+    "#84CC16",
+  ];
+
+  const handleParentPress = (parent) => {
+    console.log("Parent pressed:", parent);
+    const hasChildren = parent.childs && parent.childs.length > 0;
+
+    if (hasChildren) {
+      setSelectedParent(parent);
+      setSelectedChild(null);
+    } else {
+      if (parent.targeturl) {
+        if (parent.targeturl.startsWith("https")) {
+          navigation.navigate("WebViewScreen", {
+            url: parent.targeturl,
+          });
+        } else {
+          console.log("Parent pressedsdfdfdfddfdkofcjdslkdld:", parent);
+          navigation.navigate(parent.targeturl);
+        }
+      }
+    }
+  };
+
+  const handleChildPress = (child) => {
+    setSelectedChild(child);
+
+    if (child?.targeturl_c) {
+      if (child.targeturl_c.startsWith("https")) {
+        navigation.navigate("WebViewScreen", {
+          url: child.targeturl_c,
+        });
+      } else {
+        navigation.navigate(child.targeturl_c);
+      }
+    }
+  };
+
+  const goBackToParents = () => {
+    setSelectedParent(null);
+    setSelectedChild(null);
+  };
+
+  const goBackToChildren = () => {
+    setSelectedChild(null);
   };
 
   const openLogoutPopup = () => {
-    resetActivity();
-    setLogoutVisible(true);
     setProfileMenuVisible(false);
+    setLogoutVisible(true);
   };
 
-  const openNotifications = () => {
-    resetActivity();
-    setNotificationVisible(true);
+  // Determine current selection path and back button behavior
+  const isChildSelected = !!selectedChild;
+  const isParentSelected = !!selectedParent && !selectedChild;
+
+  const getBackButtonText = () => {
+    if (isChildSelected) return "Back to Services";
+    if (isParentSelected) return "Back to Main Menu";
+    return "";
   };
 
-  const handleBackPress = () => {
-    openLogoutPopup();
+  const getCurrentSelectionName = () => {
+    if (isChildSelected) return selectedChild?.menuitemname_c;
+    if (isParentSelected) return selectedParent?.menuitemname;
+    return "";
   };
 
-  const isParentActive = (item) => {
-    const current = String(currentScreenName || "").toUpperCase();
-
-    if (String(item?.targeturl || "").toUpperCase() === current) return true;
-
-    return (item?.childs || []).some((child) => {
-      if (String(child?.targeturl_c || "").toUpperCase() === current) {
-        return true;
-      }
-
-      return (child?.subchilds || []).some(
-        (sub) => String(sub?.targeturl_sc || "").toUpperCase() === current,
-      );
-    });
+  const getCurrentSelectionType = () => {
+    if (isChildSelected) return "Service";
+    if (isParentSelected) return "Category";
+    return "";
   };
-
-
-
-// Add state for WebView
-const [webViewVisible, setWebViewVisible] = useState(false);
-const [currentUrl, setCurrentUrl] = useState('');
-
-const handleParentPress = (item) => {
-  console.log("handleParentPress called with item:", item);
-  resetActivity();
-
-  if (item?.childs && item.childs.length > 0) {
-    console.log("Parent has children, showing bottom menu");
-    setSelectedParent(item);
-    setExpandedChildIndex(null);
-    setBottomMenuVisible(true);
-    return;
-  }
-
-  if (item?.targeturl) {
-    console.log("Parent targeturl:", item.targeturl);
-    if (item.targeturl.startsWith("https")) {
-      console.log("Opening HTTPS URL:", item.targeturl);
-      // Navigate to the link in the same tab
-      navigation?.navigate?.('WebViewScreen', { url: item.targeturl });
-    } else {
-      console.log("Navigating within app to:", item.targeturl);
-      // Navigate within the app
-      navigation?.navigate?.(item.targeturl);
-    }
-  } else {
-    console.log("No targeturl found for parent item");
-  }
-};
-
-const handleChildPress = (child, index) => {
-  // showInfoToastBottom(child?.targeturl_c)
-  console.log("handleChildPress called with child:", child, "index:", index);
-  resetActivity();
-
-  if (child?.subchilds && child.subchilds.length > 0) {
-    console.log("Child has subchildren, toggling expansion for index:", index);
-    setExpandedChildIndex((prev) => (prev === index ? null : index));
-    return;
-  }
-
-  if (child?.targeturl_c) {
-    console.log("Child targeturl_c:", child.targeturl_c);
-    
-    if (child.targeturl_c.toLowerCase().startsWith("https")) {
-      console.log("Opening HTTPS URL:", child.targeturl_c);
-      // Navigate to the link in the same tab
-      navigation?.navigate?.('WebViewScreen', { url: child.targeturl_c });
-    } else {
-      console.log("Navigating within app to:", child.targeturl_c);
-      navigation?.navigate?.(child.targeturl_c);
-    }
-  } else {
-    console.log("No targeturl_c found for child item");
-  }
-};
-
-const handleSubChildPress = (subchild) => {
-  console.log("handleSubChildPress called with subchild:", subchild);
-  resetActivity();
-  setBottomMenuVisible(false);
-  console.log("Bottom menu closed");
-
-  if (subchild?.targeturl_sc) {
-    console.log("Subchild targeturl_sc:", subchild.targeturl_sc);
-    if (subchild.targeturl_sc.startsWith("https")) {
-      console.log("Opening HTTPS URL:", subchild.targeturl_sc);
-      // Navigate to the link in the same tab
-      navigation?.navigate?.('WebViewScreen', { url: subchild.targeturl_sc });
-    } else {
-      console.log("Navigating within app to:", subchild.targeturl_sc);
-      navigation?.navigate?.(subchild.targeturl_sc);
-    }
-  } else {
-    console.log("No targeturl_sc found for subchild item");
-  }
-};
-  const [blink, setBlink] = useState(true);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setBlink((prev) => !prev);
-    }, 500);
-
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {" "}
-      {/* ✅ FIXED: Removed Pressable */}{" "}
-      <View style={styles.flex1}>
-        {" "}
+      <StatusBar backgroundColor="#0F172A" barStyle="light-content" />
+
+      <View style={styles.container}>
+        {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <View style={styles.logoContainer}>
-              {/* LOGO */}
-              <Image
-                source={labour_logo}
-                style={styles.labour_logo}
-                resizeMode="contain"
-              />
-              {/* TEXTS */}
-              <View style={styles.textContainer}>
-                <Text style={styles.teluguText}>Digital Labour Chowk</Text>
-                <Text style={styles.headerTitle}>Labour Dept,Govt. of A.P</Text>
-              </View>
+            <Image
+              source={labour_logo}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+
+            <View>
+              <Text style={styles.headerTitle}>Digital Labour Chowk</Text>
+
+              <Text style={styles.headerSubTitle}>
+                Labour Dept, Govt. of A.P
+              </Text>
             </View>
           </View>
 
-          {activeUsersCount > 0 && (
-            <TouchableOpacity
-              style={styles.iconWrapper}
-              onPress={() => setSessionAlertVisible(true)}
-            >
-              <MaterialCommunityIcons
-                name="incognito"
-                size={24}
-                color="white"
-                style={[blink && styles.blinkIcon]}
-              />
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{activeUsersCount}</Text>
-              </View>
-            </TouchableOpacity>
-          )}
           <View style={styles.headerRight}>
             <SessionTime
               remainingTime={remainingTime}
               randomTrigger={randomTrigger}
               navigation={navigation}
-              style={styles.sessionTimeCompact}
             />
+
+            {activeUsersCount > 0 && (
+              <TouchableOpacity style={styles.userCountCard}>
+                <MaterialCommunityIcons
+                  name="account-group"
+                  size={18}
+                  color="#fff"
+                />
+
+                <Text style={styles.userCountText}>{activeUsersCount}</Text>
+              </TouchableOpacity>
+            )}
 
             {showProfile && (
               <TouchableOpacity
-                ref={profileButtonRef}
-                style={styles.headerIconBtn}
-                onPress={toggleProfileMenu}
-                activeOpacity={0.7}
+                onPress={() => setProfileMenuVisible(!profileMenuVisible)}
               >
-                <View style={styles.profileImageContainer}>
-                  <Image source={profileSource} style={styles.profileImage} />
-                  <View style={styles.onlineIndicator} />
-                </View>
+                <Image source={profileSource} style={styles.profileImage} />
               </TouchableOpacity>
             )}
           </View>
-        </View>{" "}
+        </View>
+
+        {/* PROFILE MENU */}
         {profileMenuVisible && (
-          <View style={[styles.profileDropdown, profileMenuPosition]}>
+          <View style={styles.profileMenu}>
             <TouchableOpacity
-              style={styles.dropdownItem}
+              style={styles.profileMenuItem}
               onPress={() =>
                 dispatch(
                   showModal(
                     <View>
                       <Text style={styles.modalTitle}>Profile Details</Text>
-                      <Image
-                        source={profileSource}
-                        style={styles.modalProfileImage}
-                      />
 
-                      <Text style={styles.detailText}>
-                        USER ID: {userId || "-"}
+                      <Image source={profileSource} style={styles.modalImage} />
+
+                      <Text style={styles.profileText}>
+                        USER ID : {userId || "-"}
                       </Text>
-                      <Text style={styles.detailText}>
-                        Name: {username || "-"}
+
+                      <Text style={styles.profileText}>
+                        Name : {username || "-"}
                       </Text>
-                      <Text style={styles.detailText}>
-                        Role: {roleName || "-"}
+
+                      <Text style={styles.profileText}>
+                        Role : {roleName || "-"}
                       </Text>
-                      <Text style={styles.detailText}>
-                        Last Login Time: {formatSimpleHtmlText(lastLoginTime)}
+
+                      <Text style={styles.profileText}>
+                        Last Login : {formatSimpleHtmlText(lastLoginTime)}
                       </Text>
-                      <Text style={styles.detailText}>
-                        Last Logout Time: {formatSimpleHtmlText(lastLogoutTime)}
+
+                      <Text style={styles.profileText}>
+                        Last Logout : {formatSimpleHtmlText(lastLogoutTime)}
                       </Text>
-                      <Text style={styles.detailText}>
-                        Last Failure Login Time:{" "}
+
+                      <Text style={styles.profileText}>
+                        Last Failure Attempt :{" "}
                         {formatSimpleHtmlText(lastFailureAttemptTime)}
                       </Text>
 
                       {!!loginLocation && roleId === 1 && (
-                        <Text style={styles.detailText}>
-                          Login Location: {loginLocation}
+                        <Text style={styles.profileText}>
+                          Login Location : {loginLocation}
                         </Text>
                       )}
                     </View>,
                   ),
                 )
               }
-              activeOpacity={0.7}
             >
-              <Text style={styles.dropdownIcon}>👤</Text>
-              <Text style={styles.dropdownText}>Profile</Text>
+              <Icon name="user" size={18} color="#111827" />
+
+              <Text style={styles.profileMenuText}>Profile</Text>
             </TouchableOpacity>
-            <View style={styles.dropdownDivider} />
+
             <TouchableOpacity
-              style={styles.dropdownItem}
+              style={styles.profileMenuItem}
               onPress={openLogoutPopup}
-              activeOpacity={0.7}
             >
-              <Icon name="log-out" size={24} color="green" />
-              <Text style={styles.dropdownText}> Logout</Text>
+              <Icon name="log-out" size={18} color="#DC2626" />
+
+              <Text style={styles.logoutText}>Logout</Text>
             </TouchableOpacity>
           </View>
         )}
-        <UserMessage /> {/* ✅ FIXED SCROLL AREA */}{" "}
-        <View style={{ flex: 1 }}>
-          {" "}
-          {scrollEnabled ? (
-            <ScrollView
-              contentContainerStyle={[styles.contentContainer, { flexGrow: 1 }]}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-              onScrollBeginDrag={resetActivity}
-              onTouchStart={resetActivity}
-              onMomentumScrollBegin={resetActivity}
-              scrollEventThrottle={16}
+
+        <UserMessage />
+
+        {/* BODY */}
+        <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
+          {/* BACK BUTTON */}
+          {(selectedParent || selectedChild) && (
+            <TouchableOpacity
+              style={styles.backBtn}
+              onPress={selectedChild ? goBackToChildren : goBackToParents}
             >
-              {" "}
-              {children}{" "}
-            </ScrollView>
-          ) : (
-            <View style={{ flex: 1 }}>{children}</View>
-          )}{" "}
-        </View>{" "}
-        <View style={styles.bottomNav}>
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-around",
-              width: "100%",
-              gap: 0.5,
-            }}
-          >
-            {(parents || [])
-              .filter(
-                (item) =>
-                  item?.menuitemname === "Home" ||
-                  item?.menuitemname === "User Services" ||
-                  item?.menuitemname === "Services" ||
-                  item?.menuitemname === "Reports" ||
-                  item?.menuitemname === "GEO TAGGING" ||
-                  item?.menuitemname === "Worker Registration",
-              )
-              .map((item, index) => {
-                const active = isParentActive(item);
+              <Ionicons name="arrow-back" size={18} color="#fff" />
 
-                const getIcon = (name) => {
-                  switch (name) {
-                    case "Home":
-                      return "home-outline";
-                    case "User Services":
-                      return "people-outline";
-                    case "Services":
-                      return "grid-outline";
-                    case "Reports":
-                      return "document-text-outline";
-                    case "GEO TAGGING":
-                      return "business-outline"; // or "add-circle-outline"
-                    case "Worker Registration":
-                      return "person-add-outline";
-                    default:
-                      return "apps-outline";
-                  }
-                };
+              <Text style={styles.backBtnText}>{getBackButtonText()}</Text>
+            </TouchableOpacity>
+          )}
 
-                return (
+          {/* Show selected item name header */}
+          {(selectedParent || selectedChild) && (
+            <View style={styles.selectedItemContainer}>
+              <Text style={styles.selectedItemLabel}>
+                {getCurrentSelectionType()}:
+              </Text>
+              <Text style={styles.selectedItemName}>
+                {getCurrentSelectionName()}
+              </Text>
+            </View>
+          )}
+
+          {/* PARENT MENU */}
+          {!selectedParent && (
+            <>
+              <Text style={styles.sectionTitle}>Services</Text>
+
+              <View style={styles.parentGrid}>
+                {parents.map((parent, index) => {
+                  const bg = parentColors[index % parentColors.length];
+                  const hasChildren = parent.childs && parent.childs.length > 0;
+
+                  return (
+                    <TouchableOpacity
+                      key={index}
+                      style={[
+                        styles.parentCard,
+                        {
+                          backgroundColor: bg,
+                        },
+                      ]}
+                      onPress={() => handleParentPress(parent)}
+                      activeOpacity={0.85}
+                    >
+                      <View style={styles.parentIconWrap}>
+                        <Icon
+                          name={getIconName(parent.menuitemname)}
+                          size={18}
+                          color="#fff"
+                        />
+                      </View>
+
+                      <Text style={styles.parentCardText} numberOfLines={2}>
+                        {parent.menuitemname}
+                      </Text>
+
+                      {hasChildren && (
+                        <View style={styles.countBadge}>
+                          <Text style={styles.countBadgeText}>
+                            {parent.childs.length}
+                          </Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </>
+          )}
+
+          {/* CHILDREN */}
+          {selectedParent && !selectedChild && (
+            <>
+              <View style={styles.parentHeaderCard}>
+                <Text style={styles.parentHeaderText}>
+                  {selectedParent.menuitemname}
+                </Text>
+              </View>
+
+              <View style={styles.childrenGrid}>
+                {selectedParent?.childs?.map((child, index) => (
                   <TouchableOpacity
                     key={index}
-                    style={[
-                      styles.bottomNavItem,
-                      active && styles.bottomNavItemActive,
-                    ]}
-                    onPress={() => handleParentPress(item)}
+                    style={styles.childCard}
+                    onPress={() => handleChildPress(child)}
                     activeOpacity={0.85}
                   >
-                    <Ionicons
-                      name={getIcon(item?.menuitemname)}
-                      size={24}
-                      color={"#555"}
-                    />
-                    <Text>
-                      {item?.menuitemname === "User Services"
-                        ? "Settings / సెట్టింగ్స్"
-                        : `${
-                            item?.menuitemname === "GEO TAGGING"
-                              ? roleId === 4
-                                ? "Ground Truthing"
-                                : "Geo Tagging"
-                              : item?.menuitemname
-                          } / ${
-                            item?.menuitemname === "Home"
-                              ? "హోమ్"
-                              : item?.menuitemname === "Profile"
-                                ? "ప్రొఫైల్"
-                                : item?.menuitemname === "Services"
-                                  ? "సేవలు"
-                                  : item?.menuitemname === "Reports"
-                                    ? "రిపోర్ట్స్"
-                                    : item?.menuitemname === "User Services"
-                                      ? "సేవలు"
-                                      : ""
-                          }`}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-          </View>
-
-          <Modal
-            visible={bottomMenuVisible}
-            animationType="slide"
-            transparent
-            onRequestClose={() => setBottomMenuVisible(false)}
-          >
-            <Pressable
-              style={styles.bottomSheetOverlay}
-              onPress={() => setBottomMenuVisible(false)}
-            >
-              <Pressable style={styles.bottomSheet}>
-                <View style={styles.sheetHandle} />
-                <View style={styles.sheetHeader}>
-                  <Text style={styles.sheetTitle}>
-                    {selectedParent?.menuitemname || "Menu"}
-                  </Text>
-                  <TouchableOpacity onPress={() => setBottomMenuVisible(false)}>
-                    <Text style={styles.sheetClose}>✕</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <ScrollView
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={styles.sheetScrollContent}
-                >
-                  {(selectedParent?.childs || []).map((child, index) => {
-                    const hasSubchilds =
-                      child?.subchilds && child.subchilds.length > 0;
-
-                    const childActive =
-                      String(child?.targeturl_c || "").toUpperCase() ===
-                        String(currentScreenName || "").toUpperCase() ||
-                      (child?.subchilds || []).some(
-                        (sub) =>
-                          String(sub?.targeturl_sc || "").toUpperCase() ===
-                          String(currentScreenName || "").toUpperCase(),
-                      );
-
-                    return (
-                      <View key={index} style={styles.childBlock}>
-                        <TouchableOpacity
-                          style={[
-                            styles.childRow,
-                            childActive && styles.childRowActive,
-                          ]}
-                          onPress={() => handleChildPress(child, index)}
-                          activeOpacity={0.85}
-                        >
-                          <Text
-                            style={[
-                              styles.childRowText,
-                              childActive && styles.childRowTextActive,
-                            ]}
-                          >
-                            {child?.menuitemname_c || "Untitled"}
-                          </Text>
-
-                          {hasSubchilds && (
-                            <Text
-                              style={[
-                                styles.childArrow,
-                                childActive && styles.childRowTextActive,
-                              ]}
-                            >
-                              {expandedChildIndex === index ? "▲" : "▼"}
-                            </Text>
-                          )}
-                        </TouchableOpacity>
-
-                        {hasSubchilds && expandedChildIndex === index && (
-                          <View style={styles.subChildWrapper}>
-                            {child.subchilds.map((subchild, subIndex) => {
-                              const isSubActive =
-                                String(
-                                  subchild?.targeturl_sc || "",
-                                ).toUpperCase() ===
-                                String(currentScreenName || "").toUpperCase();
-
-                              return (
-                                <TouchableOpacity
-                                  key={subIndex}
-                                  style={[
-                                    styles.subChildRow,
-                                    isSubActive && styles.subChildRowActive,
-                                  ]}
-                                  onPress={() => handleSubChildPress(subchild)}
-                                  activeOpacity={0.85}
-                                >
-                                  <Text
-                                    style={[
-                                      styles.subChildRowText,
-                                      isSubActive &&
-                                        styles.subChildRowTextActive,
-                                    ]}
-                                  >
-                                    {subchild?.menuitemname_sc || "Untitled"}
-                                  </Text>
-                                </TouchableOpacity>
-                              );
-                            })}
-                          </View>
-                        )}
+                    <View style={styles.childLeft}>
+                      <View style={styles.childIcon}>
+                        <Ionicons
+                          name="chevron-forward"
+                          size={16}
+                          color="#4F46E5"
+                        />
                       </View>
-                    );
-                  })}
-                </ScrollView>
-              </Pressable>
-            </Pressable>
-          </Modal>
 
-          <Modal visible={profileVisible} animationType="fade" transparent>
-            <View style={styles.modalBackdrop}>
-              <View style={styles.modalCard}>
-                <Text style={styles.modalTitle}>Profile Details</Text>
-                <Image
-                  source={profileSource}
-                  style={styles.modalProfileImage}
-                />
+                      <Text style={styles.childText} numberOfLines={2}>
+                        {child.menuitemname_c}
+                      </Text>
+                    </View>
 
-                <Text style={styles.detailText}>USER ID: {userId || "-"}</Text>
-                <Text style={styles.detailText}>Name: {username || "-"}</Text>
-                <Text style={styles.detailText}>Role: {roleName || "-"}</Text>
-                <Text style={styles.detailText}>
-                  Last Login Time: {formatSimpleHtmlText(lastLoginTime)}
+                    <Ionicons name="open-outline" size={18} color="#94A3B8" />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </>
+          )}
+
+          {/* CHILD SCREEN CONTENT */}
+          {selectedChild && (
+            <View style={styles.contentContainer}>
+              <View style={styles.contentHeader}>
+                <Text style={styles.contentTitle}>
+                  {selectedChild.menuitemname_c}
                 </Text>
-                <Text style={styles.detailText}>
-                  Last Logout Time: {formatSimpleHtmlText(lastLogoutTime)}
-                </Text>
-                <Text style={styles.detailText}>
-                  Last Failure Login Time:{" "}
-                  {formatSimpleHtmlText(lastFailureAttemptTime)}
-                </Text>
-
-                {!!loginLocation && roleId === 1 && (
-                  <Text style={styles.detailText}>
-                    Login Location: {loginLocation}
-                  </Text>
-                )}
-
-                <TouchableOpacity
-                  style={styles.primaryBtn}
-                  onPress={() => setProfileVisible(false)}
-                >
-                  <Text style={styles.primaryBtnText}>Close</Text>
-                </TouchableOpacity>
               </View>
             </View>
-          </Modal>
+          )}
+          <View style={styles.childrenWrapper}>{children}</View>
+        </ScrollView>
 
-          <Modal visible={notificationVisible} animationType="fade" transparent>
-            <View style={styles.modalBackdrop}>
-              <View style={styles.modalCard}>
-                <Text style={styles.modalTitle}>Notifications</Text>
+        {/* BOTTOM NAV */}
+        <View style={styles.bottomNav}>
+          <TouchableOpacity style={styles.navItem}>
+            <Ionicons name="home" size={22} color="#fff" />
+            <Text style={styles.navLabel}>Home</Text>
+          </TouchableOpacity>
 
-                <View style={styles.notificationBox}>
-                  <Text style={styles.notificationTitle}></Text>
-                  <Text style={styles.notificationMsg}>REACT</Text>
-                  <Text style={styles.notificationTime}>Just now</Text>
-                </View>
+          <TouchableOpacity style={styles.navItem}>
+            <Ionicons name="chatbox-ellipses" size={22} color="#fff" />
+            <Text style={styles.navLabel}>Grievance</Text>
+          </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.primaryBtn}
-                  onPress={() => setNotificationVisible(false)}
-                >
-                  <Text style={styles.primaryBtnText}>Close</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
+          <TouchableOpacity style={styles.centerButton}>
+            <Ionicons name="grid" size={28} color="#fff" />
+          </TouchableOpacity>
 
-          <Modal visible={logoutVisible} animationType="fade" transparent>
-            <View style={styles.modalBackdrop}>
-              <View style={styles.modalCard}>
-                <Text style={styles.modalTitle}>Logout</Text>
-                <Text style={styles.modalSubTitle}>
-                  Are you sure you want to logout?
-                </Text>
+          <TouchableOpacity style={styles.navItem}>
+            <Ionicons name="notifications" size={22} color="#fff" />
+            <Text style={styles.navLabel}>Alerts</Text>
+          </TouchableOpacity>
 
-                <View style={styles.rowButtons}>
-                  <TouchableOpacity
-                    style={styles.secondaryBtn}
-                    onPress={() => {
-                      setLogoutVisible(false);
-                      serviceAuthentication();
-                    }}
-                  >
-                    <Text style={styles.secondaryBtnText}>Stay Connected</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.dangerBtn}
-                    onPress={handleLogout}
-                  >
-                    <Text style={styles.dangerBtnText}>Logout</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </Modal>
-
-          <Modal visible={sessionAlertVisible} animationType="fade" transparent>
-            <View style={styles.modalBackdrop}>
-              <View style={[styles.modalCard, { maxHeight: "80%" }]}>
-                <Text style={[styles.modalTitle, { color: "#d9534f" }]}>
-                  Security Alert
-                </Text>
-
-                <Text style={styles.alertHeading}>
-                  There are {activeUsersCount} other active session(s) using
-                  this account.
-                </Text>
-
-                <ScrollView style={styles.sessionDetailsBox}>
-                  <Text style={styles.sessionDetailsText}>
-                    {formatSessionDetails(sessionDetails)}
-                  </Text>
-                </ScrollView>
-
-                <Text style={styles.alertInstruction}>
-                  Review the session details above. If this looks suspicious,
-                  logout from all sessions.
-                </Text>
-
-                <View style={styles.columnButtons}>
-                  <TouchableOpacity
-                    style={styles.dangerFullBtn}
-                    onPress={() => logoutAll("A")}
-                  >
-                    <Text style={styles.dangerBtnText}>
-                      Logout from All Sessions
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.warningFullBtn}
-                    onPress={() => logoutAll("E")}
-                  >
-                    <Text style={styles.warningBtnText}>
-                      Logout from All Except This Session
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.secondaryBtnFull}
-                    onPress={() => setSessionAlertVisible(false)}
-                  >
-                    <Text style={styles.secondaryBtnText}>Close</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </Modal>
+          <TouchableOpacity style={styles.navItem}>
+            <Ionicons name="settings" size={22} color="#fff" />
+            <Text style={styles.navLabel}>Settings</Text>
+          </TouchableOpacity>
         </View>
-        {/* ALL MODALS (unchanged) */}{" "}
-        {/* keep your existing modals here */}{" "}
-      </View>{" "}
+      </View>
+
+      {/* LOGOUT CONFIRMATION MODAL */}
+      <Modal
+        visible={logoutVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setLogoutVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Confirm Logout</Text>
+            <Text style={styles.modalMessage}>
+              Are you sure you want to logout?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setLogoutVisible(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={handleLogout}
+              >
+                <Text style={styles.confirmButtonText}>Logout</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -984,697 +604,422 @@ const handleSubChildPress = (subchild) => {
 export default SiteLayout;
 
 const styles = StyleSheet.create({
-  flex1: {
-    flex: 1,
-    backgroundColor: "white",
-  },
   safeArea: {
     flex: 1,
-    backgroundColor: "#0d6efd",
+    backgroundColor: "#0F172A",
   },
+
+  container: {
+    flex: 1,
+    backgroundColor: "#F1F5F9",
+  },
+
   header: {
-    backgroundColor: "#0d6efd",
+    backgroundColor: "#0F172A",
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  backButtonText: {
-    color: "#fff",
-    fontSize: 24,
-    fontWeight: "600",
-    lineHeight: 28,
-  },
-  logoContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    flex: 1,
-    gap: 10,
-  },
-  headerLogo: {
-    width: 60,
-    height: 60,
-    borderRadius: 32,
-    marginRight: 8,
-    backgroundColor: "#fff",
-  },
-  headerTitle: {
-    color: "white",
-    fontSize: 10,
-    fontWeight: "bold",
-    letterSpacing: 0.2,
-    textShadowColor: "rgba(0,0,0,0.2)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
-  },
-  headerTitle2: {
-    color: "green",
-    fontSize: 16,
-    fontWeight: "500",
-    letterSpacing: 0.5,
-  },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    color: "black",
-  },
-  sessionTimeCompact: {
-    marginRight: 8,
-  },
-  headerIconBtn: {
-    marginLeft: 8,
-  },
-  iconBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.3)",
-  },
-  headerIconText: {
-    fontSize: 18,
-    color: "#fff",
-  },
-  logoutBtn: {
-    backgroundColor: "transparent",
-  },
-  logoutIconText: {
-    color: "#fff",
-  },
-  profileDropdown: {
-    position: "absolute",
-    width: 150,
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 8,
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    zIndex: 1000,
-  },
-  dropdownItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-  },
-  dropdownIcon: {
-    fontSize: 16,
-    marginRight: 10,
-  },
-  dropdownText: {
-    fontSize: 14,
-    color: "#333",
-    fontWeight: "500",
-  },
-  dropdownDivider: {
-    height: 1,
-    backgroundColor: "#e0e0e0",
-    marginVertical: 4,
-  },
-  profileStrip: {
-    backgroundColor: "#fff",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0f0e0",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 8,
-    marginHorizontal: 12,
-    borderRadius: 16,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  profileLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    marginRight: 10,
-  },
-  profileImageContainer: {
-    position: "relative",
-  },
-  profileImage: {
-    height: 36,
-    width: 36,
-    borderRadius: 25,
-    backgroundColor: "#e8f5e8",
-    borderWidth: 1,
-    borderColor: "#1e7e34",
-  },
-  onlineIndicator: {
-    position: "absolute",
-    bottom: 2,
-    right: 2,
-    width: 8,
-    height: 8,
-    borderRadius: 7,
-    backgroundColor: "#4caf50",
-    borderWidth: 2,
-    borderColor: "#fff",
-  },
-  iconWrapper: {
-    position: "relative",
-    width: 30,
-    height: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 8,
-  },
-  badge: {
-    position: "absolute",
-    top: -6,
-    right: -6,
-    backgroundColor: "#EF4444",
-    borderRadius: 10,
-    minWidth: 18,
-    height: 18,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 4,
-    borderWidth: 1,
-    borderColor: "#fff",
-  },
-  badgeText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "bold",
-  },
-  profileTextContainer: {
-    marginLeft: 12,
-    flex: 1,
-    marginTop: 10,
-  },
-  textContainer: {
-    width: 130,
-  },
-  profileName: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1a3b1a",
-  },
-  profileRole: {
-    fontSize: 14,
-    color: "#4a784a",
-    marginTop: 2,
-    fontWeight: "500",
-  },
-  notificationBell: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#f0faf0",
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
-  },
-  bellIcon: {
-    fontSize: 20,
-  },
-  notificationDot: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#ff4444",
-    borderWidth: 1,
-    borderColor: "#fff",
-  },
-  securityBanner: {
-    backgroundColor: "#fff3e0",
-    borderColor: "#ffb74d",
-    borderWidth: 1,
-    marginHorizontal: 12,
-    marginTop: 10,
-    padding: 10,
-    borderRadius: 12,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  securityBannerText: {
-    color: "#e65100",
-    fontSize: 13,
-    fontWeight: "600",
-    flex: 1,
-  },
-  breadcrumbContainer: {
-    backgroundColor: "#fff",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0f0e0",
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  lastLoginContainer: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: "#f8fff8",
-  },
-  lastLoginText: {
-    fontSize: 12,
-    color: "#4a6a4a",
-    fontWeight: "500",
-  },
-  contentContainer: {
-    padding: 16,
-    paddingBottom: 100,
-  },
-  bottomNav: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "#ffffff",
-    borderTopWidth: 1,
-    borderTopColor: "#d0e8d0",
-    width: "100%",
-    elevation: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-  },
-  bottomNavScroll: {
-    paddingHorizontal: 10,
-    alignItems: "center",
-  },
-  bottomNavItem: {
-    minWidth: 90,
-    maxWidth: 140,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 25,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  bottomNavItemActive: {},
-  bottomNavText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#fff",
-  },
-  bottomNavTextActive: {
-    color: "#fff",
-  },
-  bottomSheetOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    justifyContent: "flex-end",
-  },
-  bottomSheet: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 24,
-    maxHeight: "75%",
-  },
-  sheetHandle: {
-    width: 52,
-    height: 5,
-    borderRadius: 999,
-    backgroundColor: "#d0d7e2",
-    alignSelf: "center",
-    marginBottom: 12,
-  },
-  sheetHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  sheetTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#111827",
-  },
-  sheetClose: {
-    fontSize: 20,
-    color: "#6b7280",
-    fontWeight: "700",
-  },
-  sheetScrollContent: {
-    paddingBottom: 10,
-  },
-  childBlock: {
-    marginBottom: 10,
-  },
-  childRow: {
-    backgroundColor: "#f8faff",
-    borderWidth: 1,
-    borderColor: "#e7edff",
-    borderRadius: 14,
-    paddingHorizontal: 14,
     paddingVertical: 14,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    borderBottomLeftRadius: 22,
+    borderBottomRightRadius: 22,
   },
-  childRowActive: {
-    backgroundColor: "#eef2ff",
-    borderColor: "#c7d2fe",
-  },
-  childRowText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#1f2937",
-    flex: 1,
-    paddingRight: 10,
-  },
-  childRowTextActive: {
-    color: "#2948c7",
-    fontWeight: "700",
-  },
-  childArrow: {
-    fontSize: 14,
-    color: "#64748b",
-    fontWeight: "700",
-  },
-  subChildWrapper: {
-    marginTop: 8,
-    paddingLeft: 10,
-    borderLeftWidth: 2,
-    borderLeftColor: "#dbe4ff",
-    marginLeft: 8,
-  },
-  subChildRow: {
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#edf1ff",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    marginBottom: 8,
-  },
-  subChildRowActive: {
-    backgroundColor: "#eaf0ff",
-    borderColor: "#bdd0ff",
-  },
-  subChildRowText: {
-    fontSize: 13,
-    color: "#475467",
-    fontWeight: "600",
-  },
-  subChildRowTextActive: {
-    color: "#2442bf",
-    fontWeight: "700",
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    justifyContent: "center",
-    padding: 18,
-  },
-  modalCard: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 18,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#111",
-    marginBottom: 12,
-  },
-  modalSubTitle: {
-    fontSize: 14,
-    color: "#555",
-    marginBottom: 16,
-  },
-  modalProfileImage: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    alignSelf: "center",
-    marginBottom: 16,
-  },
-  detailText: {
-    fontSize: 14,
-    color: "#333",
-    marginBottom: 8,
-  },
-  username: {
-    fontSize: 11,
-    color: "#2563EB",
-    fontWeight: "600",
-    textShadowColor: "transparent",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 0,
-  },
-  primaryBtn: {
-    marginTop: 16,
-    backgroundColor: "#1e7e34",
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  primaryBtnText: {
-    color: "#fff",
-    fontWeight: "700",
-  },
-  secondaryBtn: {
-    flex: 1,
-    backgroundColor: "#eef2ff",
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: "center",
-    marginRight: 8,
-  },
-  secondaryBtnFull: {
-    width: "100%",
-    backgroundColor: "#eef2ff",
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  secondaryBtnText: {
-    color: "#334",
-    fontWeight: "700",
-  },
-  dangerBtn: {
-    flex: 1,
-    backgroundColor: "#d9534f",
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: "center",
-    marginLeft: 8,
-  },
-  dangerBtnText: {
-    color: "#fff",
-    fontWeight: "700",
-  },
-  rowButtons: {
-    flexDirection: "row",
-    marginTop: 4,
-  },
-  columnButtons: {
-    gap: 10,
-    marginTop: 14,
-  },
-  dangerFullBtn: {
-    width: "100%",
-    backgroundColor: "#d9534f",
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  warningFullBtn: {
-    width: "100%",
-    backgroundColor: "#fff3cd",
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  warningBtnText: {
-    color: "#8a6d3b",
-    fontWeight: "700",
-  },
-  alertHeading: {
-    fontSize: 15,
-    color: "#c0392b",
-    fontWeight: "700",
-    marginBottom: 12,
-  },
-  alertInstruction: {
-    fontSize: 13,
-    color: "#555",
-    marginTop: 12,
-  },
-  sessionDetailsBox: {
-    maxHeight: 220,
-    borderWidth: 1,
-    borderColor: "#f1d1cf",
-    backgroundColor: "#fff8f7",
-    borderRadius: 10,
-    padding: 10,
-  },
-  sessionDetailsText: {
-    color: "#8d1f1a",
-    fontSize: 13,
-    lineHeight: 20,
-  },
-  notificationBox: {
-    backgroundColor: "#f7f9ff",
-    borderWidth: 1,
-    borderColor: "#e3e9ff",
-    borderRadius: 12,
-    padding: 14,
-  },
-  notificationTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#233",
-  },
-  notificationMsg: {
-    fontSize: 14,
-    color: "#4a6cf7",
-    marginTop: 6,
-  },
-  notificationTime: {
-    fontSize: 12,
-    color: "#777",
-    marginTop: 6,
-  },
-  blinkIcon: {
-    opacity: 0.4,
-  },
-  // Idle Modal Styles
-  idleModalContent: {
-    padding: 20,
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 10,
-  },
-  idleModalIcon: {
-    fontSize: 40,
-    marginBottom: 15,
-    color: "#FF7900",
-  },
-  idleModalText: {
-    fontSize: 16,
-    color: "#333",
-    textAlign: "center",
-    marginBottom: 25,
-    lineHeight: 24,
-  },
-  idleModalButtons: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    width: "100%",
-  },
-  idleButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    minWidth: 120,
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  // Add these to your existing StyleSheet, preferably after the existing modal styles
 
-  idleModalContent: {
-    padding: 20,
+  headerLeft: {
+    flexDirection: "row",
     alignItems: "center",
+    gap: 12,
+    flex: 1,
+  },
+
+  logo: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
     backgroundColor: "#fff",
-    borderRadius: 10,
   },
-  idleModalIcon: {
-    fontSize: 40,
-    marginBottom: 15,
-    color: "#FF7900",
+
+  headerTitle: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "800",
   },
-  idleModalText: {
-    fontSize: 16,
-    color: "#333",
-    textAlign: "center",
-    marginBottom: 25,
-    lineHeight: 24,
+
+  headerSubTitle: {
+    color: "#CBD5E1",
+    fontSize: 11,
+    marginTop: 3,
+  },
+
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+
+  userCountCard: {
+    backgroundColor: "#2563EB",
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
+    gap: 4,
   },
-  idleModalButtons: {
+
+  userCountText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 12,
+  },
+
+  profileImage: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    borderWidth: 2,
+    borderColor: "#fff",
+  },
+
+  profileMenu: {
+    position: "absolute",
+    top: 90,
+    right: 14,
+    backgroundColor: "#fff",
+    width: 180,
+    borderRadius: 18,
+    paddingVertical: 10,
+    zIndex: 999,
+    elevation: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+
+  profileMenuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+
+  profileMenuText: {
+    color: "#111827",
+    fontWeight: "600",
+  },
+
+  logoutText: {
+    color: "#DC2626",
+    fontWeight: "700",
+  },
+
+  body: {
+    flex: 1,
+    paddingHorizontal: 14,
+    paddingTop: 14,
+  },
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#0F172A",
+    marginBottom: 14,
+  },
+
+  parentGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "flex-start",
+    gap: 8,
+  },
+
+  parentCard: {
+    width: CARD_WIDTH,
+    minHeight: 95,
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    marginBottom: 12,
+    justifyContent: "space-between",
+    alignItems: "center",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+
+  parentIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  parentCardText: {
+    color: "#fff",
+    fontWeight: "700",
+    textAlign: "center",
+    fontSize: 11,
+  },
+
+  countBadge: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    backgroundColor: "#fff",
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  countBadgeText: {
+    color: "#111827",
+    fontWeight: "800",
+    fontSize: 10,
+  },
+
+  parentHeaderCard: {
+    backgroundColor: "#4F46E5",
+    padding: 16,
+    borderRadius: 20,
+    marginBottom: 16,
+  },
+
+  parentHeaderText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "800",
+  },
+
+  childrenGrid: {
+    gap: 12,
+    paddingBottom: 20,
+  },
+
+  childCard: {
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    padding: 16,
     flexDirection: "row",
     justifyContent: "space-between",
-    width: "100%",
-    paddingHorizontal: 10,
-  },
-  idleButton: {
-    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    flex: 1,
-    marginHorizontal: 5,
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 2,
   },
-  logoutButton: {
-    backgroundColor: "#d9534f",
+
+  childLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    gap: 12,
   },
-  stayConnectedButton: {
-    backgroundColor: "#28a745",
+
+  childIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#EEF2FF",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  buttonText: {
+
+  childText: {
+    flex: 1,
+    color: "#0F172A",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+
+  backBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#0F172A",
+    alignSelf: "flex-start",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 14,
+    marginBottom: 16,
+    gap: 6,
+  },
+
+  backBtnText: {
     color: "#fff",
-    fontWeight: "600",
+    fontWeight: "700",
+  },
+
+  contentContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    padding: 16,
+    marginBottom: 20,
+  },
+
+  contentHeader: {
+    marginBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E2E8F0",
+    paddingBottom: 12,
+  },
+
+  contentTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#0F172A",
+  },
+
+  childrenWrapper: {
+    minHeight: 200,
+  },
+
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    textAlign: "center",
+    marginBottom: 14,
+    color: "#111827",
+  },
+
+  modalImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignSelf: "center",
+    marginBottom: 16,
+  },
+
+  profileText: {
     fontSize: 14,
-    marginLeft: 8,
+    color: "#334155",
+    marginBottom: 10,
+    fontWeight: "500",
   },
-  labour_logo: {
-    height: 40,
-    width: 40,
-    borderRadius: 10,
+
+  bottomNav: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    backgroundColor: "#0F172A",
+    paddingVertical: 10,
+    borderTopLeftRadius: 26,
+    borderTopRightRadius: 26,
   },
-  teluguText: {
-    color: "white",
-    fontWeight: "bold",
+
+  navItem: {
+    alignItems: "center",
+    gap: 4,
+  },
+
+  navLabel: {
+    color: "#fff",
     fontSize: 11,
-    marginBottom: 6,
+    fontWeight: "600",
+  },
+
+  centerButton: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: "#4F46E5",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: -30,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 24,
+    width: width - 48,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+
+  modalMessage: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 24,
+  },
+
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+
+  cancelButton: {
+    backgroundColor: "#f5f5f5",
+  },
+
+  confirmButton: {
+    backgroundColor: "#DC2626",
+  },
+
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#666",
+  },
+
+  confirmButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
+  },
+
+  // New styles for selected item display
+  selectedItemContainer: {
+    backgroundColor: "#E0E7FF",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginBottom: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+  },
+  selectedItemLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#4F46E5",
+    marginRight: 8,
+  },
+  selectedItemName: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#1E1B4B",
+    flexShrink: 1,
   },
 });
