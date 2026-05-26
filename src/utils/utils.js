@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 import { hideLoader, hideMessage, showLoader, showMessage } from "../actions";
 import { Toast } from "react-native-sprinkle-toast";
 
-export const base_url = "https://swapi.dev.nidhi.apcfss.in/labour";
+export const base_url = "https://swapi.dev.nidhi.apcfss.in/apfdcl";
 export const IMG_UPLOAD_URL =
   "https://swapi.dev.nidhi.apcfss.in/socialwelfaredms/user-defined-path/file-upload/";
 export const IMG_DOWNLOAD_URL =
@@ -193,6 +193,10 @@ export const GET_DISTRICT_REPORT = "api/open/listofdistricts"
 export const GET_VILLAGESs = "/api/open/new-villages";
 export const WORKER_REG_API = "/api/worker/worker-registration";
 export const PAYMENT_API = "/api/open/create-payment";
+
+export const TicketBookingDetails = "api/user/spotbookingdetails"
+export const TicketBookingEntryDetails = "api/user/ticketbookingdetails"
+export const REPRINT = "api/user/ticketPrintDetails?"
 
 
 

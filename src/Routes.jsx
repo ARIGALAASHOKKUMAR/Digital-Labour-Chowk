@@ -28,6 +28,7 @@ import DistImage from "./screens/DistImage";
 import WorkerRegistration from "./screens/WorkerRegistrationForm";
 import WebViewScreen from "./sitelayout/WebViewScreen";
 import PaymentScreen from "./screens/PaymentTest";
+import TicketBooking from "./Bluetooth/TicketBooking";
 
 const Stack = createNativeStackNavigator();
 
@@ -95,7 +96,7 @@ export default function Routes() {
                       currentScreenName="HOME"
                       scrollEnabled={false}
                     >
-                      <HomeScreen {...props} />
+                      <TicketBooking {...props} />
                     </SiteLayout>
                   </SessionChecking>
                 )}
