@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,10 +10,11 @@ import {
   ActivityIndicator,
   PermissionsAndroid,
   Platform,
-} from 'react-native';
+} from "react-native";
 
-import { BleManager } from 'react-native-ble-plx';
-import { Buffer } from 'buffer';
+const {
+  BLEPrinter,
+} = require("react-native-thermal-receipt-printer-image-qr");
 
 const BluetoothPrinter = ({
   visible,
@@ -22,236 +23,201 @@ const BluetoothPrinter = ({
   onPrintComplete,
   onPrintError,
 }) => {
-  const bleManagerRef = useRef(null);
-
   const [devices, setDevices] = useState([]);
   const [isScanning, setIsScanning] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    initializeBLE();
-
-    return () => {
-      try {
-        if (bleManagerRef.current) {
-          bleManagerRef.current.stopDeviceScan();
-          bleManagerRef.current.destroy();
-        }
-      } catch (e) {
-        console.log(e);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (visible && isInitialized) {
-      scanForDevices();
+    if (visible) {
+      initializePrinter();
     }
-  }, [visible, isInitialized]);
-
-  const initializeBLE = async () => {
-    try {
-      console.log('Initializing BLE...');
-
-      const manager = new BleManager();
-
-      bleManagerRef.current = manager;
-
-      setIsInitialized(true);
-
-      console.log('BLE initialized successfully');
-    } catch (error) {
-      console.log('BLE INIT ERROR:', error);
-
-      Alert.alert(
-        'Bluetooth Error',
-        'Failed to initialize Bluetooth.',
-      );
-    }
-  };
+  }, [visible]);
 
   const requestPermissions = async () => {
-    if (Platform.OS !== 'android') {
-      return true;
-    }
-
     try {
+      if (Platform.OS !== "android") {
+        return true;
+      }
+
       if (Platform.Version >= 31) {
-        const granted = await PermissionsAndroid.requestMultiple([
-          PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-          PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
-        ]);
+        const granted =
+          await PermissionsAndroid.requestMultiple([
+            PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+            PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          ]);
 
         return (
-          granted['android.permission.BLUETOOTH_SCAN'] ===
+          granted["android.permission.BLUETOOTH_SCAN"] ===
             PermissionsAndroid.RESULTS.GRANTED &&
-          granted['android.permission.BLUETOOTH_CONNECT'] ===
+          granted["android.permission.BLUETOOTH_CONNECT"] ===
             PermissionsAndroid.RESULTS.GRANTED
         );
       } else {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        );
+        const granted =
+          await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+          );
 
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
+        return (
+          granted === PermissionsAndroid.RESULTS.GRANTED
+        );
       }
-    } catch (err) {
-      console.log(err);
+    } catch (error) {
+      console.log("Permission Error:", error);
       return false;
     }
   };
 
-  const scanForDevices = async () => {
-    const bleManager = bleManagerRef.current;
-
-    if (!bleManager) {
-      return;
-    }
-
-    const permission = await requestPermissions();
-
-    if (!permission) {
-      Alert.alert('Permission denied');
-      return;
-    }
-
-    setDevices([]);
-    setIsScanning(true);
-
+  const initializePrinter = async () => {
     try {
-      bleManager.startDeviceScan(null, null, (error, device) => {
-        if (error) {
-          console.log('SCAN ERROR:', error);
-          setIsScanning(false);
-          return;
-        }
+      const permissionGranted =
+        await requestPermissions();
 
-        if (device?.name) {
-          setDevices(prev => {
-            const exists = prev.find(d => d.id === device.id);
+      if (!permissionGranted) {
+        Alert.alert(
+          "Permission Denied",
+          "Bluetooth permission required"
+        );
+        return;
+      }
 
-            if (exists) {
-              return prev;
-            }
-
-            return [...prev, device];
-          });
-        }
-      });
-
-      setTimeout(() => {
-        bleManager.stopDeviceScan();
-        setIsScanning(false);
-      }, 10000);
+      scanDevices();
     } catch (error) {
-      console.log(error);
+      console.log("INIT ERROR:", error);
+    }
+  };
+
+  const scanDevices = async () => {
+    try {
+      setIsScanning(true);
+      setDevices([]);
+
+      await BLEPrinter.init();
+
+      const printerList =
+        await BLEPrinter.getDeviceList();
+
+      console.log("Printers:", printerList);
+
+      if (
+        printerList &&
+        Array.isArray(printerList)
+      ) {
+        setDevices(printerList);
+      } else {
+        setDevices([]);
+      }
+    } catch (error) {
+      console.log("SCAN ERROR:", error);
+
+      Alert.alert(
+        "Error",
+        "Unable to scan printers"
+      );
+    } finally {
       setIsScanning(false);
     }
   };
 
-  const generatePrintContent = data => {
+  const generatePrintContent = () => {
     try {
-      const ticket = data?.data?.TicketDetails?.[0];
+      const ticket =
+        printData?.data?.TicketDetails?.[0];
 
       if (!ticket) {
-        return 'No Data\n\n';
+        return "NO DATA\n\n";
       }
 
-      let content = '';
+      let content = "";
 
-      content += '\x1B\x40';
+      content +=
+        "================================\n";
 
-      content += `${ticket.spotName || 'Ticket'}\n`;
-      content += '------------------------------\n';
+      content += `${
+        ticket.spotName || "TICKET"
+      }\n`;
 
-      content += `Order ID : ${ticket.OrderId || ''}\n`;
-      content += `Date     : ${ticket.BookingDate || ''}\n`;
+      content +=
+        "================================\n";
 
-      content += '------------------------------\n';
+      content += `Order ID : ${
+        ticket.OrderId || ""
+      }\n`;
 
-      if (ticket.categoryList?.length > 0) {
-        ticket.categoryList.forEach(item => {
+      content += `Date : ${
+        ticket.BookingDate || ""
+      }\n`;
+
+      content +=
+        "--------------------------------\n";
+
+      if (
+        ticket.categoryList &&
+        ticket.categoryList.length > 0
+      ) {
+        ticket.categoryList.forEach((item) => {
           content += `${item.categoryName} x ${item.quantity}\n`;
         });
       }
 
-      content += '------------------------------\n';
+      content +=
+        "--------------------------------\n";
 
-      content += `Total : ₹${ticket.totalPrice || 0}\n\n`;
+      content += `Total : Rs.${
+        ticket.totalPrice || 0
+      }\n`;
 
-      content += 'Thank You\n\n\n';
+      content += "\n";
+
+      content += "Thank You\n";
+      content += "\n\n\n";
 
       return content;
-    } catch (e) {
-      console.log(e);
-      return 'Print Error\n';
+    } catch (error) {
+      console.log(error);
+      return "PRINT ERROR\n\n";
     }
   };
 
-  const connectToDevice = async device => {
+  const connectPrinter = async (device) => {
     try {
       setIsConnecting(true);
 
-      const bleManager = bleManagerRef.current;
+      console.log("Connecting:", device);
 
-      bleManager.stopDeviceScan();
+      const macAddress =
+        device?.inner_mac_address ||
+        device?.macAddress ||
+        device?.address;
 
-      console.log('Connecting to:', device.name);
-
-      const connectedDevice = await bleManager.connectToDevice(device.id);
-
-      await connectedDevice.discoverAllServicesAndCharacteristics();
-
-      const services = await connectedDevice.services();
-
-      let writableCharacteristic = null;
-
-      for (const service of services) {
-        const characteristics = await service.characteristics();
-
-        for (const characteristic of characteristics) {
-          if (
-            characteristic.isWritableWithResponse ||
-            characteristic.isWritableWithoutResponse
-          ) {
-            writableCharacteristic = characteristic;
-            break;
-          }
-        }
-
-        if (writableCharacteristic) {
-          break;
-        }
+      if (!macAddress) {
+        Alert.alert(
+          "Error",
+          "Printer MAC address not found"
+        );
+        return;
       }
 
-      if (!writableCharacteristic) {
-        throw new Error('No writable characteristic found');
-      }
-
-      const printContent = generatePrintContent(printData);
-
-      const base64Data = Buffer.from(printContent, 'utf8').toString(
-        'base64',
+      await BLEPrinter.connectPrinter(
+        macAddress
       );
 
-      if (writableCharacteristic.isWritableWithResponse) {
-        await connectedDevice.writeCharacteristicWithResponseForService(
-          writableCharacteristic.serviceUUID,
-          writableCharacteristic.uuid,
-          base64Data,
-        );
-      } else {
-        await connectedDevice.writeCharacteristicWithoutResponseForService(
-          writableCharacteristic.serviceUUID,
-          writableCharacteristic.uuid,
-          base64Data,
-        );
-      }
+      const printText =
+        generatePrintContent();
 
-      Alert.alert('Success', 'Printed Successfully');
+      await BLEPrinter.printText(printText, {
+        encoding: "UTF-8",
+        codepage: 0,
+        widthtimes: 1,
+        heigthtimes: 1,
+        fonttype: 1,
+      });
 
-      await connectedDevice.cancelConnection();
+      Alert.alert(
+        "Success",
+        "Printed Successfully"
+      );
 
       if (onPrintComplete) {
         onPrintComplete();
@@ -259,11 +225,11 @@ const BluetoothPrinter = ({
 
       onClose();
     } catch (error) {
-      console.log('PRINT ERROR:', error);
+      console.log("PRINT ERROR:", error);
 
       Alert.alert(
-        'Print Failed',
-        error?.message || 'Unable to print',
+        "Print Failed",
+        error?.message || "Unable to print"
       );
 
       if (onPrintError) {
@@ -278,17 +244,21 @@ const BluetoothPrinter = ({
     return (
       <TouchableOpacity
         style={styles.deviceItem}
-        onPress={() => connectToDevice(item)}
+        onPress={() => connectPrinter(item)}
+        disabled={isConnecting}
       >
-        <View>
-          <Text style={styles.deviceName}>
-            {item.name}
-          </Text>
+        <Text style={styles.deviceName}>
+          {item.device_name ||
+            item.name ||
+            "Unknown Printer"}
+        </Text>
 
-          <Text style={styles.deviceId}>
-            {item.id}
-          </Text>
-        </View>
+        <Text style={styles.deviceId}>
+          {item.inner_mac_address ||
+            item.macAddress ||
+            item.address ||
+            ""}
+        </Text>
       </TouchableOpacity>
     );
   };
@@ -296,7 +266,7 @@ const BluetoothPrinter = ({
   return (
     <Modal
       visible={visible}
-      transparent
+      transparent={true}
       animationType="slide"
       onRequestClose={onClose}
     >
@@ -311,25 +281,27 @@ const BluetoothPrinter = ({
               <ActivityIndicator size="large" />
 
               <Text style={styles.scanText}>
-                Scanning printers...
+                Scanning Printers...
               </Text>
             </View>
           ) : (
             <>
               <FlatList
                 data={devices}
-                keyExtractor={item => item.id}
+                keyExtractor={(item, index) =>
+                  index.toString()
+                }
                 renderItem={renderDevice}
                 ListEmptyComponent={
                   <Text style={styles.noDevice}>
-                    No devices found
+                    No Printers Found
                   </Text>
                 }
               />
 
               <TouchableOpacity
                 style={styles.scanButton}
-                onPress={scanForDevices}
+                onPress={scanDevices}
               >
                 <Text style={styles.buttonText}>
                   Scan Again
@@ -345,8 +317,8 @@ const BluetoothPrinter = ({
           >
             <Text style={styles.buttonText}>
               {isConnecting
-                ? 'Connecting...'
-                : 'Close'}
+                ? "Connecting..."
+                : "Close"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -355,81 +327,84 @@ const BluetoothPrinter = ({
   );
 };
 
+export default BluetoothPrinter;
+
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   modalContent: {
-    width: '90%',
-    backgroundColor: '#fff',
+    width: "90%",
+    backgroundColor: "#fff",
     borderRadius: 10,
     padding: 20,
-    maxHeight: '80%',
+    maxHeight: "80%",
   },
 
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 20,
   },
 
   center: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 30,
   },
 
   scanText: {
     marginTop: 10,
+    fontSize: 16,
   },
 
   deviceItem: {
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    borderBottomColor: "#ddd",
   },
 
   deviceName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 
   deviceId: {
     fontSize: 12,
-    marginTop: 4,
-    color: '#777',
+    color: "#777",
+    marginTop: 5,
   },
 
   noDevice: {
-    textAlign: 'center',
+    textAlign: "center",
     marginVertical: 20,
+    fontSize: 16,
   },
 
   scanButton: {
-    backgroundColor: '#1976D2',
+    backgroundColor: "#1976D2",
     padding: 12,
     borderRadius: 8,
     marginTop: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
 
   closeButton: {
-    backgroundColor: '#f44336',
+    backgroundColor: "#f44336",
     padding: 12,
     borderRadius: 8,
     marginTop: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
 
   buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });
-
-export default BluetoothPrinter;

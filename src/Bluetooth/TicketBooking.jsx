@@ -22,6 +22,7 @@ import {
 } from "../utils/utils";
 
 import { numberToWordsWithPrecision } from "../utils/CommonFunctions";
+import BluetoothPrinter from "./BluetoothPrinter";
 // import BluetoothPrinter from "./BluetoothPrinter";
 
 const TicketBooking = (props) => {
@@ -432,7 +433,7 @@ const TicketBooking = (props) => {
         )}
       </ScrollView>
 
-      {/* {showPrinterModal && BluetoothPrinter && (
+       {showPrinterModal && BluetoothPrinter && (
         <BluetoothPrinter
           visible={showPrinterModal}
           onClose={() => setShowPrinterModal(false)}
@@ -440,7 +441,7 @@ const TicketBooking = (props) => {
           onPrintComplete={handlePrintComplete}
           onPrintError={handlePrintError}
         />
-      )} */}
+      )} 
     </>
   );
 };
