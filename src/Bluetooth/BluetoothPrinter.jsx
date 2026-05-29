@@ -12,9 +12,9 @@ import {
   Platform,
 } from "react-native";
 
-const {
-  BLEPrinter,
-} = require("react-native-thermal-receipt-printer-image-qr");
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const { BLEPrinter } = require("react-native-thermal-receipt-printer-image-qr");
 
 const BluetoothPrinter = ({
   visible,
@@ -40,12 +40,11 @@ const BluetoothPrinter = ({
       }
 
       if (Platform.Version >= 31) {
-        const granted =
-          await PermissionsAndroid.requestMultiple([
-            PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-            PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
-            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          ]);
+        const granted = await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        ]);
 
         return (
           granted["android.permission.BLUETOOTH_SCAN"] ===
@@ -54,56 +53,85 @@ const BluetoothPrinter = ({
             PermissionsAndroid.RESULTS.GRANTED
         );
       } else {
-        const granted =
-          await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-          );
-
-        return (
-          granted === PermissionsAndroid.RESULTS.GRANTED
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         );
+
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
       }
     } catch (error) {
       console.log("Permission Error:", error);
+
       return false;
     }
   };
 
   const initializePrinter = async () => {
     try {
-      const permissionGranted =
-        await requestPermissions();
+      const permissionGranted = await requestPermissions();
 
       if (!permissionGranted) {
-        Alert.alert(
-          "Permission Denied",
-          "Bluetooth permission required"
-        );
+        Alert.alert("Permission Denied", "Bluetooth permission required");
+
         return;
       }
 
-      scanDevices();
+      await autoConnectPrinter();
     } catch (error) {
       console.log("INIT ERROR:", error);
+    }
+  };
+
+  const autoConnectPrinter = async () => {
+    try {
+      const savedPrinter = await AsyncStorage.getItem("LAST_CONNECTED_PRINTER");
+
+      if (!savedPrinter) {
+        scanDevices();
+        return;
+      }
+
+      setIsConnecting(true);
+
+      await BLEPrinter.init();
+
+      await BLEPrinter.connectPrinter(savedPrinter);
+
+      const printText = generatePrintContent();
+
+      await BLEPrinter.printText(printText, {
+        encoding: "UTF-8",
+        codepage: 0,
+        cut: true,
+      });
+
+      Alert.alert("Success", "Printed Successfully");
+
+      onPrintComplete?.();
+
+      onClose();
+    } catch (error) {
+      console.log("AUTO CONNECT ERROR:", error);
+
+      scanDevices();
+    } finally {
+      setIsConnecting(false);
     }
   };
 
   const scanDevices = async () => {
     try {
       setIsScanning(true);
+
       setDevices([]);
 
       await BLEPrinter.init();
 
-      const printerList =
-        await BLEPrinter.getDeviceList();
+      const printerList = await BLEPrinter.getDeviceList();
 
       console.log("Printers:", printerList);
 
-      if (
-        printerList &&
-        Array.isArray(printerList)
-      ) {
+      if (printerList && Array.isArray(printerList)) {
         setDevices(printerList);
       } else {
         setDevices([]);
@@ -111,134 +139,330 @@ const BluetoothPrinter = ({
     } catch (error) {
       console.log("SCAN ERROR:", error);
 
-      Alert.alert(
-        "Error",
-        "Unable to scan printers"
-      );
+      Alert.alert("Error", "Unable to scan printers");
     } finally {
       setIsScanning(false);
     }
   };
 
   const generatePrintContent = () => {
-    try {
-      const ticket =
-        printData?.data?.TicketDetails?.[0];
+  try {
+    const ticket = printData?.data?.TicketDetails?.[0];
 
-      if (!ticket) {
-        return "NO DATA\n\n";
-      }
-
-      let content = "";
-
-      content +=
-        "================================\n";
-
-      content += `${
-        ticket.spotName || "TICKET"
-      }\n`;
-
-      content +=
-        "================================\n";
-
-      content += `Order ID : ${
-        ticket.OrderId || ""
-      }\n`;
-
-      content += `Date : ${
-        ticket.BookingDate || ""
-      }\n`;
-
-      content +=
-        "--------------------------------\n";
-
-      if (
-        ticket.categoryList &&
-        ticket.categoryList.length > 0
-      ) {
-        ticket.categoryList.forEach((item) => {
-          content += `${item.categoryName} x ${item.quantity}\n`;
-        });
-      }
-
-      content +=
-        "--------------------------------\n";
-
-      content += `Total : Rs.${
-        ticket.totalPrice || 0
-      }\n`;
-
-      content += "\n";
-
-      content += "Thank You\n";
-      content += "\n\n\n";
-
-      return content;
-    } catch (error) {
-      console.log(error);
-      return "PRINT ERROR\n\n";
+    if (!ticket) {
+      return "NO DATA\n\n";
     }
-  };
 
-  const connectPrinter = async (device) => {
-    try {
-      setIsConnecting(true);
+    const LINE_WIDTH = 32;
 
-      console.log("Connecting:", device);
+    const ITEM_WIDTH = 14;
+    const QTY_WIDTH = 4;
+    const PRICE_WIDTH = 6;
+    const TOTAL_WIDTH = 8;
 
-      const macAddress =
-        device?.inner_mac_address ||
-        device?.macAddress ||
-        device?.address;
+    const centerText = (text = "") => {
+      text = String(text);
 
-      if (!macAddress) {
-        Alert.alert(
-          "Error",
-          "Printer MAC address not found"
-        );
-        return;
+      if (text.length >= LINE_WIDTH) {
+        return text + "\n";
       }
 
-      await BLEPrinter.connectPrinter(
-        macAddress
+      const leftPadding = Math.floor(
+        (LINE_WIDTH - text.length) / 2,
       );
 
-      const printText =
-        generatePrintContent();
+      return " ".repeat(leftPadding) + text + "\n";
+    };
 
-      await BLEPrinter.printText(printText, {
-        encoding: "UTF-8",
-        codepage: 0,
-        widthtimes: 1,
-        heigthtimes: 1,
-        fonttype: 1,
+    const divider = () => "=".repeat(LINE_WIDTH) + "\n";
+
+    const thinLine = () => "-".repeat(LINE_WIDTH) + "\n";
+
+    const leftRight = (left = "", right = "") => {
+      left = String(left);
+      right = String(right);
+
+      const space =
+        LINE_WIDTH - left.length - right.length;
+
+      return (
+        left +
+        " ".repeat(Math.max(1, space)) +
+        right +
+        "\n"
+      );
+    };
+
+    const wrapText = (text, width) => {
+      const lines = [];
+
+      let current = "";
+
+      text.split(" ").forEach((word) => {
+        if (
+          (current + word).length < width
+        ) {
+          current += word + " ";
+        } else {
+          lines.push(current.trim());
+          current = word + " ";
+        }
       });
 
-      Alert.alert(
-        "Success",
-        "Printed Successfully"
-      );
-
-      if (onPrintComplete) {
-        onPrintComplete();
+      if (current.trim()) {
+        lines.push(current.trim());
       }
 
-      onClose();
-    } catch (error) {
-      console.log("PRINT ERROR:", error);
+      return lines;
+    };
 
-      Alert.alert(
-        "Print Failed",
-        error?.message || "Unable to print"
+    const formatTableRow = (
+      item,
+      qty,
+      price,
+      total,
+    ) => {
+      let output = "";
+
+      const wrappedItems = wrapText(
+        String(item || ""),
+        ITEM_WIDTH,
       );
 
-      if (onPrintError) {
-        onPrintError(error);
-      }
-    } finally {
-      setIsConnecting(false);
+      wrappedItems.forEach(
+        (line, index) => {
+          if (index === 0) {
+            output +=
+              line.padEnd(ITEM_WIDTH) +
+              String(qty)
+                .padStart(QTY_WIDTH) +
+              String(price)
+                .padStart(PRICE_WIDTH) +
+              String(total)
+                .padStart(TOTAL_WIDTH) +
+              "\n";
+          } else {
+            output +=
+              line.padEnd(
+                ITEM_WIDTH +
+                  QTY_WIDTH +
+                  PRICE_WIDTH +
+                  TOTAL_WIDTH,
+              ) + "\n";
+          }
+        },
+      );
+
+      return output;
+    };
+
+    let content = "";
+
+    content += "\n";
+
+    content += centerText("APFDCL");
+
+    content += centerText(
+      ticket.spotName || "ENTRY TICKET",
+    );
+
+    content += centerText("ENTRY TICKET");
+
+    content += divider();
+
+    content += leftRight(
+      "Order ID",
+      ticket.OrderId || "-",
+    );
+
+    content += leftRight(
+      "Date",
+      ticket.BookingDate || "-",
+    );
+
+    content += leftRight(
+      "Time",
+      ticket.BookingTime || "-",
+    );
+
+    content += divider();
+
+    content +=
+      "Item".padEnd(ITEM_WIDTH) +
+      "Qty".padStart(QTY_WIDTH) +
+      "Price".padStart(PRICE_WIDTH) +
+      "Total".padStart(TOTAL_WIDTH) +
+      "\n";
+
+    content += thinLine();
+
+    let grandTotal = 0;
+
+    if (
+      ticket.categoryList &&
+      ticket.categoryList.length > 0
+    ) {
+      ticket.categoryList.forEach((item) => {
+        const qty = Number(
+          item.quantity || 0,
+        );
+
+        const price = Number(
+          item.categoryAmount || 0,
+        );
+
+        const subtotal = qty * price;
+
+        grandTotal += subtotal;
+
+        content += formatTableRow(
+          item.categoryName || "",
+          qty,
+          price,
+          subtotal,
+        );
+      });
     }
-  };
+
+    content += thinLine();
+
+    content += leftRight(
+      "TOTAL",
+      `Rs.${grandTotal}/-`,
+    );
+
+    if (
+      ticket.discountAmount &&
+      ticket.discountAmount > 0
+    ) {
+      content += leftRight(
+        "Discount",
+        `-Rs.${ticket.discountAmount}`,
+      );
+
+      content += leftRight(
+        "NET TOTAL",
+        `Rs.${
+          grandTotal -
+          ticket.discountAmount
+        }/-`,
+      );
+    }
+
+    if (ticket.paidAmount) {
+      content += leftRight(
+        "Paid",
+        `Rs.${ticket.paidAmount}/-`,
+      );
+    }
+
+    content += divider();
+
+    if (ticket.visitorName) {
+      content += leftRight(
+        "Visitor",
+        ticket.visitorName,
+      );
+    }
+
+    if (ticket.visitorMobile) {
+      content += leftRight(
+        "Mobile",
+        ticket.visitorMobile,
+      );
+    }
+
+    content += divider();
+
+    content += centerText(
+      "Thank You! Visit Again",
+    );
+
+    content += centerText(
+      "Have a Nice Day",
+    );
+
+    content += "\n\n\n";
+
+    return content;
+  } catch (error) {
+    console.log(
+      "PRINT CONTENT ERROR:",
+      error,
+    );
+
+    return "PRINT ERROR\n\n";
+  }
+};
+
+  const connectPrinter = async (device) => {
+  try {
+    setIsConnecting(true);
+
+    const macAddress =
+      device?.inner_mac_address ||
+      device?.macAddress ||
+      device?.address;
+
+    if (!macAddress) {
+      Alert.alert(
+        "Error",
+        "Printer MAC address not found",
+      );
+
+      return;
+    }
+
+    await AsyncStorage.setItem(
+      "LAST_CONNECTED_PRINTER",
+      macAddress,
+    );
+
+    await BLEPrinter.connectPrinter(
+      macAddress,
+    );
+
+    // PRINT LOGO
+    await BLEPrinter.printImage(
+      "https://apfdcl.ap.gov.in/files/apfdcl_final_logo.jpg",
+      {
+        imageWidth: 180,
+        imageHeight: 80,
+      },
+    );
+
+    const printText =
+      generatePrintContent();
+
+    await BLEPrinter.printText(
+      printText,
+      {
+        encoding: "UTF-8",
+        codepage: 0,
+        widthtimes: 0,
+        heigthtimes: 0,
+        fonttype: 1,
+        cut: true,
+      },
+    );
+
+    onPrintComplete?.();
+
+    onClose();
+  } catch (error) {
+    console.log("PRINT ERROR:", error);
+
+    Alert.alert(
+      "Print Failed",
+      error?.message ||
+        "Unable to print",
+    );
+
+    onPrintError?.(error);
+  } finally {
+    setIsConnecting(false);
+  }
+};
 
   const renderDevice = ({ item }) => {
     return (
@@ -248,16 +472,11 @@ const BluetoothPrinter = ({
         disabled={isConnecting}
       >
         <Text style={styles.deviceName}>
-          {item.device_name ||
-            item.name ||
-            "Unknown Printer"}
+          {item.device_name || item.name || "Unknown Printer"}
         </Text>
 
         <Text style={styles.deviceId}>
-          {item.inner_mac_address ||
-            item.macAddress ||
-            item.address ||
-            ""}
+          {item.inner_mac_address || item.macAddress || item.address || ""}
         </Text>
       </TouchableOpacity>
     );
@@ -272,40 +491,31 @@ const BluetoothPrinter = ({
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <Text style={styles.title}>
-            Select Printer
-          </Text>
+          <Text style={styles.title}>Select Printer</Text>
 
-          {isScanning ? (
+          {isScanning || isConnecting ? (
             <View style={styles.center}>
               <ActivityIndicator size="large" />
 
               <Text style={styles.scanText}>
-                Scanning Printers...
+                {isConnecting
+                  ? "Connecting Printer..."
+                  : "Scanning Printers..."}
               </Text>
             </View>
           ) : (
             <>
               <FlatList
                 data={devices}
-                keyExtractor={(item, index) =>
-                  index.toString()
-                }
+                keyExtractor={(item, index) => index.toString()}
                 renderItem={renderDevice}
                 ListEmptyComponent={
-                  <Text style={styles.noDevice}>
-                    No Printers Found
-                  </Text>
+                  <Text style={styles.noDevice}>No Printers Found</Text>
                 }
               />
 
-              <TouchableOpacity
-                style={styles.scanButton}
-                onPress={scanDevices}
-              >
-                <Text style={styles.buttonText}>
-                  Scan Again
-                </Text>
+              <TouchableOpacity style={styles.scanButton} onPress={scanDevices}>
+                <Text style={styles.buttonText}>Scan Again</Text>
               </TouchableOpacity>
             </>
           )}
@@ -315,11 +525,7 @@ const BluetoothPrinter = ({
             onPress={onClose}
             disabled={isConnecting}
           >
-            <Text style={styles.buttonText}>
-              {isConnecting
-                ? "Connecting..."
-                : "Close"}
-            </Text>
+            <Text style={styles.buttonText}>Close</Text>
           </TouchableOpacity>
         </View>
       </View>

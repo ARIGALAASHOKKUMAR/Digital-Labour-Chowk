@@ -23,6 +23,7 @@ import {
 
 import { numberToWordsWithPrecision } from "../utils/CommonFunctions";
 import BluetoothPrinter from "./BluetoothPrinter";
+import { globalStyes } from "../screens/GlobalStyles";
 // import BluetoothPrinter from "./BluetoothPrinter";
 
 const TicketBooking = (props) => {
@@ -41,10 +42,7 @@ const TicketBooking = (props) => {
   const getDisplayText = (value) => {
     if (typeof value === "object" && value !== null) {
       return (
-        value.combined ||
-        value.english ||
-        value.telugu ||
-        JSON.stringify(value)
+        value.combined || value.english || value.telugu || JSON.stringify(value)
       );
     }
     return value || "";
@@ -79,7 +77,7 @@ const TicketBooking = (props) => {
         TicketBookingDetails,
         {},
         "GET",
-        dispatch
+        dispatch,
       );
 
       if (response.status === 200) {
@@ -118,9 +116,7 @@ const TicketBooking = (props) => {
 
   const calculateSpotTotal = (categoryList) => {
     return categoryList.reduce((total, category) => {
-      const quantity = category.quantity
-        ? parseInt(category.quantity, 10)
-        : 0;
+      const quantity = category.quantity ? parseInt(category.quantity, 10) : 0;
 
       return total + category.categoryAmount * quantity;
     }, 0);
@@ -132,7 +128,7 @@ const TicketBooking = (props) => {
 
     spots.forEach((spot, spotIndex) => {
       const hasNonZeroQuantity = spot.categoryList.some(
-        (cat) => cat.quantity && parseInt(cat.quantity, 10) > 0
+        (cat) => cat.quantity && parseInt(cat.quantity, 10) > 0,
       );
 
       if (!hasNonZeroQuantity) {
@@ -144,9 +140,8 @@ const TicketBooking = (props) => {
 
       spot.categoryList.forEach((category, catIndex) => {
         if (category.quantity && parseInt(category.quantity, 10) < 0) {
-          newErrors[
-            `spots[${spotIndex}].categoryList[${catIndex}].quantity`
-          ] = "Quantity cannot be negative";
+          newErrors[`spots[${spotIndex}].categoryList[${catIndex}].quantity`] =
+            "Quantity cannot be negative";
 
           isValid = false;
         }
@@ -180,7 +175,7 @@ const TicketBooking = (props) => {
 
     Alert.alert(
       "Print Error",
-      "Failed to print ticket. Please check printer connection."
+      "Failed to print ticket. Please check printer connection.",
     );
   };
 
@@ -194,7 +189,7 @@ const TicketBooking = (props) => {
     if (!validateForm()) {
       Alert.alert(
         "Validation Error",
-        "Please fill at least one category with quantity greater than 0"
+        "Please fill at least one category with quantity greater than 0",
       );
 
       return;
@@ -213,8 +208,7 @@ const TicketBooking = (props) => {
             categoryList: spot.categoryList
               .filter(
                 (category) =>
-                  category.quantity &&
-                  parseInt(category.quantity, 10) > 0
+                  category.quantity && parseInt(category.quantity, 10) > 0,
               )
               .map((category) => ({
                 categoryId: category.categoryId,
@@ -232,10 +226,10 @@ const TicketBooking = (props) => {
         TicketBookingEntryDetails,
         modifiedValues,
         "POST",
-        dispatch
+        dispatch,
       );
 
-      console.log("Booking response:", response);
+      console.log("Booking response:", response.data.TicketDetails);
       if (response.status === 200) {
         TicketPopup(response);
       } else {
@@ -264,7 +258,7 @@ const TicketBooking = (props) => {
         REPRINT + `orderId=${orderId}`,
         {},
         "GET",
-        dispatch
+        dispatch,
       );
 
       if (response.status === 200) {
@@ -293,15 +287,11 @@ const TicketBooking = (props) => {
     return spots.map((spot, spotIndex) => (
       <View key={spotIndex} style={styles.spotCard}>
         <View style={styles.spotHeader}>
-          <Text style={styles.spotName}>
-            {getDisplayText(spot.spotName)}
-          </Text>
+          <Text style={styles.spotName}>{getDisplayText(spot.spotName)}</Text>
         </View>
 
         {errors[`spots[${spotIndex}]`] && (
-          <Text style={styles.errorText}>
-            {errors[`spots[${spotIndex}]`]}
-          </Text>
+          <Text style={styles.errorText}>{errors[`spots[${spotIndex}]`]}</Text>
         )}
 
         <View style={styles.categoryContainer}>
@@ -324,11 +314,7 @@ const TicketBooking = (props) => {
                   keyboardType="numeric"
                   value={String(category.quantity || "")}
                   onChangeText={(value) =>
-                    handleQuantityChange(
-                      spotIndex,
-                      categoryIndex,
-                      value
-                    )
+                    handleQuantityChange(spotIndex, categoryIndex, value)
                   }
                 />
               </View>
@@ -348,19 +334,19 @@ const TicketBooking = (props) => {
           ))}
         </View>
 
-        <View style={styles.paymentModeContainer}>
+        <View style={globalStyes.selectBox}>
           <Text style={styles.labelTextBlack}>Mode of Payment</Text>
 
-          <View style={styles.pickerWrapper}>
+          {/* <View style={globalStyes.selectBox}> */}
             <Picker
               selectedValue={mode}
               onValueChange={(itemValue) => setMode(itemValue)}
-              style={styles.picker}
+              style={globalStyes.pickerText}
             >
               <Picker.Item label="Offline" value="offline" />
               <Picker.Item label="Online" value="online" />
             </Picker>
-          </View>
+          {/* </View> */}
         </View>
 
         <View style={styles.totalContainer}>
@@ -373,9 +359,7 @@ const TicketBooking = (props) => {
 
         <Text style={styles.amountInWords}>
           {getDisplayText(
-            numberToWordsWithPrecision(
-              calculateSpotTotal(spot.categoryList)
-            )
+            numberToWordsWithPrecision(calculateSpotTotal(spot.categoryList)),
           )}
         </Text>
       </View>
@@ -388,7 +372,7 @@ const TicketBooking = (props) => {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>📋 Ticket Booking</Text>
 
-          <View style={styles.reprintContainer}>
+          {/* <View style={styles.reprintContainer}>
             <Text style={styles.labelText}>Order ID</Text>
 
             <View style={styles.reprintRow}>
@@ -407,7 +391,7 @@ const TicketBooking = (props) => {
                 <Text style={styles.buttonText}>Print</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </View> */}
         </View>
 
         {loading && (
@@ -426,14 +410,12 @@ const TicketBooking = (props) => {
             onPress={handleSubmit}
             disabled={loading}
           >
-            <Text style={styles.submitButtonText}>
-              Book Ticket
-            </Text>
+            <Text style={styles.submitButtonText}>Book Ticket</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
 
-       {showPrinterModal && BluetoothPrinter && (
+      {showPrinterModal && BluetoothPrinter && (
         <BluetoothPrinter
           visible={showPrinterModal}
           onClose={() => setShowPrinterModal(false)}
@@ -441,7 +423,7 @@ const TicketBooking = (props) => {
           onPrintComplete={handlePrintComplete}
           onPrintError={handlePrintError}
         />
-      )} 
+      )}
     </>
   );
 };
