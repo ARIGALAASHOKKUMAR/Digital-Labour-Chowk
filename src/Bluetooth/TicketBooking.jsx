@@ -1,3 +1,4 @@
+// TicketBooking.js
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -8,8 +9,6 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
-  PermissionsAndroid,
-  Platform,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useDispatch } from "react-redux";
@@ -24,7 +23,6 @@ import {
 import { numberToWordsWithPrecision } from "../utils/CommonFunctions";
 import BluetoothPrinter from "./BluetoothPrinter";
 import { globalStyes } from "../screens/GlobalStyles";
-// import BluetoothPrinter from "./BluetoothPrinter";
 
 const TicketBooking = (props) => {
   const [data, setData] = useState([]);
@@ -35,6 +33,9 @@ const TicketBooking = (props) => {
   const [showPrinterModal, setShowPrinterModal] = useState(false);
   const [printData, setPrintData] = useState(null);
   const [errors, setErrors] = useState({});
+  const [bluetoothname, setBluetoothname] = useState("");
+  const [showBluetoothModal, setShowBluetoothModal] = useState(false);
+  const [pendingPrintData, setPendingPrintData] = useState(null);
 
   const dispatch = useDispatch();
 
@@ -50,24 +51,7 @@ const TicketBooking = (props) => {
 
   useEffect(() => {
     fetchSpotBookingDetails();
-    requestBluetoothPermission();
   }, []);
-
-  const requestBluetoothPermission = async () => {
-    if (Platform.OS === "android") {
-      try {
-        const granted = await PermissionsAndroid.requestMultiple([
-          PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-          PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        ]);
-
-        console.log("Bluetooth permissions:", granted);
-      } catch (err) {
-        console.warn(err);
-      }
-    }
-  };
 
   const fetchSpotBookingDetails = async () => {
     setLoading(true);
@@ -83,18 +67,11 @@ const TicketBooking = (props) => {
       if (response.status === 200) {
         const fetchedSpots = response.data.spotBookingDetails.map((spot) => ({
           spotId: spot.spotId,
-
-          // FIXED
           spotName: getDisplayText(spot.spotName),
-
           paymentMode: "offline",
-
           categoryList: spot.categoryList.map((category) => ({
             categoryId: category.categoryId,
-
-            // FIXED
             categoryName: getDisplayText(category.categoryName),
-
             categoryAmount: parseFloat(category.categoryAmount),
             quantity: "",
             Total: 0,
@@ -117,7 +94,6 @@ const TicketBooking = (props) => {
   const calculateSpotTotal = (categoryList) => {
     return categoryList.reduce((total, category) => {
       const quantity = category.quantity ? parseInt(category.quantity, 10) : 0;
-
       return total + category.categoryAmount * quantity;
     }, 0);
   };
@@ -134,7 +110,6 @@ const TicketBooking = (props) => {
       if (!hasNonZeroQuantity) {
         newErrors[`spots[${spotIndex}]`] =
           "At least one category should be filled";
-
         isValid = false;
       }
 
@@ -142,47 +117,70 @@ const TicketBooking = (props) => {
         if (category.quantity && parseInt(category.quantity, 10) < 0) {
           newErrors[`spots[${spotIndex}].categoryList[${catIndex}].quantity`] =
             "Quantity cannot be negative";
-
           isValid = false;
         }
       });
     });
 
     setErrors(newErrors);
-
     return isValid;
   };
 
   const handleQuantityChange = (spotIndex, categoryIndex, value) => {
     const newSpots = [...spots];
-
     newSpots[spotIndex].categoryList[categoryIndex].quantity = value;
-
     setSpots(newSpots);
   };
 
   const handlePrintComplete = () => {
     setShowPrinterModal(false);
     setPrintData(null);
-
+    setPendingPrintData(null);
     Alert.alert("Success", "Ticket printed successfully!");
-
     fetchSpotBookingDetails();
   };
 
   const handlePrintError = (error) => {
     console.error("Print error:", error);
-
     Alert.alert(
       "Print Error",
       "Failed to print ticket. Please check printer connection.",
     );
   };
 
-  const TicketPopup = (response) => {
-    setOrderId("");
-    setPrintData(response);
-    setShowPrinterModal(true);
+  const handlePrintAnyway = async () => {
+    setShowBluetoothModal(false);
+    // Call API without printing
+    await callBookingAPI(pendingPrintData);
+    setPendingPrintData(null);
+  };
+
+  const callBookingAPI = async (responseData) => {
+    try {
+      const response = await commonAPICall(
+        TicketBookingEntryDetails,
+        responseData,
+        "POST",
+        dispatch,
+      );
+
+      if (response.status === 200) {
+        Alert.alert("Success", "Ticket booked successfully!");
+        fetchSpotBookingDetails();
+        // Reset form
+        setSpots(spots.map(spot => ({
+          ...spot,
+          categoryList: spot.categoryList.map(cat => ({ ...cat, quantity: "" }))
+        })));
+      } else {
+        Alert.alert("Error", "Ticket booking failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      Alert.alert("Error", "An error occurred while booking ticket");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -191,7 +189,6 @@ const TicketBooking = (props) => {
         "Validation Error",
         "Please fill at least one category with quantity greater than 0",
       );
-
       return;
     }
 
@@ -204,7 +201,6 @@ const TicketBooking = (props) => {
             spotId: spot.spotId,
             paymentMode: mode,
             totalPrice: calculateSpotTotal(spot.categoryList),
-
             categoryList: spot.categoryList
               .filter(
                 (category) =>
@@ -214,8 +210,6 @@ const TicketBooking = (props) => {
                 categoryId: category.categoryId,
                 categoryAmount: category.categoryAmount,
                 quantity: parseInt(category.quantity, 10),
-
-                // FIXED
                 categoryName: getDisplayText(category.categoryName),
               })),
           }))
@@ -230,16 +224,47 @@ const TicketBooking = (props) => {
       );
 
       console.log("Booking response:", response.data.TicketDetails);
+      
       if (response.status === 200) {
-        TicketPopup(response);
+        // Check if Bluetooth is connected
+        if (bluetoothname && bluetoothname !== "") {
+          // Bluetooth is connected, print directly
+          setPrintData(response);
+          setShowPrinterModal(true);
+        } else {
+          // No Bluetooth connected, show alert
+          Alert.alert(
+            "No Printer Connected",
+            "Please connect to a Bluetooth printer first",
+            [
+              {
+                text: "Connect Bluetooth",
+                onPress: () => {
+                  setPendingPrintData(modifiedValues);
+                  setShowBluetoothModal(true);
+                },
+              },
+              {
+                text: "Print Anyway",
+                onPress: async () => {
+                  await callBookingAPI(modifiedValues);
+                },
+              },
+              {
+                text: "Cancel",
+                style: "cancel",
+                onPress: () => setLoading(false),
+              },
+            ]
+          );
+        }
       } else {
         Alert.alert("Error", "Ticket booking failed. Please try again.");
+        setLoading(false);
       }
     } catch (error) {
       console.error("Error submitting form:", error);
-
       Alert.alert("Error", "An error occurred while booking ticket");
-    } finally {
       setLoading(false);
     }
   };
@@ -247,7 +272,6 @@ const TicketBooking = (props) => {
   const Reprint = async () => {
     if (!orderId || orderId.trim() === "") {
       Alert.alert("Error", "Order ID should not be empty");
-
       return;
     }
 
@@ -262,15 +286,43 @@ const TicketBooking = (props) => {
       );
 
       if (response.status === 200) {
-        TicketPopup(response);
+        if (bluetoothname && bluetoothname !== "") {
+          setPrintData(response);
+          setShowPrinterModal(true);
+        } else {
+          Alert.alert(
+            "No Printer Connected",
+            "Please connect to a Bluetooth printer first",
+            [
+              {
+                text: "Connect Bluetooth",
+                onPress: () => {
+                  setPendingPrintData(response);
+                  setShowBluetoothModal(true);
+                },
+              },
+              {
+                text: "Print Anyway",
+                onPress: async () => {
+                  Alert.alert("Info", "Cannot reprint without printer connection");
+                  setLoading(false);
+                },
+              },
+              {
+                text: "Cancel",
+                style: "cancel",
+                onPress: () => setLoading(false),
+              },
+            ]
+          );
+        }
       } else {
         Alert.alert("Error", "Order not found");
+        setLoading(false);
       }
     } catch (error) {
       console.error("Reprint error:", error);
-
       Alert.alert("Error", "Failed to reprint ticket");
-    } finally {
       setLoading(false);
     }
   };
@@ -301,7 +353,6 @@ const TicketBooking = (props) => {
                 <Text style={styles.categoryName}>
                   {getDisplayText(category.categoryName)}
                 </Text>
-
                 <Text style={styles.categoryPrice}>
                   ₹{category.categoryAmount}/-
                 </Text>
@@ -336,22 +387,18 @@ const TicketBooking = (props) => {
 
         <View style={globalStyes.selectBox}>
           <Text style={styles.labelTextBlack}>Mode of Payment</Text>
-
-          {/* <View style={globalStyes.selectBox}> */}
-            <Picker
-              selectedValue={mode}
-              onValueChange={(itemValue) => setMode(itemValue)}
-              style={globalStyes.pickerText}
-            >
-              <Picker.Item label="Offline" value="offline" />
-              <Picker.Item label="Online" value="online" />
-            </Picker>
-          {/* </View> */}
+          <Picker
+            selectedValue={mode}
+            onValueChange={(itemValue) => setMode(itemValue)}
+            style={globalStyes.pickerText}
+          >
+            <Picker.Item label="Offline" value="offline" />
+            <Picker.Item label="Online" value="online" />
+          </Picker>
         </View>
 
         <View style={styles.totalContainer}>
           <Text style={styles.totalLabel}>Total Amount:</Text>
-
           <Text style={styles.totalAmount}>
             ₹{calculateSpotTotal(spot.categoryList)}
           </Text>
@@ -371,33 +418,27 @@ const TicketBooking = (props) => {
       <ScrollView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>📋 Ticket Booking</Text>
-
-          {/* <View style={styles.reprintContainer}>
-            <Text style={styles.labelText}>Order ID</Text>
-
-            <View style={styles.reprintRow}>
-              <TextInput
-                style={[styles.input, styles.reprintInput]}
-                placeholder="Enter Order ID"
-                value={orderId}
-                onChangeText={setOrderId}
-              />
-
-              <TouchableOpacity
-                style={styles.printButton}
-                onPress={Reprint}
-                disabled={loading}
-              >
-                <Text style={styles.buttonText}>Print</Text>
-              </TouchableOpacity>
+          
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={styles.bluetoothButton}
+              onPress={() => setShowBluetoothModal(true)}
+            >
+              <Text style={styles.bluetoothButtonText}>🔌 Connect Bluetooth</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.printerStatus}>
+              <Text style={styles.statusLabel}>Connected Printer:</Text>
+              <Text style={styles.printerName}>
+                {bluetoothname !== "" ? bluetoothname : "None"}
+              </Text>
             </View>
-          </View> */}
+          </View>
         </View>
 
         {loading && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#1976D2" />
-
             <Text style={styles.loadingText}>Processing...</Text>
           </View>
         )}
@@ -415,13 +456,32 @@ const TicketBooking = (props) => {
         )}
       </ScrollView>
 
-      {showPrinterModal && BluetoothPrinter && (
+      <BluetoothPrinter
+        visible={showBluetoothModal}
+        onClose={() => {
+          setShowBluetoothModal(false);
+          setPendingPrintData(null);
+        }}
+        printData={printData}
+        onPrintComplete={handlePrintComplete}
+        onPrintError={handlePrintError}
+        setBluetoothname={setBluetoothname}
+        pendingPrintData={pendingPrintData}
+        onPrintAnyway={handlePrintAnyway}
+      />
+
+      {showPrinterModal && !showBluetoothModal && (
         <BluetoothPrinter
           visible={showPrinterModal}
-          onClose={() => setShowPrinterModal(false)}
+          onClose={() => {
+            setShowPrinterModal(false);
+            setPrintData(null);
+          }}
           printData={printData}
           onPrintComplete={handlePrintComplete}
           onPrintError={handlePrintError}
+          setBluetoothname={setBluetoothname}
+          autoPrint={true}
         />
       )}
     </>
@@ -434,50 +494,76 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
     marginBottom: 100,
   },
-
   header: {
     backgroundColor: "#1976D2",
     padding: 15,
     borderBottomLeftRadius: 10,
     borderBottomRightRadius: 10,
   },
-
   headerTitle: {
     fontSize: 22,
     fontWeight: "bold",
     color: "white",
     marginBottom: 15,
   },
-
-  reprintContainer: {
-    marginTop: 10,
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 5,
   },
-
+  bluetoothButton: {
+    backgroundColor: "#FF9800",
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 5,
+  },
+  bluetoothButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+  printerStatus: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  statusLabel: {
+    color: "white",
+    fontSize: 12,
+    opacity: 0.9,
+  },
+  printerName: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  reprintContainer: {
+    margin: 15,
+    backgroundColor: "white",
+    padding: 15,
+    borderRadius: 10,
+    elevation: 3,
+  },
   labelText: {
     color: "white",
     fontSize: 14,
     marginBottom: 5,
     fontWeight: "500",
   },
-
   labelTextBlack: {
     color: "#000",
     fontSize: 14,
     marginBottom: 5,
     fontWeight: "500",
   },
-
   reprintRow: {
     flexDirection: "row",
     alignItems: "center",
   },
-
   reprintInput: {
     flex: 1,
-    backgroundColor: "white",
     marginRight: 10,
   },
-
   printButton: {
     backgroundColor: "#4CAF50",
     paddingHorizontal: 20,
@@ -486,12 +572,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   buttonText: {
     color: "white",
     fontWeight: "bold",
   },
-
   spotCard: {
     backgroundColor: "white",
     margin: 15,
@@ -499,52 +583,43 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     elevation: 3,
   },
-
   spotHeader: {
     borderBottomWidth: 1,
     borderBottomColor: "#e0e0e0",
     paddingBottom: 10,
     marginBottom: 15,
   },
-
   spotName: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#1976D2",
   },
-
   categoryContainer: {
     marginBottom: 15,
   },
-
   categoryRow: {
     marginBottom: 15,
     paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
   },
-
   categoryInfo: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 8,
   },
-
   categoryName: {
     fontSize: 16,
     fontWeight: "500",
     flex: 1,
   },
-
   categoryPrice: {
     fontSize: 14,
     color: "#666",
   },
-
   quantityInput: {
     marginTop: 5,
   },
-
   input: {
     borderWidth: 1,
     borderColor: "#ddd",
@@ -553,12 +628,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: "#fff",
   },
-
   paymentModeContainer: {
     marginTop: 10,
     marginBottom: 15,
   },
-
   pickerWrapper: {
     borderWidth: 1,
     borderColor: "#ddd",
@@ -566,11 +639,9 @@ const styles = StyleSheet.create({
     marginTop: 5,
     backgroundColor: "#fff",
   },
-
   picker: {
     height: 50,
   },
-
   totalContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -579,25 +650,21 @@ const styles = StyleSheet.create({
     borderTopColor: "#e0e0e0",
     marginTop: 10,
   },
-
   totalLabel: {
     fontSize: 18,
     fontWeight: "bold",
   },
-
   totalAmount: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#1976D2",
   },
-
   amountInWords: {
     fontSize: 12,
     color: "red",
     marginTop: 5,
     fontStyle: "italic",
   },
-
   errorText: {
     color: "red",
     fontSize: 12,
@@ -606,13 +673,11 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 5,
   },
-
   errorSmallText: {
     color: "red",
     fontSize: 11,
     marginTop: 3,
   },
-
   submitButton: {
     backgroundColor: "#1976D2",
     margin: 15,
@@ -622,13 +687,11 @@ const styles = StyleSheet.create({
     elevation: 3,
     marginBottom: 30,
   },
-
   submitButtonText: {
     color: "white",
     fontSize: 18,
     fontWeight: "bold",
   },
-
   loadingContainer: {
     position: "absolute",
     top: 0,
@@ -640,18 +703,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     zIndex: 999,
   },
-
   loadingText: {
     color: "white",
     marginTop: 10,
     fontSize: 16,
   },
-
   noDataContainer: {
     padding: 50,
     alignItems: "center",
   },
-
   noDataText: {
     color: "red",
     fontSize: 18,
