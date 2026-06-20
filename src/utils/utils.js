@@ -200,7 +200,10 @@ export const REPRINT = "api/user/ticketPrintDetails?"
 
 
 export const GENERATEQRSAMPLE = "api/user/generateSampleQrStock?noOfQrs=20"
-
+export const ASSIGNDUTYTEAMLEADER = "api/user/assignDutyToTeamLeader"
+export const COLLECTSAMPLEANDSENDTOLAB = "api/user/collectSampleAndSendToLab"
+export const MARINEDISCHARGEDETAILS = "api/user/marine-discharge-posting-details"
+export const UPDATEASSIGNDUTY = "api/user/updateAssignedDuty"
 
 
 
