@@ -87,8 +87,15 @@ function GenerateQrCode() {
       qrIds: uniqueIds,
     };
 
+          console.log("payload",payload);
+
+
     return payload;
+
+
   };
+
+  
 
   // Share QR codes with payload
   const shareQRCodes = async () => {
