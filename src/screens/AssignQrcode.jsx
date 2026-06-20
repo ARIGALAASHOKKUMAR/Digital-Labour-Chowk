@@ -169,7 +169,7 @@ function AssignQrcode() {
   async function GetData() {
     setLoading(true);
     try {
-      let res = await commonAPICall(MARINEDISCHARGEDETAILS, {}, 'get',commonAPICall);
+      let res = await commonAPICall(MARINEDISCHARGEDETAILS, {}, 'get',dispatch);
       if (res.status === 200) {
         setData(res.data.MarineDischargePostingDetails || []);
       } else {
@@ -198,7 +198,7 @@ function AssignQrcode() {
         assignedDate: assignForm.assignedDate,
         assignmentRemarks: 'Assigned for sample collection at Marine Discharge Point.'
       };
-      let res = await commonAPICall(ASSIGNDUTYTEAMLEADER, payload, 'post',commonAPICall);
+      let res = await commonAPICall(ASSIGNDUTYTEAMLEADER, payload, 'post',dispatch);
       if (res.status === 200) {
         setShowModal(false);
         GetData();
@@ -231,7 +231,7 @@ function AssignQrcode() {
         assignedDate: updateForm.assignedDate,
         assignmentRemarks: 'Team Leader changed due to unavailability of previously assigned officer.'
       };
-      let res = await commonAPICall(UPDATEASSIGNDUTY, payload, 'post',commonAPICall);
+      let res = await commonAPICall(UPDATEASSIGNDUTY, payload, 'post',dispatch);
       if (res.status === 200) {
         setUpdateModal(false);
         GetData();

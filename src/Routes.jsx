@@ -98,7 +98,7 @@ export default function Routes() {
                       currentScreenName="HOME"
                       scrollEnabled={false}
                     >
-                      <TicketBooking {...props} />
+                      <HomeScreen {...props} />
                     </SiteLayout>
                   </SessionChecking>
                 )}
