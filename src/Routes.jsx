@@ -29,6 +29,7 @@ import WorkerRegistration from "./screens/WorkerRegistrationForm";
 import WebViewScreen from "./sitelayout/WebViewScreen";
 import PaymentScreen from "./screens/PaymentTest";
 import TicketBooking from "./Bluetooth/TicketBooking";
+import GenerateQrCode from "./screens/GenerateQrCode";
 
 const Stack = createNativeStackNavigator();
 
@@ -125,6 +126,21 @@ export default function Routes() {
                       scrollEnabled={false}
                     >
                       <JobSearchScreen {...props} />
+                    </SiteLayout>
+                  </SessionChecking>
+                )}
+              </Stack.Screen>
+
+
+               <Stack.Screen name="GenerateQrCode">
+                {(props) => (
+                  <SessionChecking navigation={props.navigation}>
+                    <SiteLayout
+                      navigation={props.navigation}
+                      currentScreenName="GenerateQrCode"
+                      scrollEnabled={false}
+                    >
+                      <GenerateQrCode {...props} />
                     </SiteLayout>
                   </SessionChecking>
                 )}

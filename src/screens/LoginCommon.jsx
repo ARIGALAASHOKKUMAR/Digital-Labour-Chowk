@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
+  base_url,
   commonAPICall,
   EMPLOYEEREG,
   EMPLOYEEREGOTP,
@@ -178,8 +179,12 @@ const LoginCommon = ({ navigation }) => {
       // loginType: selectedUserType, // enable if backend needs this
     };
 
+    console.log("LOGIN_END_POINT",base_url+LOGIN_END_POINT);
+    
+
     try {
       const response = await myAxiosLogin.post(LOGIN_END_POINT, values);
+
 
       if (response.status === 200) {
         const payload = {
