@@ -10,7 +10,10 @@ import {
   ActivityIndicator,
   Alert,
   Share,
-  Platform
+  Platform,
+  PermissionsAndroid,
+  ToastAndroid,
+  Linking
 } from 'react-native';
 import { commonAPICall, CONTEXT_HEADING, GENERATEQRCODES } from '../utils/utils';
 import { useDispatch } from 'react-redux';
@@ -21,6 +24,7 @@ function GenerateQrCode() {
   const [qrCodes, setQrCodes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showQRCodes, setShowQRCodes] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   // Generate QR codes using free API (no installation needed)
   const generateQRCodeFromAPI = async (id) => {
@@ -52,7 +56,6 @@ function GenerateQrCode() {
 
   const dispatch = useDispatch()
 
-
   const preparePayload = () => {
     if (qrCodes.length === 0) {
       Alert.alert('Info', 'Please generate QR codes first');
@@ -67,12 +70,8 @@ function GenerateQrCode() {
       qrIds: uniqueIds,
     };
 
-          console.log("payload",payload);
-
-
+    console.log("payload",payload);
     return payload;
-
-
   };
 
   // Generate multiple QR codes
@@ -89,7 +88,7 @@ function GenerateQrCode() {
       
       setQrCodes(generatedQRs);
       setShowQRCodes(false);
-      const res = await commonAPICall(GENERATEQRCODES,preparePayload(),"post",dispatch)
+      const res = await commonAPICall(GENERATEQRCODES, preparePayload(), "post", dispatch)
       if(res.status === 200){
         setShowQRCodes(true)
       }
@@ -101,40 +100,103 @@ function GenerateQrCode() {
     }
   };
 
-  // Prepare payload with only unique IDs
-  
+  // Request storage permission for Android
+  const requestStoragePermission = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+          {
+            title: 'Storage Permission',
+            message: 'App needs access to storage to save QR codes',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          }
+        );
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      } catch (err) {
+        console.warn(err);
+        return false;
+      }
+    }
+    return true;
+  };
 
+  // Download QR code image (using built-in browser download for web/Android)
+  const downloadQRImage = async (qr, index) => {
+    try {
+      setDownloading(true);
+      
+      // For Android, request permission
+      if (Platform.OS === 'android') {
+        const hasPermission = await requestStoragePermission();
+        if (!hasPermission) {
+          Alert.alert('Permission Denied', 'Cannot save QR code without storage permission');
+          setDownloading(false);
+          return;
+        }
+      }
 
-  
+      const imageUrl = qr.qrImagedownloadUrl;
+      
+      // Open the image URL in browser which will trigger download
+      // This works on both Android and iOS
+      const supported = await Linking.canOpenURL(imageUrl);
+      
+      if (supported) {
+        await Linking.openURL(imageUrl);
+        if (Platform.OS === 'android') {
+          ToastAndroid.show(`Opening QR Code ${index + 1} for download`, ToastAndroid.SHORT);
+        }
+      } else {
+        Alert.alert('Error', 'Cannot open URL for download');
+      }
+      
+    } catch (error) {
+      console.error('Error downloading QR code:', error);
+      Alert.alert('Error', 'Failed to download QR code');
+    } finally {
+      setDownloading(false);
+    }
+  };
 
-  // Share QR codes with payload
-  const shareQRCodes = async () => {
+  // Share QR code image
+  const shareQRImage = async (qr, index) => {
+    try {
+      const imageUrl = qr.qrImagedownloadUrl;
+      
+      // Share the image URL
+      await Share.share({
+        message: `QR Code ${index + 1}\nGenerated QR Code Image\nURL: ${imageUrl}`,
+        title: `QR Code ${index + 1}`,
+        url: imageUrl, // For iOS
+      });
+      
+    } catch (error) {
+      console.error('Error sharing QR code:', error);
+      Alert.alert('Error', 'Failed to share QR code');
+    }
+  };
+
+  // Share all QR codes
+  const shareAllQRCodes = async () => {
     if (qrCodes.length === 0) {
       Alert.alert('Info', 'Please generate QR codes first');
       return;
     }
 
     try {
-      // Prepare the payload
-      const payload = preparePayload();
-      
-      if (!payload) return;
-
-      // Format payload for sharing
-      const shareMessage = {
-        title: 'QR Codes Payload',
-        message: `Total QR Codes: ${payload.totalCount}\n\nQR IDs:\n${payload.qrIds.join('\n')}\n\nPayload:\n${JSON.stringify(payload, null, 2)}`,
-        timestamp: payload.generatedAt
-      };
-
-      // Share using React Native's Share API
-      await Share.share({
-        message: shareMessage.message,
-        title: shareMessage.title,
+      // Create a message with all QR code URLs
+      let message = 'QR Codes:\n\n';
+      qrCodes.forEach((qr, index) => {
+        message += `QR ${index + 1}: ${qr.qrImagedownloadUrl}\n\n`;
       });
-
-      // Also log payload to console for debugging
-      console.log('Shared Payload:', payload);
+      
+      await Share.share({
+        message: message,
+        title: 'All QR Codes',
+      });
       
     } catch (error) {
       console.error('Error sharing QR codes:', error);
@@ -142,87 +204,80 @@ function GenerateQrCode() {
     }
   };
 
-  // Share only the payload as JSON
-  const sharePayloadAsJSON = async () => {
+  // Download all QR codes
+  const downloadAllQRCodes = async () => {
     if (qrCodes.length === 0) {
       Alert.alert('Info', 'Please generate QR codes first');
       return;
     }
 
     try {
-      const payload = preparePayload();
-      if (!payload) return;
-
-      const jsonPayload = JSON.stringify(payload, null, 2);
+      setDownloading(true);
       
-      await Share.share({
-        message: `Here is the QR codes payload:\n\n${jsonPayload}`,
-        title: 'QR Codes Payload JSON',
-      });
+      // For Android, request permission
+      if (Platform.OS === 'android') {
+        const hasPermission = await requestStoragePermission();
+        if (!hasPermission) {
+          Alert.alert('Permission Denied', 'Cannot save QR codes without storage permission');
+          setDownloading(false);
+          return;
+        }
+      }
 
-      console.log('JSON Payload shared:', jsonPayload);
-      
+      Alert.alert(
+        'Download All',
+        `Open ${qrCodes.length} QR codes in browser to download?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Open All', 
+            onPress: async () => {
+              let opened = 0;
+              for (let i = 0; i < qrCodes.length; i++) {
+                const imageUrl = qrCodes[i].qrImagedownloadUrl;
+                const supported = await Linking.canOpenURL(imageUrl);
+                if (supported) {
+                  await Linking.openURL(imageUrl);
+                  opened++;
+                  if (Platform.OS === 'android') {
+                    ToastAndroid.show(`Opening QR ${i + 1}/${qrCodes.length}`, ToastAndroid.SHORT);
+                  }
+                  // Add small delay between openings
+                  if (i < qrCodes.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                  }
+                }
+              }
+              Alert.alert('Success', `Opened ${opened} QR codes for download`);
+            }
+          }
+        ]
+      );
     } catch (error) {
-      console.error('Error sharing payload:', error);
-      Alert.alert('Error', 'Failed to share payload');
+      console.error('Error downloading QR codes:', error);
+      Alert.alert('Error', 'Failed to download QR codes');
+    } finally {
+      setDownloading(false);
     }
   };
 
-  // Copy payload to clipboard (optional - if you want)
-  const copyPayload = () => {
-    const payload = preparePayload();
-    if (!payload) return;
-
-    // For now just show alert with payload
+  // Handle individual QR click
+  const handleQRPress = (qr, index) => {
     Alert.alert(
-      'Payload Ready',
-      JSON.stringify(payload, null, 2),
+      `QR Code ${index + 1}`,
+      'Choose action:',
       [
-        {
-          text: 'OK',
-          style: 'default'
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Share Image', 
+          onPress: () => shareQRImage(qr, index)
         },
-        {
-          text: 'Share Payload',
-          onPress: sharePayloadAsJSON
+        { 
+          text: 'Download Image', 
+          onPress: () => downloadQRImage(qr, index)
         }
       ]
     );
-  };
-
-  // Reveal QR codes
-  const revealQRs = () => {
-    if (qrCodes.length === 0) {
-      Alert.alert('Info', 'Please generate QR codes first');
-      return;
-    }
-    setShowQRCodes(true);
-  };
-
-  // Hide QR codes
-  const hideQRs = () => {
-    setShowQRCodes(false);
-  };
-
-  // Share individual QR code
-  const shareIndividualQR = async (qr, index) => {
-    try {
-      // Prepare individual payload
-      const individualPayload = {
-        qrId: qr.id,
-        timestamp: new Date().toISOString(),
-        type: 'INDIVIDUAL_QR'
-      };
-
-      await Share.share({
-        message: `QR Code ${index + 1}\nID: ${qr.id}\nPayload: ${JSON.stringify(individualPayload, null, 2)}`,
-        title: `QR Code ${index + 1}`,
-        url: qr.qrImagedownloadUrl, // For iOS
-      });
-    } catch (error) {
-      console.error('Error sharing individual QR:', error);
-      Alert.alert('Error', 'Failed to share QR code');
-    }
   };
 
   return (
@@ -270,7 +325,7 @@ function GenerateQrCode() {
                 </View>
               )}
 
-              {/* Action Buttons Row */}
+              {/* Share and Download All Buttons */}
 
               {/* QR Codes Grid - Only shown when reveal is clicked */}
               {showQRCodes && qrCodes.length > 0 && (
@@ -279,7 +334,7 @@ function GenerateQrCode() {
                     <TouchableOpacity
                       key={i}
                       style={styles.gridItem}
-                      onPress={() => shareIndividualQR(qr, i)}
+                      onPress={() => handleQRPress(qr, i)}
                       activeOpacity={0.8}
                     >
                       <Image
@@ -288,22 +343,31 @@ function GenerateQrCode() {
                         resizeMode="contain"
                       />
                       <Text style={styles.qrLabel}>QR {i + 1}</Text>
-                      {/* <Text style={styles.qrSubLabel}>
-                        {qr.id.substring(0, 15)}...
-                      </Text> */}
-                      <Text style={styles.tapHint}>Tap to share</Text>
+                      <Text style={styles.tapHint}>Tap for options</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
               )}
-              {/* Share and Payload Buttons */}
+
               {qrCodes.length > 0 && (
-                <View style={styles.shareButtonsContainer}>
+                <View style={styles.actionButtonsContainer}>
                   <TouchableOpacity
-                    style={[styles.shareButton, styles.shareAllButton]}
-                    onPress={shareQRCodes}
+                    style={[styles.actionButton, styles.shareAllButton]}
+                    onPress={shareAllQRCodes}
                   >
-                    <Text style={styles.buttonText}>Share All</Text>
+                    <Text style={styles.buttonText}>Share All URLs</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.downloadAllButton]}
+                    onPress={downloadAllQRCodes}
+                    disabled={downloading}
+                  >
+                    {downloading ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <Text style={styles.buttonText}>Download All</Text>
+                    )}
                   </TouchableOpacity>
                 </View>
               )}
@@ -382,36 +446,18 @@ const styles = StyleSheet.create({
     minWidth: 200,
     alignItems: 'center',
   },
-  actionRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginVertical: 8,
-  },
-  actionButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 4,
-    minWidth: 150,
-    alignItems: 'center',
-  },
-  revealButton: {
-    backgroundColor: '#28a745',
-  },
-  hideButton: {
-    backgroundColor: '#dc3545',
-  },
-  shareButtonsContainer: {
+  actionButtonsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
     marginVertical: 8,
     gap: 8,
   },
-  shareButton: {
+  actionButton: {
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 4,
-    minWidth: 120,
+    minWidth: 150,
     alignItems: 'center',
     marginHorizontal: 4,
     marginVertical: 4,
@@ -419,11 +465,8 @@ const styles = StyleSheet.create({
   shareAllButton: {
     backgroundColor: '#17a2b8',
   },
-  payloadButton: {
-    backgroundColor: '#6c757d',
-  },
-  copyButton: {
-    backgroundColor: '#ffc107',
+  downloadAllButton: {
+    backgroundColor: '#28a745',
   },
   buttonText: {
     color: '#fff',
@@ -474,11 +517,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     color: '#333',
-    textAlign: 'center',
-  },
-  qrSubLabel: {
-    fontSize: 10,
-    color: '#888',
     textAlign: 'center',
   },
   tapHint: {
