@@ -12,7 +12,8 @@ import {
   Share,
   Platform
 } from 'react-native';
-import { CONTEXT_HEADING } from '../utils/utils';
+import { commonAPICall, CONTEXT_HEADING, GENERATEQRCODES } from '../utils/utils';
+import { useDispatch } from 'react-redux';
 
 const { width } = Dimensions.get('window');
 
@@ -49,30 +50,9 @@ function GenerateQrCode() {
     }
   };
 
-  // Generate multiple QR codes
-  const generateQRs = async () => {
-    setLoading(true);
-    try {
-      const generatedQRs = [];
-      // Generate 10 QR codes with unique IDs
-      for (let i = 0; i < 10; i++) {
-        const uniqueId = `QR_${Date.now()}_${i}_${Math.random().toString(36).substring(7)}`;
-        const qr = await generateQRCodeFromAPI(uniqueId);
-        generatedQRs.push(qr);
-      }
-      
-      setQrCodes(generatedQRs);
-      setShowQRCodes(false); // Hide QR codes initially after generation
-      Alert.alert('Success', `${generatedQRs.length} QR codes generated successfully!`);
-    } catch (error) {
-      console.error('Error generating QR codes:', error);
-      Alert.alert('Error', 'Failed to generate QR codes');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const dispatch = useDispatch()
 
-  // Prepare payload with only unique IDs
+
   const preparePayload = () => {
     if (qrCodes.length === 0) {
       Alert.alert('Info', 'Please generate QR codes first');
@@ -94,6 +74,36 @@ function GenerateQrCode() {
 
 
   };
+
+  // Generate multiple QR codes
+  const generateQRs = async () => {
+    setLoading(true);
+    try {
+      const generatedQRs = [];
+      // Generate 10 QR codes with unique IDs
+      for (let i = 0; i < 10; i++) {
+        const uniqueId = `QR_${Date.now()}_${i}_${Math.random().toString(36).substring(7)}`;
+        const qr = await generateQRCodeFromAPI(uniqueId);
+        generatedQRs.push(qr);
+      }
+      
+      setQrCodes(generatedQRs);
+      setShowQRCodes(false);
+      const res = await commonAPICall(GENERATEQRCODES,preparePayload(),"post",dispatch)
+      if(res.status === 200){
+        setShowQRCodes(true)
+      }
+    } catch (error) {
+      console.error('Error generating QR codes:', error);
+      Alert.alert('Error', 'Failed to generate QR codes');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Prepare payload with only unique IDs
+  
+
 
   
 
@@ -261,51 +271,6 @@ function GenerateQrCode() {
               )}
 
               {/* Action Buttons Row */}
-              {qrCodes.length > 0 && (
-                <View style={styles.actionRow}>
-                  {!showQRCodes ? (
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.revealButton]}
-                      onPress={revealQRs}
-                    >
-                      <Text style={styles.buttonText}>Reveal QR Codes</Text>
-                    </TouchableOpacity>
-                  ) : (
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.hideButton]}
-                      onPress={hideQRs}
-                    >
-                      <Text style={styles.buttonText}>Hide QR Codes</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              )}
-
-              {/* Share and Payload Buttons */}
-              {qrCodes.length > 0 && (
-                <View style={styles.shareButtonsContainer}>
-                  <TouchableOpacity
-                    style={[styles.shareButton, styles.shareAllButton]}
-                    onPress={shareQRCodes}
-                  >
-                    <Text style={styles.buttonText}>Share All</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    style={[styles.shareButton, styles.payloadButton]}
-                    onPress={sharePayloadAsJSON}
-                  >
-                    <Text style={styles.buttonText}>Share Payload</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.shareButton, styles.copyButton]}
-                    onPress={copyPayload}
-                  >
-                    <Text style={styles.buttonText}>View Payload</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
 
               {/* QR Codes Grid - Only shown when reveal is clicked */}
               {showQRCodes && qrCodes.length > 0 && (
@@ -329,6 +294,17 @@ function GenerateQrCode() {
                       <Text style={styles.tapHint}>Tap to share</Text>
                     </TouchableOpacity>
                   ))}
+                </View>
+              )}
+              {/* Share and Payload Buttons */}
+              {qrCodes.length > 0 && (
+                <View style={styles.shareButtonsContainer}>
+                  <TouchableOpacity
+                    style={[styles.shareButton, styles.shareAllButton]}
+                    onPress={shareQRCodes}
+                  >
+                    <Text style={styles.buttonText}>Share All</Text>
+                  </TouchableOpacity>
                 </View>
               )}
             </View>

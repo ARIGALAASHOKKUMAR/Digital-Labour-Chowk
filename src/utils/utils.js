@@ -205,6 +205,8 @@ export const COLLECTSAMPLEANDSENDTOLAB = "api/user/collectSampleAndSendToLab"
 export const MARINEDISCHARGEDETAILS = "api/user/marine-discharge-posting-details"
 export const UPDATEASSIGNDUTY = "api/user/updateAssignedDuty"
 
+export const GENERATEQRCODES = "/api/user/generateSampleQrStock"
+
 
 
 

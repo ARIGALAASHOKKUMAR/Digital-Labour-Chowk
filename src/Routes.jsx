@@ -146,7 +146,7 @@ export default function Routes() {
                   </SessionChecking>
                 )}
               </Stack.Screen>
-
+{/* 
                <Stack.Screen name="SampleCollectionRequests">
                 {(props) => (
                   <SessionChecking navigation={props.navigation}>
@@ -159,7 +159,7 @@ export default function Routes() {
                     </SiteLayout>
                   </SessionChecking>
                 )}
-              </Stack.Screen>
+              </Stack.Screen> */}
 
               <Stack.Screen name="WorkerSearch">
                 {(props) => (
