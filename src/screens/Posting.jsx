@@ -112,6 +112,8 @@ const Posting = () => {
         "get",
         dispatch,
       );
+
+      
       if (res.status === 200) {
         setData(res.data.MarineDischargePostingDetails || []);
       } else {

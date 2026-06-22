@@ -32,6 +32,9 @@ import PaymentScreen from "./screens/PaymentTest";
 import GenerateQrCode from "./screens/GenerateQrCode";
 import AssignQrcode from "./screens/AssignQrcode";
 import Posting from "./screens/Posting";
+import DischargeSummary from "./screens/DischargeScreen";
+import AnalysisReport from "./screens/AnalysisReport";
+import EditRequests from "./screens/EditRequests";
 
 const Stack = createNativeStackNavigator();
 
@@ -157,6 +160,48 @@ export default function Routes() {
                       scrollEnabled={false}
                     >
                       <AssignQrcode {...props} />
+                    </SiteLayout>
+                  </SessionChecking>
+                )}
+              </Stack.Screen>
+
+              <Stack.Screen name="DischargeSummary">
+                {(props) => (
+                  <SessionChecking navigation={props.navigation}>
+                    <SiteLayout
+                      navigation={props.navigation}
+                      currentScreenName="SampleCollectionRequests"
+                      scrollEnabled={false}
+                    >
+                      <DischargeSummary {...props} />
+                    </SiteLayout>
+                  </SessionChecking>
+                )}
+              </Stack.Screen>
+
+               <Stack.Screen name="AnalysisReports">
+                {(props) => (
+                  <SessionChecking navigation={props.navigation}>
+                    <SiteLayout
+                      navigation={props.navigation}
+                      currentScreenName="SampleCollectionRequests"
+                      scrollEnabled={false}
+                    >
+                      <AnalysisReport {...props} />
+                    </SiteLayout>
+                  </SessionChecking>
+                )}
+              </Stack.Screen>
+
+              <Stack.Screen name="EditRequests">
+                {(props) => (
+                  <SessionChecking navigation={props.navigation}>
+                    <SiteLayout
+                      navigation={props.navigation}
+                      currentScreenName="SampleCollectionRequests"
+                      scrollEnabled={false}
+                    >
+                      <EditRequests {...props} />
                     </SiteLayout>
                   </SessionChecking>
                 )}

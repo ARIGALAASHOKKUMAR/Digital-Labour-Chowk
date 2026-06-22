@@ -208,6 +208,8 @@ export const UPDATEASSIGNDUTY = "api/user/updateAssignedDuty"
 export const GENERATEQRCODES = "/api/user/generateSampleQrStock"
 export const CREATEMARINEDISCHARGEPOSTING = "api/user/createMarineDischargePosting"
 
+export const ASSIGNDISCHARGEDUTY = "api/user/assignDischargeDutyToTeamLeader"
+export const EDITAPPROVALACTION = "api/user/startReadingEditRequestApprovalAction"
 
 
 
