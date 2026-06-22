@@ -12,10 +12,6 @@ import ChangePassword from "./sitelayout/ChangePassword";
 import ProfileUpdate from "./sitelayout/ProfileUpdate";
 import ModalPopup from "./sitelayout/ModalPopup";
 import Overlay from "./sitelayout/Overlay";
-import LoginCommon, {
-  RegisterEmployer,
-  RegisterWorker,
-} from "./screens/LoginCommon";
 import { ToastProvider } from "react-native-sprinkle-toast";
 import JobSearchScreen from "./screens/JobSearch";
 import AppliedJobs from "./screens/AppliedJobs";
@@ -35,6 +31,7 @@ import Posting from "./screens/Posting";
 import DischargeSummary from "./screens/DischargeScreen";
 import AnalysisReport from "./screens/AnalysisReport";
 import EditRequests from "./screens/EditRequests";
+import LoginCommon from "./screens/LoginCommon";
 
 const Stack = createNativeStackNavigator();
 
@@ -52,11 +49,7 @@ export default function Routes() {
             >
               {/* Login Screen */}
               <Stack.Screen name="Login" component={LoginCommon} />
-              <Stack.Screen name="RegisterWorker" component={RegisterWorker} />
-              <Stack.Screen
-                name="RegisterEmployer"
-                component={RegisterEmployer}
-              />
+              
               <Stack.Screen name="WebViewScreen">
                 {(props) => (
                   <SiteLayout

@@ -137,8 +137,8 @@ const showNativeMessage = (msg, type) => {
   }
 };
 
-export const CONTEXT_NAME = "Digital Labour Chowk";
-export const CONTEXT_HEADING = "Digital Labour Chowk";
+export const CONTEXT_NAME = "APEMCL";
+export const CONTEXT_HEADING = "APEMCL";
 export const BASE_SERVER_URL = "https://forests.ap.gov.in/uploads/";
 export const ACC_YEAR = new Date().getFullYear().toString();
 export const LOGIN_END_POINT = "/api/open/login";

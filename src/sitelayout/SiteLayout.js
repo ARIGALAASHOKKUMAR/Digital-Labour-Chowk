@@ -42,7 +42,7 @@ import UserMessage from "./UserMessage";
 import Icon from "react-native-vector-icons/Feather";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
-import labour_logo from "../../assets/labour_log.png";
+import labour_logo from "../../assets/logo2.png";
 
 const { width } = Dimensions.get("window");
 
@@ -311,10 +311,10 @@ const SiteLayout = ({
             />
 
             <View>
-              <Text style={styles.headerTitle}>Digital Labour Chowk</Text>
+              <Text style={styles.headerTitle}>APEMCL</Text>
 
               <Text style={styles.headerSubTitle}>
-                Labour Dept, Govt. of A.P
+                APEMCL, Govt. of A.P
               </Text>
             </View>
           </View>
