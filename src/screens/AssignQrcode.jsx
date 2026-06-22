@@ -16,7 +16,8 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import moment from 'moment';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { Camera, useCameraPermissions } from 'expo-camera';
+// Import Camera correctly
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import {
   ASSIGNDUTYTEAMLEADER,
   COLLECTSAMPLEANDSENDTOLAB,
@@ -169,13 +170,16 @@ const SampleCollectionRequests = () => {
   };
 
   // QR Code Scanning
-  const handleBarCodeScanned = ({ type, data: scannedData }) => {
+  const handleBarCodeScanned = ({ data }) => {
+    if (!scanning) return;
+    
     setScanning(false);
     setQrModal(false);
-    if (scannedData) {
-      // Set the QR code value in sampleFormik
-      sampleFormik.setFieldValue('sampleQrCode', scannedData);
-      // Open sample modal if not already open
+    
+    if (data) {
+      sampleFormik.setFieldValue('sampleQrCode', data);
+      Alert.alert('QR Code Scanned', `QR Code: ${data}`);
+      
       if (!sampleModal) {
         setSampleModal(true);
       }
@@ -190,8 +194,13 @@ const SampleCollectionRequests = () => {
         return;
       }
     }
-    setQrModal(true);
     setScanning(true);
+    setQrModal(true);
+  };
+
+  const closeScanner = () => {
+    setScanning(false);
+    setQrModal(false);
   };
 
   useEffect(() => {
@@ -343,7 +352,7 @@ const SampleCollectionRequests = () => {
                 onPress={() => {
                   const path = "APEMCL/MARINE/";
                   ImageBucketRN(
-                    sampleFormik, // Pass the entire formik instance
+                    sampleFormik,
                     path,
                     "inletSealImage",
                     20971520,
@@ -389,7 +398,7 @@ const SampleCollectionRequests = () => {
                 onPress={() => {
                   const path = "APEMCL/MARINE/";
                   ImageBucketRN(
-                    sampleFormik, // Pass the entire formik instance
+                    sampleFormik,
                     path,
                     "levelMeterImage",
                     20971520,
@@ -470,54 +479,85 @@ const SampleCollectionRequests = () => {
     </Modal>
   );
 
-  const renderQRScannerModal = () => (
-    <Modal
-      visible={qrModal}
-      transparent
-      animationType="slide"
-      onRequestClose={() => {
-        setQrModal(false);
-        setScanning(false);
-      }}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.qrModalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Scan QR Code</Text>
-            <TouchableOpacity
-              onPress={() => {
-                setQrModal(false);
-                setScanning(false);
-              }}
-            >
-              <Icon name="close" size={24} color="#000" />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.cameraContainer}>
-            <Camera
-              style={styles.camera}
-              onBarCodeScanned={scanning ? handleBarCodeScanned : undefined}
-              barCodeScannerSettings={{
-                barCodeTypes: ['qr'],
-              }}
-            />
-            <View style={styles.overlay}>
-              <View style={styles.scannerFrame} />
+  const renderQRScannerModal = () => {
+    // Don't render Camera if permission is not granted
+    if (!permission?.granted) {
+      return (
+        <Modal
+          visible={qrModal}
+          transparent
+          animationType="slide"
+          onRequestClose={closeScanner}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.qrModalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Scan QR Code</Text>
+                <TouchableOpacity onPress={closeScanner}>
+                  <Icon name="close" size={24} color="#000" />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.permissionContainer}>
+                <Text style={styles.permissionText}>Camera permission is required</Text>
+                <TouchableOpacity 
+                  style={styles.permissionButton}
+                  onPress={requestPermission}
+                >
+                  <Text style={styles.permissionButtonText}>Grant Permission</Text>
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={closeScanner}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
             </View>
           </View>
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => {
-              setQrModal(false);
-              setScanning(false);
-            }}
-          >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </TouchableOpacity>
+        </Modal>
+      );
+    }
+
+    return (
+      <Modal
+        visible={qrModal}
+        transparent
+        animationType="slide"
+        onRequestClose={closeScanner}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.qrModalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Scan QR Code</Text>
+              <TouchableOpacity onPress={closeScanner}>
+                <Icon name="close" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.cameraContainer}>
+              <CameraView
+                style={styles.camera}
+                onBarcodeScanned={scanning ? handleBarCodeScanned : undefined}
+                barcodeScannerSettings={{
+                  barcodeTypes: ['qr'],
+                }}
+              >
+                <View style={styles.overlay}>
+                  <View style={styles.scannerFrame} />
+                  <Text style={styles.scanInstruction}>Align QR code within the frame</Text>
+                </View>
+              </CameraView>
+            </View>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={closeScanner}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </Modal>
-  );
+      </Modal>
+    );
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -629,7 +669,6 @@ const SampleCollectionRequests = () => {
                             onPress={() => {
                               setSampleModal(true);
                               setRowData(item);
-                              // Reset QR code when opening new sample
                               sampleFormik.setFieldValue('sampleQrCode', '');
                             }}
                           >
@@ -915,25 +954,37 @@ const styles = StyleSheet.create({
     flex: 1,
     marginTop: 10,
     position: 'relative',
+    backgroundColor: '#000',
+    borderRadius: 10,
+    overflow: 'hidden',
+    minHeight: 400,
   },
   camera: {
     flex: 1,
   },
   overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
   scannerFrame: {
-    width: 200,
-    height: 200,
+    width: 250,
+    height: 250,
     borderWidth: 2,
     borderColor: '#007bff',
     backgroundColor: 'transparent',
+    borderRadius: 10,
+  },
+  scanInstruction: {
+    color: '#fff',
+    fontSize: 16,
+    marginTop: 20,
+    textAlign: 'center',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
   },
   cancelButton: {
     backgroundColor: '#dc3545',
@@ -943,6 +994,30 @@ const styles = StyleSheet.create({
     marginTop: 15,
   },
   cancelButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  permissionContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    minHeight: 400,
+  },
+  permissionText: {
+    color: '#333',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  permissionButton: {
+    backgroundColor: '#007bff',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  permissionButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
