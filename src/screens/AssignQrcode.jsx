@@ -27,6 +27,7 @@ import {
   UPDATEASSIGNDUTY,
 } from '../utils/utils';
 import ImageBucketRN from '../utils/ImageBucketRN';
+import { Picker } from '@react-native-picker/picker';
 
 const SampleCollectionRequests = () => {
   const dispatch = useDispatch();
@@ -172,14 +173,14 @@ const SampleCollectionRequests = () => {
   // QR Code Scanning
   const handleBarCodeScanned = ({ data }) => {
     if (!scanning) return;
-    
+
     setScanning(false);
     setQrModal(false);
-    
+
     if (data) {
       sampleFormik.setFieldValue('sampleQrCode', data);
       Alert.alert('QR Code Scanned', `QR Code: ${data}`);
-      
+
       if (!sampleModal) {
         setSampleModal(true);
       }
@@ -242,19 +243,20 @@ const SampleCollectionRequests = () => {
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Assigning Date <Text style={styles.star}>*</Text></Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  formik.errors.assignedDate && formik.touched.assignedDate && styles.inputError
-                ]}
-                placeholder="YYYY-MM-DD"
-                value={formik.values.assignedDate}
-                onChangeText={formik.handleChange('assignedDate')}
-                onBlur={formik.handleBlur('assignedDate')}
-              />
-              {formik.errors.assignedDate && formik.touched.assignedDate && (
-                <Text style={styles.errorText}>{formik.errors.assignedDate}</Text>
+              <Text style={styles.label}>Team Leader <Text style={styles.star}>*</Text></Text>
+              <View style={[styles.dropdownContainer, formik.errors.assignedTeamLeaderId && formik.touched.assignedTeamLeaderId && styles.inputError]}>
+                <Picker
+                  selectedValue={formik.values.assignedTeamLeaderId}
+                  onValueChange={(itemValue) => formik.setFieldValue('assignedTeamLeaderId', itemValue)}
+                  onBlur={formik.handleBlur('assignedTeamLeaderId')}
+                  style={styles.picker}
+                >
+                  <Picker.Item label="Select Team Leader" value="" />
+                  <Picker.Item label="TEAML" value="TEAML" />
+                </Picker>
+              </View>
+              {formik.errors.assignedTeamLeaderId && formik.touched.assignedTeamLeaderId && (
+                <Text style={styles.errorText}>{formik.errors.assignedTeamLeaderId}</Text>
               )}
             </View>
 
@@ -285,16 +287,18 @@ const SampleCollectionRequests = () => {
           <View>
             <View style={styles.formGroup}>
               <Text style={styles.label}>Team Leader <Text style={styles.star}>*</Text></Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  updateFormik.errors.assignedTeamLeaderId && updateFormik.touched.assignedTeamLeaderId && styles.inputError
-                ]}
-                placeholder="Select Team Leader"
-                value={updateFormik.values.assignedTeamLeaderId}
-                onChangeText={updateFormik.handleChange('assignedTeamLeaderId')}
-                onBlur={updateFormik.handleBlur('assignedTeamLeaderId')}
-              />
+              <View style={[styles.dropdownContainer, updateFormik.errors.assignedTeamLeaderId && updateFormik.touched.assignedTeamLeaderId && styles.inputError]}>
+                <Picker
+                  selectedValue={updateFormik.values.assignedTeamLeaderId}
+                  onValueChange={(itemValue) => updateFormik.setFieldValue('assignedTeamLeaderId', itemValue)}
+                  onBlur={updateFormik.handleBlur('assignedTeamLeaderId')}
+                  style={styles.picker}
+                >
+                  <Picker.Item label="Select Team Leader" value="" />
+                  <Picker.Item label="TEAML" value="TEAML" />
+
+                </Picker>
+              </View>
               {updateFormik.errors.assignedTeamLeaderId && updateFormik.touched.assignedTeamLeaderId && (
                 <Text style={styles.errorText}>{updateFormik.errors.assignedTeamLeaderId}</Text>
               )}
@@ -499,7 +503,7 @@ const SampleCollectionRequests = () => {
               </View>
               <View style={styles.permissionContainer}>
                 <Text style={styles.permissionText}>Camera permission is required</Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.permissionButton}
                   onPress={requestPermission}
                 >
@@ -620,12 +624,12 @@ const SampleCollectionRequests = () => {
                         {item?.guard_pond_id === 1 || item?.guard_pond_id === '1'
                           ? 'Guard Pond-1'
                           : item?.guard_pond_id === 2 || item?.guard_pond_id === '2'
-                          ? 'Guard Pond-2'
-                          : item?.guard_pond_id === 3 || item?.guard_pond_id === '3'
-                          ? 'Guard Pond-3'
-                          : item?.guard_pond_id === 4 || item?.guard_pond_id === '4'
-                          ? 'Guard Pond-4'
-                          : '-'}
+                            ? 'Guard Pond-2'
+                            : item?.guard_pond_id === 3 || item?.guard_pond_id === '3'
+                              ? 'Guard Pond-3'
+                              : item?.guard_pond_id === 4 || item?.guard_pond_id === '4'
+                                ? 'Guard Pond-4'
+                                : '-'}
                       </Text>
                       {roleId === 9 && (
                         <Text style={[styles.tableCell, { width: 130 }]}>
