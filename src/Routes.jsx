@@ -28,7 +28,7 @@ import DistImage from "./screens/DistImage";
 import WorkerRegistration from "./screens/WorkerRegistrationForm";
 import WebViewScreen from "./sitelayout/WebViewScreen";
 import PaymentScreen from "./screens/PaymentTest";
-import TicketBooking from "./Bluetooth/TicketBooking";
+// import TicketBooking from "./Bluetooth/TicketBooking";
 import GenerateQrCode from "./screens/GenerateQrCode";
 import AssignQrcode from "./screens/AssignQrcode";
 import Posting from "./screens/Posting";
