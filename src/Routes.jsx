@@ -31,6 +31,7 @@ import PaymentScreen from "./screens/PaymentTest";
 import TicketBooking from "./Bluetooth/TicketBooking";
 import GenerateQrCode from "./screens/GenerateQrCode";
 import AssignQrcode from "./screens/AssignQrcode";
+import Posting from "./screens/Posting";
 
 const Stack = createNativeStackNavigator();
 
@@ -146,7 +147,7 @@ export default function Routes() {
                   </SessionChecking>
                 )}
               </Stack.Screen>
-{/* 
+
                <Stack.Screen name="SampleCollectionRequests">
                 {(props) => (
                   <SessionChecking navigation={props.navigation}>
@@ -159,7 +160,21 @@ export default function Routes() {
                     </SiteLayout>
                   </SessionChecking>
                 )}
-              </Stack.Screen> */}
+              </Stack.Screen>
+
+                <Stack.Screen name="Posting">
+                {(props) => (
+                  <SessionChecking navigation={props.navigation}>
+                    <SiteLayout
+                      navigation={props.navigation}
+                      currentScreenName="Posting"
+                      scrollEnabled={false}
+                    >
+                      <Posting {...props} />
+                    </SiteLayout>
+                  </SessionChecking>
+                )}
+              </Stack.Screen>
 
               <Stack.Screen name="WorkerSearch">
                 {(props) => (

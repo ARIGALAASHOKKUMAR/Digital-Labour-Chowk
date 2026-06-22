@@ -206,6 +206,9 @@ export const MARINEDISCHARGEDETAILS = "api/user/marine-discharge-posting-details
 export const UPDATEASSIGNDUTY = "api/user/updateAssignedDuty"
 
 export const GENERATEQRCODES = "/api/user/generateSampleQrStock"
+export const CREATEMARINEDISCHARGEPOSTING = "api/user/createMarineDischargePosting"
+
+
 
 
 
