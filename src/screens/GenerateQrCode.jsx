@@ -360,7 +360,7 @@ function GenerateQrCode() {
                       <TouchableOpacity
                         key={i}
                         style={styles.gridItem}
-                        onPress={() => viewQRCode(qr, i)}
+                        // onPress={() => viewQRCode(qr, i)}
                         activeOpacity={0.8}
                       >
                         <Image
@@ -369,7 +369,7 @@ function GenerateQrCode() {
                           resizeMode="contain"
                         />
                         <Text style={styles.qrLabel}>QR {i + 1}</Text>
-                        <Text style={styles.tapHint}>Tap to view</Text>
+                        {/* <Text style={styles.tapHint}>Tap to view</Text> */}
                       </TouchableOpacity>
                     ))}
                   </View>
