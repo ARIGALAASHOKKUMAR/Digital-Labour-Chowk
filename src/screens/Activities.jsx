@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Image,
   Linking,
+  FlatList,
 } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { useFormik } from 'formik';
@@ -329,7 +330,6 @@ const Activities = () => {
             </TouchableOpacity>
           </View>
           <ScrollView>
-            {/* Start Reading Display */}
             <View style={styles.startReadingDisplay}>
               <Text style={styles.startReadingLabel}>Start Reading:</Text>
               <Text style={styles.startReadingValue}>{rowData?.start_reading || '-'}</Text>
@@ -437,8 +437,8 @@ const Activities = () => {
     </Modal>
   );
 
-  // ================= RENDER TABLE ROW =================
-  const renderTableRow = (item, index) => {
+  // ================= RENDER CARD =================
+  const renderCard = ({ item, index }) => {
     const hasStartReading = item?.start_reading !== null && item?.start_reading !== undefined;
     const hasEndReading = item?.end_reading !== null && item?.end_reading !== undefined;
     const isStartDisabled = hasStartReading || hasEndReading;
@@ -448,75 +448,117 @@ const Activities = () => {
       ? (Number(item.end_reading || 0) - Number(item.start_reading || 0)).toFixed(2)
       : '-';
 
+    const getGuardPondName = (id) => {
+      const pondMap = {
+        '1': 'Guard Pond-1',
+        '2': 'Guard Pond-2',
+        '3': 'Guard Pond-3',
+        '4': 'Guard Pond-4',
+      };
+      return pondMap[id] || pondMap[String(id)] || '-';
+    };
+
     return (
-      <View key={index} style={styles.tableRow}>
-        <Text style={[styles.tableCell, { width: 40, textAlign: 'center' }]}>
-          {index + 1}
-        </Text>
-        <Text style={[styles.tableCell, { width: 120 }]}>
-          {item?.discharge_request_industry || '-'}
-        </Text>
-        <Text style={[styles.tableCell, { width: 100 }]}>
-          {item?.guard_pond_id === 1 || item?.guard_pond_id === '1'
-            ? 'Guard Pond-1'
-            : item?.guard_pond_id === 2 || item?.guard_pond_id === '2'
-            ? 'Guard Pond-2'
-            : item?.guard_pond_id === 3 || item?.guard_pond_id === '3'
-            ? 'Guard Pond-3'
-            : item?.guard_pond_id === 4 || item?.guard_pond_id === '4'
-            ? 'Guard Pond-4'
-            : '-'}
-        </Text>
-        <Text style={[styles.tableCell, { width: 100 }]}>
-          {item?.discharge_request_date?.split(' ')[0] || '-'}
-        </Text>
-        <Text style={[styles.tableCell, { width: 90, textAlign: 'right' }]}>
-          {item?.start_reading || '-'}
-        </Text>
-        <Text style={[styles.tableCell, { width: 90, textAlign: 'right' }]}>
-          {item?.end_reading || '-'}
-        </Text>
-        <Text style={[styles.tableCell, { width: 100, textAlign: 'right', fontWeight: '600' }]}>
-          {totalDischarged}
-        </Text>
-        <View style={[styles.tableCell, { width: 160, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }]}>
-          <TouchableOpacity
-            style={[styles.actionButton, isStartDisabled ? styles.disabledButton : styles.startButton]}
-            disabled={isStartDisabled}
-            onPress={() => {
-              setShowStartModal(true);
-              setRowData(item);
-            }}
-          >
-            <Icon
-              name={hasStartReading ? 'checkmark-circle' : 'play-circle'}
-              size={14}
-              color="#fff"
-            />
-            <Text style={styles.actionButtonText}>Start</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionButton, isEndDisabled ? styles.disabledButton : styles.endButton]}
-            disabled={isEndDisabled}
-            onPress={() => {
-              setShowEndModal(true);
-              setRowData(item);
-            }}
-          >
-            <Icon
-              name={hasEndReading ? 'checkmark-circle' : 'stop-circle'}
-              size={14}
-              color="#fff"
-            />
-            <Text style={styles.actionButtonText}>End</Text>
-          </TouchableOpacity>
+      <View style={styles.cardItem}>
+        <View style={styles.cardHeaderItem}>
+          <View style={styles.cardTitleRow}>
+            <Text style={styles.cardIndustry}>{item?.discharge_request_industry || '-'}</Text>
+            <View style={styles.cardBadge}>
+              <Text style={styles.cardBadgeText}>#{index + 1}</Text>
+            </View>
+          </View>
+          <Text style={styles.cardPond}>{getGuardPondName(item?.guard_pond_id)}</Text>
+        </View>
+
+        <View style={styles.cardBodyItem}>
+          <View style={styles.cardRow}>
+            <View style={styles.cardLabelContainer}>
+              <Text style={styles.cardLabel}>Discharge Date</Text>
+              <Text style={styles.cardValue}>{item?.discharge_request_date?.split(' ')[0] || '-'}</Text>
+            </View>
+            <View style={styles.cardLabelContainer}>
+              <Text style={styles.cardLabel}>Total Qty</Text>
+              <Text style={[styles.cardValue, styles.cardValueHighlight]}>{totalDischarged}</Text>
+            </View>
+          </View>
+
+          <View style={styles.cardRow}>
+            <View style={styles.cardLabelContainer}>
+              <Text style={styles.cardLabel}>Start Reading</Text>
+              <Text style={styles.cardValue}>{item?.start_reading || '-'}</Text>
+            </View>
+            <View style={styles.cardLabelContainer}>
+              <Text style={styles.cardLabel}>End Reading</Text>
+              <Text style={styles.cardValue}>{item?.end_reading || '-'}</Text>
+            </View>
+          </View>
+
+          <View style={styles.cardActions}>
+            <TouchableOpacity
+              style={[styles.cardActionButton, isStartDisabled ? styles.cardButtonDisabled : styles.cardButtonStart]}
+              disabled={isStartDisabled}
+              onPress={() => {
+                setShowStartModal(true);
+                setRowData(item);
+              }}
+            >
+              <Icon
+                name={hasStartReading ? 'checkmark-circle' : 'play-circle'}
+                size={16}
+                color="#fff"
+              />
+              <Text style={styles.cardButtonText}>
+                {hasStartReading ? 'Started' : 'Start'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.cardActionButton, isEndDisabled ? styles.cardButtonDisabled : styles.cardButtonEnd]}
+              disabled={isEndDisabled}
+              onPress={() => {
+                setShowEndModal(true);
+                setRowData(item);
+              }}
+            >
+              <Icon
+                name={hasEndReading ? 'checkmark-circle' : 'stop-circle'}
+                size={16}
+                color="#fff"
+              />
+              <Text style={styles.cardButtonText}>
+                {hasEndReading ? 'Completed' : 'End'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Status Indicator */}
+          <View style={styles.cardStatus}>
+            {hasStartReading && !hasEndReading && (
+              <View style={styles.statusBadgeInProgress}>
+                <View style={styles.statusDotInProgress} />
+                <Text style={styles.statusTextInProgress}>In Progress</Text>
+              </View>
+            )}
+            {hasStartReading && hasEndReading && (
+              <View style={styles.statusBadgeCompleted}>
+                <View style={styles.statusDotCompleted} />
+                <Text style={styles.statusTextCompleted}>Completed</Text>
+              </View>
+            )}
+            {!hasStartReading && !hasEndReading && (
+              <View style={styles.statusBadgePending}>
+                <View style={styles.statusDotPending} />
+                <Text style={styles.statusTextPending}>Pending</Text>
+              </View>
+            )}
+          </View>
         </View>
       </View>
     );
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       {renderStartModal()}
       {renderEndModal()}
 
@@ -538,34 +580,22 @@ const Activities = () => {
               <Text style={styles.loadingText}>Loading...</Text>
             </View>
           ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-              <View>
-                {/* Table Header */}
-                <View style={styles.tableHeader}>
-                  <Text style={[styles.tableHeaderText, { width: 40 }]}>S.No</Text>
-                  <Text style={[styles.tableHeaderText, { width: 120 }]}>Industry</Text>
-                  <Text style={[styles.tableHeaderText, { width: 100 }]}>Guard Pond</Text>
-                  <Text style={[styles.tableHeaderText, { width: 100 }]}>Discharge Date</Text>
-                  <Text style={[styles.tableHeaderText, { width: 90 }]}>Start</Text>
-                  <Text style={[styles.tableHeaderText, { width: 90 }]}>End</Text>
-                  <Text style={[styles.tableHeaderText, { width: 100 }]}>Total Qty</Text>
-                  <Text style={[styles.tableHeaderText, { width: 160 }]}>Action</Text>
+            <FlatList
+              data={data}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={renderCard}
+              contentContainerStyle={styles.listContainer}
+              ListEmptyComponent={
+                <View style={styles.noRecords}>
+                  <Text style={styles.noRecordsText}>No Records Found</Text>
                 </View>
-
-                {/* Table Body */}
-                {data.length > 0 ? (
-                  data.map((item, index) => renderTableRow(item, index))
-                ) : (
-                  <View style={styles.noRecords}>
-                    <Text style={styles.noRecordsText}>No Records Found</Text>
-                  </View>
-                )}
-              </View>
-            </ScrollView>
+              }
+              showsVerticalScrollIndicator={false}
+            />
           )}
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -575,6 +605,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   card: {
+    flex: 1,
     margin: 10,
     backgroundColor: '#fff',
     borderRadius: 8,
@@ -596,6 +627,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   cardBody: {
+    flex: 1,
     padding: 10,
   },
   headerPanel: {
@@ -618,33 +650,179 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 14,
   },
-  tableHeader: {
-    flexDirection: 'row',
+  listContainer: {
+    paddingBottom: 20,
+  },
+  // Card Styles
+  cardItem: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  cardHeaderItem: {
     backgroundColor: '#f8f9fa',
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-    paddingVertical: 8,
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
   },
-  tableHeaderText: {
-    fontWeight: 'bold',
-    paddingHorizontal: 6,
-    fontSize: 10,
-    color: '#000',
-    textAlign: 'center',
-  },
-  tableRow: {
+  cardTitleRow: {
     flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-    borderTopWidth: 0,
-    paddingVertical: 8,
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  tableCell: {
-    paddingHorizontal: 6,
-    fontSize: 10,
-    color: '#000',
+  cardIndustry: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1e3a5f',
+    flex: 1,
   },
+  cardBadge: {
+    backgroundColor: '#007bff',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  cardBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  cardPond: {
+    fontSize: 12,
+    color: '#6c757d',
+    marginTop: 4,
+  },
+  cardBodyItem: {
+    padding: 12,
+  },
+  cardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  cardLabelContainer: {
+    flex: 1,
+  },
+  cardLabel: {
+    fontSize: 11,
+    color: '#6c757d',
+    marginBottom: 2,
+  },
+  cardValue: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+  },
+  cardValueHighlight: {
+    color: '#007bff',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  cardActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 6,
+    flex: 0.45,
+    justifyContent: 'center',
+  },
+  cardButtonStart: {
+    backgroundColor: '#007bff',
+  },
+  cardButtonEnd: {
+    backgroundColor: '#28a745',
+  },
+  cardButtonDisabled: {
+    backgroundColor: '#6c757d',
+  },
+  cardButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  cardStatus: {
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  statusBadgeInProgress: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff3cd',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusBadgeCompleted: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#d4edda',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusBadgePending: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8d7da',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusDotInProgress: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#ffc107',
+    marginRight: 6,
+  },
+  statusDotCompleted: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#28a745',
+    marginRight: 6,
+  },
+  statusDotPending: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#dc3545',
+    marginRight: 6,
+  },
+  statusTextInProgress: {
+    fontSize: 11,
+    color: '#856404',
+    fontWeight: '500',
+  },
+  statusTextCompleted: {
+    fontSize: 11,
+    color: '#155724',
+    fontWeight: '500',
+  },
+  statusTextPending: {
+    fontSize: 11,
+    color: '#721c24',
+    fontWeight: '500',
+  },
+  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -772,43 +950,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    borderRadius: 4,
-    marginRight: 4,
-    marginBottom: 4,
-  },
-  startButton: {
-    backgroundColor: '#007bff',
-  },
-  endButton: {
-    backgroundColor: '#28a745',
-  },
-  disabledButton: {
-    backgroundColor: '#6c757d',
-  },
-  actionButtonText: {
-    color: '#fff',
-    fontSize: 8,
-    fontWeight: '500',
-    marginLeft: 2,
-  },
-  noRecords: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  noRecordsText: {
-    color: 'red',
-    fontSize: 14,
-  },
   pickerContainer: {
     borderWidth: 1,
     borderColor: '#ced4da',
     borderRadius: 8,
     backgroundColor: '#fff',
+  },
+  noRecords: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  noRecordsText: {
+    color: 'red',
+    fontSize: 14,
   },
 });
 

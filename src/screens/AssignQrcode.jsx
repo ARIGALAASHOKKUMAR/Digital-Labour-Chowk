@@ -10,14 +10,17 @@ import {
   Alert,
   Image,
   Linking,
+  FlatList,
+  ActivityIndicator,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import moment from 'moment';
 import Icon from 'react-native-vector-icons/Ionicons';
-// Import Camera correctly
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { Picker } from '@react-native-picker/picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import {
   ASSIGNDUTYTEAMLEADER,
   COLLECTSAMPLEANDSENDTOLAB,
@@ -27,7 +30,6 @@ import {
   UPDATEASSIGNDUTY,
 } from '../utils/utils';
 import ImageBucketRN from '../utils/ImageBucketRN';
-import { Picker } from '@react-native-picker/picker';
 
 const SampleCollectionRequests = () => {
   const dispatch = useDispatch();
@@ -41,6 +43,11 @@ const SampleCollectionRequests = () => {
   const [rowData, setRowData] = useState(null);
   const [scanning, setScanning] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
+  const [loading, setLoading] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showUpdateDatePicker, setShowUpdateDatePicker] = useState(false);
+  const [tempDate, setTempDate] = useState(new Date());
+  const [tempUpdateDate, setTempUpdateDate] = useState(new Date());
 
   // Validation Schemas
   const validationSchema = Yup.object({
@@ -101,6 +108,7 @@ const SampleCollectionRequests = () => {
   // API Calls
   const HandleSubmit = async (values) => {
     try {
+      setLoading(true);
       const payload = {
         postingId: rowData.posting_id,
         assignedTeamLeaderId: values.assignedTeamLeaderId,
@@ -112,14 +120,18 @@ const SampleCollectionRequests = () => {
         setShowModal(false);
         GetData();
         formik.resetForm();
+        Alert.alert('Success', 'Duty assigned successfully');
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to assign duty');
+    } finally {
+      setLoading(false);
     }
   };
 
   const HandleUpdateSubmit = async (values) => {
     try {
+      setLoading(true);
       const payload = {
         postingId: rowData.posting_id,
         assignedTeamLeaderId: values.assignedTeamLeaderId,
@@ -131,14 +143,18 @@ const SampleCollectionRequests = () => {
         setUpdateModal(false);
         GetData();
         updateFormik.resetForm();
+        Alert.alert('Success', 'Duty updated successfully');
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to update duty');
+    } finally {
+      setLoading(false);
     }
   };
 
   const HandleSampleSubmit = async (values) => {
     try {
+      setLoading(true);
       const payload = {
         postingId: rowData.posting_id,
         inletSealImage: values.inletSealImage,
@@ -151,14 +167,18 @@ const SampleCollectionRequests = () => {
         setSampleModal(false);
         GetData();
         sampleFormik.resetForm();
+        Alert.alert('Success', 'Sample submitted successfully');
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to submit sample');
+    } finally {
+      setLoading(false);
     }
   };
 
   const GetData = async () => {
     try {
+      setLoading(true);
       const res = await commonAPICall(MARINEDISCHARGEDETAILS, {}, 'get', dispatch);
       if (res.status === 200) {
         setData(res.data.MarineDischargePostingDetails);
@@ -167,20 +187,22 @@ const SampleCollectionRequests = () => {
       }
     } catch (error) {
       setData([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   // QR Code Scanning
   const handleBarCodeScanned = ({ data }) => {
     if (!scanning) return;
-
+    
     setScanning(false);
     setQrModal(false);
-
+    
     if (data) {
       sampleFormik.setFieldValue('sampleQrCode', data);
       Alert.alert('QR Code Scanned', `QR Code: ${data}`);
-
+      
       if (!sampleModal) {
         setSampleModal(true);
       }
@@ -204,11 +226,28 @@ const SampleCollectionRequests = () => {
     setQrModal(false);
   };
 
+  // Handle Date Change
+  const onDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || tempDate;
+    setShowDatePicker(Platform.OS === 'ios');
+    setTempDate(currentDate);
+    const formattedDate = currentDate.toISOString().split('T')[0];
+    formik.setFieldValue('assignedDate', formattedDate);
+  };
+
+  const onUpdateDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || tempUpdateDate;
+    setShowUpdateDatePicker(Platform.OS === 'ios');
+    setTempUpdateDate(currentDate);
+    const formattedDate = currentDate.toISOString().split('T')[0];
+    updateFormik.setFieldValue('assignedDate', formattedDate);
+  };
+
   useEffect(() => {
     GetData();
   }, []);
 
-  // Render Functions
+  // Render Assign Duty Modal
   const renderAssignDutyModal = () => (
     <Modal
       visible={showModal}
@@ -224,32 +263,21 @@ const SampleCollectionRequests = () => {
               <Icon name="close" size={24} color="#000" />
             </TouchableOpacity>
           </View>
-          <View>
+          <ScrollView>
             <View style={styles.formGroup}>
               <Text style={styles.label}>Team Leader <Text style={styles.star}>*</Text></Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  formik.errors.assignedTeamLeaderId && formik.touched.assignedTeamLeaderId && styles.inputError
-                ]}
-                placeholder="Select Team Leader"
-                value={formik.values.assignedTeamLeaderId}
-                onChangeText={formik.handleChange('assignedTeamLeaderId')}
-                onBlur={formik.handleBlur('assignedTeamLeaderId')}
-              />
-              {formik.errors.assignedTeamLeaderId && formik.touched.assignedTeamLeaderId && (
-                <Text style={styles.errorText}>{formik.errors.assignedTeamLeaderId}</Text>
-              )}
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Team Leader <Text style={styles.star}>*</Text></Text>
-              <View style={[styles.dropdownContainer, formik.errors.assignedTeamLeaderId && formik.touched.assignedTeamLeaderId && styles.inputError]}>
+              <View style={[
+                styles.pickerWrapper,
+                formik.errors.assignedTeamLeaderId && formik.touched.assignedTeamLeaderId && styles.inputError
+              ]}>
                 <Picker
                   selectedValue={formik.values.assignedTeamLeaderId}
-                  onValueChange={(itemValue) => formik.setFieldValue('assignedTeamLeaderId', itemValue)}
-                  onBlur={formik.handleBlur('assignedTeamLeaderId')}
+                  onValueChange={(itemValue) => {
+                    formik.setFieldValue('assignedTeamLeaderId', itemValue);
+                    formik.setFieldTouched('assignedTeamLeaderId', true);
+                  }}
                   style={styles.picker}
+                  dropdownIconColor="#666"
                 >
                   <Picker.Item label="Select Team Leader" value="" />
                   <Picker.Item label="TEAML" value="TEAML" />
@@ -260,15 +288,54 @@ const SampleCollectionRequests = () => {
               )}
             </View>
 
-            <TouchableOpacity style={styles.submitButton} onPress={formik.handleSubmit}>
-              <Text style={styles.submitButtonText}>Submit</Text>
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Assigning Date <Text style={styles.star}>*</Text></Text>
+              <TouchableOpacity
+                style={[
+                  styles.dateInputWrapper,
+                  formik.errors.assignedDate && formik.touched.assignedDate && styles.inputError,
+                ]}
+                onPress={() => setShowDatePicker(true)}
+                activeOpacity={0.7}
+              >
+                <Text style={[
+                  styles.dateInputText,
+                  !formik.values.assignedDate && styles.datePlaceholder
+                ]}>
+                  {formik.values.assignedDate || 'YYYY-MM-DD'}
+                </Text>
+                <Icon name="calendar-outline" size={22} color="#666" />
+              </TouchableOpacity>
+              
+              {showDatePicker && (
+                <DateTimePicker
+                  value={tempDate}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={onDateChange}
+                  maximumDate={new Date()}
+                />
+              )}
+              
+              {formik.errors.assignedDate && formik.touched.assignedDate && (
+                <Text style={styles.errorText}>{formik.errors.assignedDate}</Text>
+              )}
+            </View>
+
+            <TouchableOpacity
+              style={styles.submitButton}
+              onPress={formik.handleSubmit}
+              disabled={loading}
+            >
+              {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitButtonText}>Submit</Text>}
             </TouchableOpacity>
-          </View>
+          </ScrollView>
         </View>
       </View>
     </Modal>
   );
 
+  // Render Update Duty Modal
   const renderUpdateDutyModal = () => (
     <Modal
       visible={updateModal}
@@ -284,19 +351,24 @@ const SampleCollectionRequests = () => {
               <Icon name="close" size={24} color="#000" />
             </TouchableOpacity>
           </View>
-          <View>
+          <ScrollView>
             <View style={styles.formGroup}>
               <Text style={styles.label}>Team Leader <Text style={styles.star}>*</Text></Text>
-              <View style={[styles.dropdownContainer, updateFormik.errors.assignedTeamLeaderId && updateFormik.touched.assignedTeamLeaderId && styles.inputError]}>
+              <View style={[
+                styles.pickerWrapper,
+                updateFormik.errors.assignedTeamLeaderId && updateFormik.touched.assignedTeamLeaderId && styles.inputError
+              ]}>
                 <Picker
                   selectedValue={updateFormik.values.assignedTeamLeaderId}
-                  onValueChange={(itemValue) => updateFormik.setFieldValue('assignedTeamLeaderId', itemValue)}
-                  onBlur={updateFormik.handleBlur('assignedTeamLeaderId')}
+                  onValueChange={(itemValue) => {
+                    updateFormik.setFieldValue('assignedTeamLeaderId', itemValue);
+                    updateFormik.setFieldTouched('assignedTeamLeaderId', true);
+                  }}
                   style={styles.picker}
+                  dropdownIconColor="#666"
                 >
                   <Picker.Item label="Select Team Leader" value="" />
                   <Picker.Item label="TEAML" value="TEAML" />
-
                 </Picker>
               </View>
               {updateFormik.errors.assignedTeamLeaderId && updateFormik.touched.assignedTeamLeaderId && (
@@ -306,30 +378,52 @@ const SampleCollectionRequests = () => {
 
             <View style={styles.formGroup}>
               <Text style={styles.label}>Assigning Date <Text style={styles.star}>*</Text></Text>
-              <TextInput
+              <TouchableOpacity
                 style={[
-                  styles.input,
-                  updateFormik.errors.assignedDate && updateFormik.touched.assignedDate && styles.inputError
+                  styles.dateInputWrapper,
+                  updateFormik.errors.assignedDate && updateFormik.touched.assignedDate && styles.inputError,
                 ]}
-                placeholder="YYYY-MM-DD"
-                value={updateFormik.values.assignedDate}
-                onChangeText={updateFormik.handleChange('assignedDate')}
-                onBlur={updateFormik.handleBlur('assignedDate')}
-              />
+                onPress={() => setShowUpdateDatePicker(true)}
+                activeOpacity={0.7}
+              >
+                <Text style={[
+                  styles.dateInputText,
+                  !updateFormik.values.assignedDate && styles.datePlaceholder
+                ]}>
+                  {updateFormik.values.assignedDate || 'YYYY-MM-DD'}
+                </Text>
+                <Icon name="calendar-outline" size={22} color="#666" />
+              </TouchableOpacity>
+              
+              {showUpdateDatePicker && (
+                <DateTimePicker
+                  value={tempUpdateDate}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={onUpdateDateChange}
+                  maximumDate={new Date()}
+                />
+              )}
+              
               {updateFormik.errors.assignedDate && updateFormik.touched.assignedDate && (
                 <Text style={styles.errorText}>{updateFormik.errors.assignedDate}</Text>
               )}
             </View>
 
-            <TouchableOpacity style={styles.submitButton} onPress={updateFormik.handleSubmit}>
-              <Text style={styles.submitButtonText}>Submit</Text>
+            <TouchableOpacity
+              style={styles.submitButton}
+              onPress={updateFormik.handleSubmit}
+              disabled={loading}
+            >
+              {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitButtonText}>Submit</Text>}
             </TouchableOpacity>
-          </View>
+          </ScrollView>
         </View>
       </View>
     </Modal>
   );
 
+  // Render Sample Collection Modal
   const renderSampleCollectionModal = () => (
     <Modal
       visible={sampleModal}
@@ -468,14 +562,19 @@ const SampleCollectionRequests = () => {
                 value={sampleFormik.values.sampleCollectionRemarks}
                 onChangeText={sampleFormik.handleChange('sampleCollectionRemarks')}
                 onBlur={sampleFormik.handleBlur('sampleCollectionRemarks')}
+                textAlignVertical="top"
               />
               {sampleFormik.errors.sampleCollectionRemarks && sampleFormik.touched.sampleCollectionRemarks && (
                 <Text style={styles.errorText}>{sampleFormik.errors.sampleCollectionRemarks}</Text>
               )}
             </View>
 
-            <TouchableOpacity style={styles.submitButton} onPress={sampleFormik.handleSubmit}>
-              <Text style={styles.submitButtonText}>Submit</Text>
+            <TouchableOpacity
+              style={styles.submitButton}
+              onPress={sampleFormik.handleSubmit}
+              disabled={loading}
+            >
+              {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitButtonText}>Submit</Text>}
             </TouchableOpacity>
           </ScrollView>
         </View>
@@ -483,8 +582,8 @@ const SampleCollectionRequests = () => {
     </Modal>
   );
 
+  // Render QR Scanner Modal
   const renderQRScannerModal = () => {
-    // Don't render Camera if permission is not granted
     if (!permission?.granted) {
       return (
         <Modal
@@ -502,8 +601,9 @@ const SampleCollectionRequests = () => {
                 </TouchableOpacity>
               </View>
               <View style={styles.permissionContainer}>
+                <Icon name="camera-outline" size={60} color="#94a3b8" />
                 <Text style={styles.permissionText}>Camera permission is required</Text>
-                <TouchableOpacity
+                <TouchableOpacity 
                   style={styles.permissionButton}
                   onPress={requestPermission}
                 >
@@ -563,8 +663,120 @@ const SampleCollectionRequests = () => {
     );
   };
 
+  // Render Card
+  const renderCard = ({ item, index }) => {
+    const isAssigned = item.sample_collection_team_leader_id !== null;
+    const getGuardPondName = (id) => {
+      const pondMap = {
+        '1': 'Guard Pond-1',
+        '2': 'Guard Pond-2',
+        '3': 'Guard Pond-3',
+        '4': 'Guard Pond-4',
+      };
+      return pondMap[id] || pondMap[String(id)] || '-';
+    };
+
+    return (
+      <View style={styles.cardItem}>
+        <View style={styles.cardHeaderItem}>
+          <View style={styles.cardTitleRow}>
+            <Text style={styles.cardIndustry}>{item?.discharge_request_industry || '-'}</Text>
+            <View style={styles.cardBadge}>
+              <Text style={styles.cardBadgeText}>#{index + 1}</Text>
+            </View>
+          </View>
+          <Text style={styles.cardPond}>{getGuardPondName(item?.guard_pond_id)}</Text>
+        </View>
+
+        <View style={styles.cardBodyItem}>
+          <View style={styles.cardRow}>
+            <View style={styles.cardLabelContainer}>
+              <Text style={styles.cardLabel}>Sample ID</Text>
+              <Text style={styles.cardValue}>{item?.posting_id || '-'}</Text>
+            </View>
+            <View style={styles.cardLabelContainer}>
+              <Text style={styles.cardLabel}>Status</Text>
+              <View style={[
+                styles.statusBadge,
+                isAssigned ? styles.statusAssigned : styles.statusPending
+              ]}>
+                <Text style={[
+                  styles.statusText,
+                  isAssigned ? styles.statusTextAssigned : styles.statusTextPending
+                ]}>
+                  {isAssigned ? 'Assigned' : 'Pending'}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.cardRow}>
+            <View style={styles.cardLabelContainer}>
+              <Text style={styles.cardLabel}>Request Date</Text>
+              <Text style={styles.cardValue}>{item?.discharge_request_date || '-'}</Text>
+            </View>
+            {roleId === 9 && (
+              <View style={styles.cardLabelContainer}>
+                <Text style={styles.cardLabel}>Assigned Date</Text>
+                <Text style={styles.cardValue}>{item?.sample_collection_assigned_date || '-'}</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.cardActions}>
+            {roleId === 8 && (
+              <>
+                {isAssigned ? (
+                  <>
+                    <TouchableOpacity style={styles.disabledButton} disabled>
+                      <Text style={styles.disabledButtonText}>Assigned</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.editButton}
+                      onPress={() => {
+                        setUpdateModal(true);
+                        setRowData(item);
+                      }}
+                    >
+                      <Icon name="create-outline" size={14} color="#fff" />
+                      <Text style={styles.editButtonText}>Edit</Text>
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.assignButton}
+                    onPress={() => {
+                      setShowModal(true);
+                      setRowData(item);
+                    }}
+                  >
+                    <Icon name="person-add-outline" size={14} color="#fff" />
+                    <Text style={styles.assignButtonText}>Assign Duty</Text>
+                  </TouchableOpacity>
+                )}
+              </>
+            )}
+            {roleId === 9 && (
+              <TouchableOpacity
+                style={styles.collectButton}
+                onPress={() => {
+                  setSampleModal(true);
+                  setRowData(item);
+                  sampleFormik.setFieldValue('sampleQrCode', '');
+                }}
+              >
+                <Icon name="flask-outline" size={14} color="#fff" />
+                <Text style={styles.collectButtonText}>Collect Sample</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </View>
+    );
+  };
+
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       {renderAssignDutyModal()}
       {renderUpdateDutyModal()}
       {renderSampleCollectionModal()}
@@ -582,117 +794,28 @@ const SampleCollectionRequests = () => {
             <Text style={styles.headerText}>{CONTEXT_HEADING}</Text>
           </View>
 
-          <View style={styles.tableContainer}>
-            <ScrollView horizontal>
-              <View>
-                <View style={styles.tableHeader}>
-                  <Text style={[styles.tableHeaderText, { width: 50 }]}>S.No</Text>
-                  <Text style={[styles.tableHeaderText, { width: 150 }]}>Requested Industry</Text>
-                  {roleId === 8 && (
-                    <Text style={[styles.tableHeaderText, { width: 130 }]}>Sample Request Date</Text>
-                  )}
-                  {roleId === 9 && (
-                    <Text style={[styles.tableHeaderText, { width: 100 }]}>Sample Id</Text>
-                  )}
-                  <Text style={[styles.tableHeaderText, { width: 120 }]}>Guard Pond</Text>
-                  {roleId === 9 && (
-                    <Text style={[styles.tableHeaderText, { width: 130 }]}>Assigned Date</Text>
-                  )}
-                  <Text style={[styles.tableHeaderText, { width: 120 }]}>Action</Text>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#007bff" />
+              <Text style={styles.loadingText}>Loading...</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={data}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={renderCard}
+              contentContainerStyle={styles.listContainer}
+              ListEmptyComponent={
+                <View style={styles.noRecords}>
+                  <Text style={styles.noRecordsText}>No Records Found</Text>
                 </View>
-
-                {data.length > 0 ? (
-                  data.map((item, index) => (
-                    <View key={index} style={styles.tableRow}>
-                      <Text style={[styles.tableCell, { width: 50, textAlign: 'center' }]}>
-                        {index + 1}
-                      </Text>
-                      <Text style={[styles.tableCell, { width: 150 }]}>
-                        {item?.discharge_request_industry}
-                      </Text>
-                      {roleId === 8 && (
-                        <Text style={[styles.tableCell, { width: 130 }]}>
-                          {item?.discharge_request_date}
-                        </Text>
-                      )}
-                      {roleId === 9 && (
-                        <Text style={[styles.tableCell, { width: 100, textAlign: 'right' }]}>
-                          {item?.posting_id}
-                        </Text>
-                      )}
-                      <Text style={[styles.tableCell, { width: 120 }]}>
-                        {item?.guard_pond_id === 1 || item?.guard_pond_id === '1'
-                          ? 'Guard Pond-1'
-                          : item?.guard_pond_id === 2 || item?.guard_pond_id === '2'
-                            ? 'Guard Pond-2'
-                            : item?.guard_pond_id === 3 || item?.guard_pond_id === '3'
-                              ? 'Guard Pond-3'
-                              : item?.guard_pond_id === 4 || item?.guard_pond_id === '4'
-                                ? 'Guard Pond-4'
-                                : '-'}
-                      </Text>
-                      {roleId === 9 && (
-                        <Text style={[styles.tableCell, { width: 130 }]}>
-                          {item?.sample_collection_assigned_date}
-                        </Text>
-                      )}
-                      <View style={[styles.tableCell, { width: 120, flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap' }]}>
-                        {roleId === 8 && (
-                          <>
-                            {item.sample_collection_team_leader_id !== null ? (
-                              <>
-                                <TouchableOpacity style={styles.disabledButton} disabled>
-                                  <Text style={styles.disabledButtonText}>Assigned</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                  style={styles.editButton}
-                                  onPress={() => {
-                                    setUpdateModal(true);
-                                    setRowData(item);
-                                  }}
-                                >
-                                  <Text style={styles.editButtonText}>Edit</Text>
-                                </TouchableOpacity>
-                              </>
-                            ) : (
-                              <TouchableOpacity
-                                style={styles.primaryButton}
-                                onPress={() => {
-                                  setShowModal(true);
-                                  setRowData(item);
-                                }}
-                              >
-                                <Text style={styles.primaryButtonText}>Assign Duty</Text>
-                              </TouchableOpacity>
-                            )}
-                          </>
-                        )}
-                        {roleId === 9 && (
-                          <TouchableOpacity
-                            style={styles.editIcon}
-                            onPress={() => {
-                              setSampleModal(true);
-                              setRowData(item);
-                              sampleFormik.setFieldValue('sampleQrCode', '');
-                            }}
-                          >
-                            <Icon name="create-outline" size={20} color="#007bff" />
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    </View>
-                  ))
-                ) : (
-                  <View style={styles.noRecords}>
-                    <Text style={styles.noRecordsText}>No Records Found</Text>
-                  </View>
-                )}
-              </View>
-            </ScrollView>
-          </View>
+              }
+              showsVerticalScrollIndicator={false}
+            />
+          )}
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -702,6 +825,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   card: {
+    flex: 1,
     margin: 10,
     backgroundColor: '#fff',
     borderRadius: 8,
@@ -723,6 +847,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   cardBody: {
+    flex: 1,
     padding: 10,
   },
   headerPanel: {
@@ -736,35 +861,178 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  tableContainer: {
-    overflow: 'scroll',
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#f8f9fa',
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-    paddingVertical: 8,
-  },
-  tableHeaderText: {
-    fontWeight: 'bold',
-    paddingHorizontal: 8,
-    fontSize: 12,
-    color: '#000',
-  },
-  tableRow: {
-    flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-    borderTopWidth: 0,
-    paddingVertical: 8,
+  loadingContainer: {
+    padding: 40,
     alignItems: 'center',
   },
-  tableCell: {
-    paddingHorizontal: 8,
-    fontSize: 12,
-    color: '#000',
+  loadingText: {
+    marginTop: 10,
+    color: '#666',
+    fontSize: 14,
   },
+  listContainer: {
+    paddingBottom: 20,
+  },
+  // Card Styles
+  cardItem: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  cardHeaderItem: {
+    backgroundColor: '#f8f9fa',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  cardTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  cardIndustry: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1e3a5f',
+    flex: 1,
+  },
+  cardBadge: {
+    backgroundColor: '#007bff',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  cardBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  cardPond: {
+    fontSize: 12,
+    color: '#6c757d',
+    marginTop: 4,
+  },
+  cardBodyItem: {
+    padding: 12,
+  },
+  cardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  cardLabelContainer: {
+    flex: 1,
+  },
+  cardLabel: {
+    fontSize: 11,
+    color: '#6c757d',
+    marginBottom: 2,
+  },
+  cardValue: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  statusAssigned: {
+    backgroundColor: '#d4edda',
+  },
+  statusPending: {
+    backgroundColor: '#f8d7da',
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  statusTextAssigned: {
+    color: '#155724',
+  },
+  statusTextPending: {
+    color: '#721c24',
+  },
+  cardActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  assignButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#007bff',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    flex: 0.45,
+    justifyContent: 'center',
+  },
+  assignButtonText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  collectButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#28a745',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    flex: 0.9,
+    justifyContent: 'center',
+  },
+  collectButtonText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#17a2b8',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    flex: 0.45,
+    justifyContent: 'center',
+  },
+  editButtonText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  disabledButton: {
+    backgroundColor: '#6c757d',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    flex: 0.45,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  disabledButtonText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -776,7 +1044,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 20,
     width: '90%',
-    maxHeight: '80%',
+    maxHeight: '90%',
   },
   qrModalContent: {
     backgroundColor: '#fff',
@@ -838,6 +1106,36 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 12,
     marginTop: 5,
+  },
+  pickerWrapper: {
+    borderWidth: 1,
+    borderColor: '#ced4da',
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    overflow: 'hidden',
+  },
+  picker: {
+    height: 50,
+    width: '100%',
+    color: '#333',
+  },
+  dateInputWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ced4da',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    backgroundColor: '#fff',
+  },
+  dateInputText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  datePlaceholder: {
+    color: '#999',
   },
   uploadButton: {
     backgroundColor: '#f8f9fa',
@@ -911,43 +1209,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  primaryButton: {
-    backgroundColor: '#007bff',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 4,
-    marginRight: 4,
-  },
-  primaryButtonText: {
-    color: '#fff',
-    fontSize: 12,
-  },
-  disabledButton: {
-    backgroundColor: '#6c757d',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 4,
-    marginRight: 4,
-  },
-  disabledButtonText: {
-    color: '#fff',
-    fontSize: 12,
-  },
-  editButton: {
-    backgroundColor: '#17a2b8',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 4,
-  },
-  editButtonText: {
-    color: '#fff',
-    fontSize: 12,
-  },
-  editIcon: {
-    padding: 6,
-  },
   noRecords: {
-    padding: 20,
+    padding: 40,
     alignItems: 'center',
   },
   noRecordsText: {

@@ -193,7 +193,7 @@ export default function Routes() {
                   <SessionChecking navigation={props.navigation}>
                     <SiteLayout
                       navigation={props.navigation}
-                      currentScreenName="SampleCollectionRequests"
+                      currentScreenName="AnalysisReport"
                       scrollEnabled={false}
                     >
                       <LabAnalysis {...props} />
@@ -207,7 +207,7 @@ export default function Routes() {
                   <SessionChecking navigation={props.navigation}>
                     <SiteLayout
                       navigation={props.navigation}
-                      currentScreenName="SampleCollectionRequests"
+                      currentScreenName="Activities"
                       scrollEnabled={false}
                     >
                       <Activities {...props} />

@@ -10,6 +10,7 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  FlatList,
 } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { useFormik } from 'formik';
@@ -102,23 +103,8 @@ const DischargeSummary = () => {
     setShowDatePicker(Platform.OS === 'ios');
     setTempDate(currentDate);
     
-    // Format date to YYYY-MM-DD
     const formattedDate = currentDate.toISOString().split('T')[0];
     formik.setFieldValue('dischargeAssignedDate', formattedDate);
-  };
-
-  // Handle manual date input
-  const handleDateInput = (text) => {
-    // Allow only numbers and dashes
-    const cleaned = text.replace(/[^0-9-]/g, '');
-    
-    // Auto-format as user types (YYYY-MM-DD)
-    let formatted = cleaned;
-    if (cleaned.length === 4 || cleaned.length === 7) {
-      formatted = cleaned + '-';
-    }
-    
-    formik.setFieldValue('dischargeAssignedDate', formatted);
   };
 
   // Render Assign Duty Modal
@@ -137,7 +123,7 @@ const DischargeSummary = () => {
               <Icon name="close" size={24} color="#000" />
             </TouchableOpacity>
           </View>
-          <View>
+          <ScrollView>
             <View style={styles.formGroup}>
               <Text style={styles.label}>
                 Team Leader <Text style={styles.star}>*</Text>
@@ -152,8 +138,8 @@ const DischargeSummary = () => {
                   selectedValue={formik.values.dischargeAssignedTeamLeaderId}
                   onValueChange={(itemValue) => {
                     formik.setFieldValue('dischargeAssignedTeamLeaderId', itemValue);
+                    formik.setFieldTouched('dischargeAssignedTeamLeaderId', true);
                   }}
-                  onBlur={formik.handleBlur('dischargeAssignedTeamLeaderId')}
                   style={styles.picker}
                   dropdownIconColor="#666"
                 >
@@ -177,24 +163,22 @@ const DischargeSummary = () => {
                 Assigning Date <Text style={styles.star}>*</Text>
               </Text>
               <TouchableOpacity
+                style={[
+                  styles.dateInputWrapper,
+                  formik.errors.dischargeAssignedDate &&
+                    formik.touched.dischargeAssignedDate &&
+                    styles.inputError,
+                ]}
                 onPress={() => setShowDatePicker(true)}
                 activeOpacity={0.7}
               >
-                <View pointerEvents="none">
-                  <TextInput
-                    style={[
-                      styles.input,
-                      formik.errors.dischargeAssignedDate &&
-                        formik.touched.dischargeAssignedDate &&
-                        styles.inputError,
-                    ]}
-                    placeholder="YYYY-MM-DD"
-                    value={formik.values.dischargeAssignedDate}
-                    onChangeText={handleDateInput}
-                    onBlur={formik.handleBlur('dischargeAssignedDate')}
-                    editable={false}
-                  />
-                </View>
+                <Text style={[
+                  styles.dateInputText,
+                  !formik.values.dischargeAssignedDate && styles.datePlaceholder
+                ]}>
+                  {formik.values.dischargeAssignedDate || 'YYYY-MM-DD'}
+                </Text>
+                <Icon name="calendar-outline" size={22} color="#666" />
               </TouchableOpacity>
               
               {showDatePicker && (
@@ -226,93 +210,143 @@ const DischargeSummary = () => {
                 <Text style={styles.submitButtonText}>Submit</Text>
               )}
             </TouchableOpacity>
-          </View>
+          </ScrollView>
         </View>
       </View>
     </Modal>
   );
 
-  // Render Table Row
-  const renderTableRow = (item, index) => (
-    <View key={index} style={styles.tableRow}>
-      <Text style={[styles.tableCell, { width: 40, textAlign: 'center' }]}>
-        {index + 1 || '-'}
-      </Text>
-      <Text style={[styles.tableCell, { width: 120 }]}>
-        {item?.discharge_request_industry || '-'}
-      </Text>
-      <Text style={[styles.tableCell, { width: 100 }]}>
-        {item?.sample_collected_date?.split(' ')[0] || '-'}
-      </Text>
-      <Text style={[styles.tableCell, { width: 100 }]}>
-        {item?.analysis_date?.split(' ')[0] || '-'}
-      </Text>
-      <Text style={[styles.tableCell, { width: 90 }]}>
-        {item?.guard_pond_id === 1 || item?.guard_pond_id === '1'
-          ? 'Pond-1'
-          : item?.guard_pond_id === 2 || item?.guard_pond_id === '2'
-          ? 'Pond-2'
-          : item?.guard_pond_id === 3 || item?.guard_pond_id === '3'
-          ? 'Pond-3'
-          : item?.guard_pond_id === 4 || item?.guard_pond_id === '4'
-          ? 'Pond-4'
-          : '-'}
-      </Text>
-      <Text style={[styles.tableCell, { width: 60, textAlign: 'right' }]}>
-        {item?.tds_value || '-'}
-      </Text>
-      <Text style={[styles.tableCell, { width: 60, textAlign: 'right' }]}>
-        {item?.tss_value || '-'}
-      </Text>
-      <Text style={[styles.tableCell, { width: 60, textAlign: 'right' }]}>
-        {item?.cod_value || '-'}
-      </Text>
-      <Text style={[styles.tableCell, { width: 60, textAlign: 'right' }]}>
-        {item?.ph_value || '-'}
-      </Text>
-      <Text style={[styles.tableCell, { width: 70, textAlign: 'right' }]}>
-        {item?.fluoride_value || '-'}
-      </Text>
-      <Text style={[styles.tableCell, { width: 70, textAlign: 'right' }]}>
-        {item?.phenols_value || '-'}
-      </Text>
-      <Text style={[styles.tableCell, { width: 80, textAlign: 'right' }]}>
-        {item?.ortho_phosphate_value || '-'}
-      </Text>
-      <Text style={[styles.tableCell, { width: 80, textAlign: 'right' }]}>
-        {item?.nitrate_nitrogen_value || '-'}
-      </Text>
-      <Text style={[styles.tableCell, { width: 80, textAlign: 'right' }]}>
-        {item?.ammonical_nitrogen_value || '-'}
-      </Text>
-      <Text style={[styles.tableCell, { width: 80, textAlign: 'right' }]}>
-        {item?.hexavalent_chromium_value || '-'}
-      </Text>
-      <View style={[styles.tableCell, { width: 120, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }]}>
-        {item?.discharge_assigned_team_leader_id !== null ? (
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={() => {
-              setShowModal(true);
-              setRowData(item);
-            }}
-          >
-            <Text style={styles.primaryButtonText}>Assign Duty</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity style={styles.disabledButton} disabled>
-            <Text style={styles.disabledButtonText}>Assigned</Text>
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity style={styles.warningButton}>
-          <Text style={styles.warningButtonText}>Notice</Text>
-        </TouchableOpacity>
+  // Render Card
+  const renderCard = ({ item, index }) => {
+    const isAssigned = item?.discharge_assigned_team_leader_id !== null;
+
+    return (
+      <View style={styles.cardItem}>
+        <View style={styles.cardHeaderItem}>
+          <View style={styles.cardTitleRow}>
+            <Text style={styles.cardIndustry}>{item?.discharge_request_industry || '-'}</Text>
+            <View style={styles.cardBadge}>
+              <Text style={styles.cardBadgeText}>#{index + 1}</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.cardBodyItem}>
+          <View style={styles.cardRow}>
+            <View style={styles.cardLabelContainer}>
+              <Text style={styles.cardLabel}>Collected Date</Text>
+              <Text style={styles.cardValue}>{item?.sample_collected_date?.split(' ')[0] || '-'}</Text>
+            </View>
+            <View style={styles.cardLabelContainer}>
+              <Text style={styles.cardLabel}>Analysis Date</Text>
+              <Text style={styles.cardValue}>{item?.analysis_date?.split(' ')[0] || '-'}</Text>
+            </View>
+          </View>
+
+          <View style={styles.cardRow}>
+            <View style={styles.cardLabelContainer}>
+              <Text style={styles.cardLabel}>Guard Pond</Text>
+              <Text style={styles.cardValue}>
+                {item?.guard_pond_id === 1 || item?.guard_pond_id === '1'
+                  ? 'Pond-1'
+                  : item?.guard_pond_id === 2 || item?.guard_pond_id === '2'
+                  ? 'Pond-2'
+                  : item?.guard_pond_id === 3 || item?.guard_pond_id === '3'
+                  ? 'Pond-3'
+                  : item?.guard_pond_id === 4 || item?.guard_pond_id === '4'
+                  ? 'Pond-4'
+                  : '-'}
+              </Text>
+            </View>
+            <View style={styles.cardLabelContainer}>
+              <Text style={styles.cardLabel}>Status</Text>
+              <View style={[
+                styles.statusBadge,
+                isAssigned ? styles.statusAssigned : styles.statusPending
+              ]}>
+                <Text style={[
+                  styles.statusText,
+                  isAssigned ? styles.statusTextAssigned : styles.statusTextPending
+                ]}>
+                  {isAssigned ? 'Assigned' : 'Pending'}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Parameter Grid */}
+          <View style={styles.parameterGrid}>
+            <View style={styles.parameterItem}>
+              <Text style={styles.parameterLabel}>TDS</Text>
+              <Text style={styles.parameterValue}>{item?.tds_value || '-'}</Text>
+            </View>
+            <View style={styles.parameterItem}>
+              <Text style={styles.parameterLabel}>TSS</Text>
+              <Text style={styles.parameterValue}>{item?.tss_value || '-'}</Text>
+            </View>
+            <View style={styles.parameterItem}>
+              <Text style={styles.parameterLabel}>COD</Text>
+              <Text style={styles.parameterValue}>{item?.cod_value || '-'}</Text>
+            </View>
+            <View style={styles.parameterItem}>
+              <Text style={styles.parameterLabel}>PH</Text>
+              <Text style={styles.parameterValue}>{item?.ph_value || '-'}</Text>
+            </View>
+            <View style={styles.parameterItem}>
+              <Text style={styles.parameterLabel}>Flouride</Text>
+              <Text style={styles.parameterValue}>{item?.fluoride_value || '-'}</Text>
+            </View>
+            <View style={styles.parameterItem}>
+              <Text style={styles.parameterLabel}>Phenols</Text>
+              <Text style={styles.parameterValue}>{item?.phenols_value || '-'}</Text>
+            </View>
+            <View style={styles.parameterItem}>
+              <Text style={styles.parameterLabel}>Phosphate</Text>
+              <Text style={styles.parameterValue}>{item?.ortho_phosphate_value || '-'}</Text>
+            </View>
+            <View style={styles.parameterItem}>
+              <Text style={styles.parameterLabel}>Nitrate</Text>
+              <Text style={styles.parameterValue}>{item?.nitrate_nitrogen_value || '-'}</Text>
+            </View>
+            <View style={styles.parameterItem}>
+              <Text style={styles.parameterLabel}>Ammonical</Text>
+              <Text style={styles.parameterValue}>{item?.ammonical_nitrogen_value || '-'}</Text>
+            </View>
+            <View style={styles.parameterItem}>
+              <Text style={styles.parameterLabel}>Chromium</Text>
+              <Text style={styles.parameterValue}>{item?.hexavalent_chromium_value || '-'}</Text>
+            </View>
+          </View>
+
+          <View style={styles.cardActions}>
+            {isAssigned ? (
+              <TouchableOpacity style={styles.disabledButton} disabled>
+                <Text style={styles.disabledButtonText}>Assigned</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.assignButton}
+                onPress={() => {
+                  setShowModal(true);
+                  setRowData(item);
+                }}
+              >
+                <Icon name="person-add-outline" size={16} color="#fff" />
+                <Text style={styles.assignButtonText}>Assign Duty</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={styles.noticeButton}>
+              <Icon name="notifications-outline" size={16} color="#000" />
+              <Text style={styles.noticeButtonText}>Notice</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       {renderAssignDutyModal()}
 
       <View style={styles.card}>
@@ -333,42 +367,22 @@ const DischargeSummary = () => {
               <Text style={styles.loadingText}>Loading...</Text>
             </View>
           ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-              <View>
-                {/* Table Header */}
-                <View style={styles.tableHeader}>
-                  <Text style={[styles.tableHeaderText, { width: 40 }]}>S.No</Text>
-                  <Text style={[styles.tableHeaderText, { width: 120 }]}>Industry</Text>
-                  <Text style={[styles.tableHeaderText, { width: 100 }]}>Collected</Text>
-                  <Text style={[styles.tableHeaderText, { width: 100 }]}>Analysis</Text>
-                  <Text style={[styles.tableHeaderText, { width: 90 }]}>Pond</Text>
-                  <Text style={[styles.tableHeaderText, { width: 60 }]}>TDS</Text>
-                  <Text style={[styles.tableHeaderText, { width: 60 }]}>TSS</Text>
-                  <Text style={[styles.tableHeaderText, { width: 60 }]}>COD</Text>
-                  <Text style={[styles.tableHeaderText, { width: 60 }]}>PH</Text>
-                  <Text style={[styles.tableHeaderText, { width: 70 }]}>Flouride</Text>
-                  <Text style={[styles.tableHeaderText, { width: 70 }]}>Phenols</Text>
-                  <Text style={[styles.tableHeaderText, { width: 80 }]}>Ortho Phos</Text>
-                  <Text style={[styles.tableHeaderText, { width: 80 }]}>Nitrate N</Text>
-                  <Text style={[styles.tableHeaderText, { width: 80 }]}>Ammonical N</Text>
-                  <Text style={[styles.tableHeaderText, { width: 80 }]}>Hexa Chrom</Text>
-                  <Text style={[styles.tableHeaderText, { width: 120 }]}>Action</Text>
+            <FlatList
+              data={data}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={renderCard}
+              contentContainerStyle={styles.listContainer}
+              ListEmptyComponent={
+                <View style={styles.noRecords}>
+                  <Text style={styles.noRecordsText}>No Records Found</Text>
                 </View>
-
-                {/* Table Body */}
-                {data.length > 0 ? (
-                  data.map((item, index) => renderTableRow(item, index))
-                ) : (
-                  <View style={styles.noRecords}>
-                    <Text style={styles.noRecordsText}>No Records Found</Text>
-                  </View>
-                )}
-              </View>
-            </ScrollView>
+              }
+              showsVerticalScrollIndicator={false}
+            />
           )}
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -378,6 +392,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   card: {
+    flex: 1,
     margin: 10,
     backgroundColor: '#fff',
     borderRadius: 8,
@@ -399,6 +414,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   cardBody: {
+    flex: 1,
     padding: 10,
   },
   headerPanel: {
@@ -421,33 +437,170 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 14,
   },
-  tableHeader: {
-    flexDirection: 'row',
+  listContainer: {
+    paddingBottom: 20,
+  },
+  // Card Styles
+  cardItem: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  cardHeaderItem: {
     backgroundColor: '#f8f9fa',
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-    paddingVertical: 8,
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
   },
-  tableHeaderText: {
-    fontWeight: 'bold',
-    paddingHorizontal: 6,
-    fontSize: 10,
-    color: '#000',
-    textAlign: 'center',
-  },
-  tableRow: {
+  cardTitleRow: {
     flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-    borderTopWidth: 0,
-    paddingVertical: 8,
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  tableCell: {
-    paddingHorizontal: 6,
-    fontSize: 10,
-    color: '#000',
+  cardIndustry: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1e3a5f',
+    flex: 1,
   },
+  cardBadge: {
+    backgroundColor: '#007bff',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  cardBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  cardBodyItem: {
+    padding: 12,
+  },
+  cardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  cardLabelContainer: {
+    flex: 1,
+  },
+  cardLabel: {
+    fontSize: 11,
+    color: '#6c757d',
+    marginBottom: 2,
+  },
+  cardValue: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  statusAssigned: {
+    backgroundColor: '#d4edda',
+  },
+  statusPending: {
+    backgroundColor: '#f8d7da',
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  statusTextAssigned: {
+    color: '#155724',
+  },
+  statusTextPending: {
+    color: '#721c24',
+  },
+  parameterGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 10,
+    marginBottom: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+    paddingTop: 10,
+  },
+  parameterItem: {
+    width: '50%',
+    paddingVertical: 4,
+  },
+  parameterLabel: {
+    fontSize: 10,
+    color: '#6c757d',
+  },
+  parameterValue: {
+    fontSize: 13,
+    color: '#333',
+    fontWeight: '600',
+  },
+  cardActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  assignButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#007bff',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    flex: 0.45,
+    justifyContent: 'center',
+  },
+  assignButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  noticeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffc107',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    flex: 0.45,
+    justifyContent: 'center',
+  },
+  noticeButtonText: {
+    color: '#000',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  disabledButton: {
+    backgroundColor: '#6c757d',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    flex: 0.45,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  disabledButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -459,6 +612,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 20,
     width: '90%',
+    maxHeight: '90%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -486,15 +640,6 @@ const styles = StyleSheet.create({
   star: {
     color: 'red',
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ced4da',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    backgroundColor: '#fff',
-  },
   pickerWrapper: {
     borderWidth: 1,
     borderColor: '#ced4da',
@@ -506,6 +651,24 @@ const styles = StyleSheet.create({
     height: 50,
     width: '100%',
     color: '#333',
+  },
+  dateInputWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ced4da',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    backgroundColor: '#fff',
+  },
+  dateInputText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  datePlaceholder: {
+    color: '#999',
   },
   inputError: {
     borderColor: 'red',
@@ -527,46 +690,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  primaryButton: {
-    backgroundColor: '#007bff',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    marginRight: 4,
-    marginBottom: 4,
-  },
-  primaryButtonText: {
-    color: '#fff',
-    fontSize: 9,
-    fontWeight: '500',
-  },
-  disabledButton: {
-    backgroundColor: '#6c757d',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    marginRight: 4,
-    marginBottom: 4,
-  },
-  disabledButtonText: {
-    color: '#fff',
-    fontSize: 9,
-    fontWeight: '500',
-  },
-  warningButton: {
-    backgroundColor: '#ffc107',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    marginBottom: 4,
-  },
-  warningButtonText: {
-    color: '#000',
-    fontSize: 9,
-    fontWeight: '500',
-  },
   noRecords: {
-    padding: 20,
+    padding: 40,
     alignItems: 'center',
   },
   noRecordsText: {
