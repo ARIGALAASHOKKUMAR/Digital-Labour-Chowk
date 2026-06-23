@@ -755,13 +755,13 @@ const AnalysisReport = () => {
           </View>
 
           {/* Scan QR Code Button */}
-          <View style={styles.scanButtonContainer}>
+          {/* <View style={styles.scanButtonContainer}>
             <TouchableOpacity style={styles.scanButton} onPress={openScanner} activeOpacity={0.8}>
               <Icon name="qr-code-outline" size={24} color="#fff" />
               <Text style={styles.scanButtonText}>Scan QR Code</Text>
             </TouchableOpacity>
             <Text style={styles.scanHint}>Scan QR code to assign duty</Text>
-          </View>
+          </View> */}
 
           {loading ? (
             <View style={styles.loadingContainer}>
