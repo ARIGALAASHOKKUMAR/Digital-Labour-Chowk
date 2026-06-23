@@ -361,8 +361,8 @@ const Posting = () => {
                               <Image
                                 source={{ uri: fileUrl }}
                                 style={{
-                                  width: 120,
-                                  height: 120,
+                                  width: 100,
+                                  height: 100,
                                   borderRadius: 8,
                                   resizeMode: "cover",
                                 }}
@@ -669,7 +669,7 @@ fileNameText: {
     backgroundColor: "#fff",
     borderRadius: 10,
     width: "90%",
-    maxHeight: "80%",
+    maxHeight: "100%",
   },
   modalHeader: {
     flexDirection: "row",
