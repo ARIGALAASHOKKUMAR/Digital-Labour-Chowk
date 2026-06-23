@@ -190,7 +190,6 @@ function GenerateQrCode() {
                 <div class="qr-item">
                   <img src="${qr.qrImageUrl}" alt="QR Code ${index + 1}" />
                   <h3>QR Code ${index + 1}</h3>
-                  <p><strong>ID:</strong> ${qr.id}</p>
                 </div>
               `).join('')}
             </div>
