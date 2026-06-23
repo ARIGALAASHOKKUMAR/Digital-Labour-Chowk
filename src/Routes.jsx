@@ -33,6 +33,7 @@ import AnalysisReport from "./screens/AnalysisReport";
 import EditRequests from "./screens/EditRequests";
 import LoginCommon from "./screens/LoginCommon";
 import LabAnalysis from "./screens/LabAnalysis";
+import Activities from "./screens/Activities";
 
 const Stack = createNativeStackNavigator();
 
@@ -196,6 +197,20 @@ export default function Routes() {
                       scrollEnabled={false}
                     >
                       <LabAnalysis {...props} />
+                    </SiteLayout>
+                  </SessionChecking>
+                )}
+              </Stack.Screen>
+
+               <Stack.Screen name="Activities">
+                {(props) => (
+                  <SessionChecking navigation={props.navigation}>
+                    <SiteLayout
+                      navigation={props.navigation}
+                      currentScreenName="SampleCollectionRequests"
+                      scrollEnabled={false}
+                    >
+                      <Activities {...props} />
                     </SiteLayout>
                   </SessionChecking>
                 )}

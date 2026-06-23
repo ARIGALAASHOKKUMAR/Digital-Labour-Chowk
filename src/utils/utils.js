@@ -211,6 +211,11 @@ export const CREATEMARINEDISCHARGEPOSTING = "api/user/createMarineDischargePosti
 export const ASSIGNDISCHARGEDUTY = "api/user/assignDischargeDutyToTeamLeader"
 export const EDITAPPROVALACTION = "api/user/startReadingEditRequestApprovalAction"
 
+export const COMPLETEDISCHARGE = "api/user/completeDischarge"
+export const STARTDISCHARGE = "api/user/startDischarge"
+export const STARTREADINGEDITREQUEST = "api/user/raiseStartReadingEditRequest"
+
+
 
 
 
