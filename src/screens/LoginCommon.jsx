@@ -12,6 +12,7 @@ import {
   StatusBar,
   ScrollView,
   Alert,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
@@ -22,6 +23,7 @@ import { login } from '../actions';
 import { showErrorToast, showSuccessToast } from '../utils/showToast';
 import { useNavigation } from '@react-navigation/native';
 
+const { width, height } = Dimensions.get('window');
 
 const LoginCommon = () => {
   const dispatch = useDispatch();
@@ -29,9 +31,8 @@ const LoginCommon = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [captchaImage, setCaptchaImage] = useState('');
   const [storedCaptchaId, setStoredCaptchaId] = useState('');
-  const [showErrors, setShowErrors] = useState(false);
 
-  const navigation = useNavigation()
+  const navigation = useNavigation();
 
   // Validation Schema
   const validationSchema = Yup.object({
@@ -54,6 +55,8 @@ const LoginCommon = () => {
       captcha: '',
     },
     validationSchema,
+    validateOnChange: true,
+    validateOnBlur: true,
     onSubmit: handleLogin,
   });
 
@@ -68,17 +71,27 @@ const LoginCommon = () => {
     }
   };
 
-  useEffect(()=>{
-    generateCaptcha()
-  },[])
+  useEffect(() => {
+    generateCaptcha();
+  }, []);
 
   // Handle Login
   async function handleLogin(values) {
-    setShowErrors(true);
-    
+    // Validate all fields
+    const errors = await formik.validateForm();
+    if (Object.keys(errors).length > 0) {
+      // Set touched for all fields to show errors
+      formik.setTouched({
+        username: true,
+        password: true,
+        captcha: true,
+      });
+      return;
+    }
+
     try {
       setLoading(true);
-      
+
       const payload = {
         username: values.username.trim(),
         password: btoa(values.password), // Base64 encode password
@@ -117,13 +130,13 @@ const LoginCommon = () => {
         };
 
         dispatch(login(payload));
-        
+
         const currentTime = new Date().getHours();
-        let welcomeMsg = currentTime >= 5 && currentTime < 12 
-          ? 'Good morning! Welcome to Marine Discharge' 
-          : currentTime >= 12 && currentTime < 18 
-          ? 'Good afternoon! Welcome to Marine Discharge' 
-          : 'Good evening! Welcome to Marine Discharge';
+        let welcomeMsg = currentTime >= 5 && currentTime < 12
+          ? 'Good morning! Welcome to Marine Discharge'
+          : currentTime >= 12 && currentTime < 18
+            ? 'Good afternoon! Welcome to Marine Discharge'
+            : 'Good evening! Welcome to Marine Discharge';
 
         showSuccessToast(welcomeMsg);
         navigation.navigate('HOME');
@@ -148,8 +161,8 @@ const LoginCommon = () => {
 
   return (
     <View style={styles.screen}>
-      <StatusBar barStyle="light-content" backgroundColor="#0a2a4a" />
-      
+      <StatusBar barStyle="light-content" backgroundColor="#0f172a" />
+
       <KeyboardAvoidingView
         style={styles.flexOne}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -160,33 +173,33 @@ const LoginCommon = () => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Background Decoration */}
-          <View style={styles.backgroundLayer} />
-          <View style={styles.topDecoration} />
-          <View style={styles.bottomDecoration} />
+          {/* Background Decorations */}
+          <View style={styles.glowOrb1} />
+          <View style={styles.glowOrb2} />
+          <View style={styles.glowOrb3} />
 
           {/* Card */}
           <View style={styles.card}>
             {/* Logo */}
             <View style={styles.logoContainer}>
               <View style={styles.logoCircle}>
-                <Ionicons name="water-outline" size={40} color="#fff" />
+                <Ionicons name="boat-outline" size={44} color="#fff" />
               </View>
             </View>
 
-            <Text style={styles.welcomeText}>Welcome to</Text>
+            <Text style={styles.welcomeText}>Welcome Back</Text>
             <Text style={styles.titleText}>Marine Discharge</Text>
-            <Text style={styles.subtitleText}>Sign in to your account</Text>
+            <Text style={styles.subtitleText}>Sign in to continue</Text>
 
             {/* Username */}
             <View style={styles.fieldBlock}>
               <View style={[
                 styles.inputWrapper,
-                showErrors && formik.errors.username && styles.inputWrapperError
+                formik.touched.username && formik.errors.username && styles.inputWrapperError
               ]}>
-                <Ionicons name="person-outline" size={20} color="#5f6f94" style={styles.leftIcon} />
+                <Ionicons name="person-outline" size={20} color="#64748b" style={styles.leftIcon} />
                 <TextInput
-                  placeholder="User Name"
+                  placeholder="Username"
                   placeholderTextColor="#94a3b8"
                   style={styles.input}
                   value={formik.values.username}
@@ -198,7 +211,7 @@ const LoginCommon = () => {
                   returnKeyType="next"
                 />
               </View>
-              {showErrors && formik.errors.username && (
+              {formik.touched.username && formik.errors.username && (
                 <Text style={styles.errorText}>{formik.errors.username}</Text>
               )}
             </View>
@@ -207,9 +220,9 @@ const LoginCommon = () => {
             <View style={styles.fieldBlock}>
               <View style={[
                 styles.inputWrapper,
-                showErrors && formik.errors.password && styles.inputWrapperError
+                formik.touched.password && formik.errors.password && styles.inputWrapperError
               ]}>
-                <Ionicons name="lock-closed-outline" size={20} color="#5f6f94" style={styles.leftIcon} />
+                <Ionicons name="lock-closed-outline" size={20} color="#64748b" style={styles.leftIcon} />
                 <TextInput
                   placeholder="Password"
                   placeholderTextColor="#94a3b8"
@@ -222,18 +235,18 @@ const LoginCommon = () => {
                   autoCorrect={false}
                   returnKeyType="done"
                 />
-                <TouchableOpacity 
-                  onPress={() => setShowPassword(!showPassword)} 
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
                   style={styles.eyeButton}
                 >
-                  <Ionicons 
-                    name={showPassword ? 'eye-outline' : 'eye-off-outline'} 
-                    size={22} 
-                    color="#1e3a5f" 
+                  <Ionicons
+                    name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                    size={22}
+                    color="#64748b"
                   />
                 </TouchableOpacity>
               </View>
-              {showErrors && formik.errors.password && (
+              {formik.touched.password && formik.errors.password && (
                 <Text style={styles.errorText}>{formik.errors.password}</Text>
               )}
             </View>
@@ -243,10 +256,10 @@ const LoginCommon = () => {
               <View style={styles.captchaRow}>
                 <View style={[
                   styles.captchaInputWrapper,
-                  showErrors && formik.errors.captcha && styles.inputWrapperError
+                  formik.touched.captcha && formik.errors.captcha && styles.inputWrapperError
                 ]}>
                   <TextInput
-                    placeholder="Captcha"
+                    placeholder="Enter Captcha"
                     placeholderTextColor="#94a3b8"
                     style={styles.input}
                     value={formik.values.captcha}
@@ -259,9 +272,9 @@ const LoginCommon = () => {
 
                 <View style={styles.captchaBox}>
                   {captchaImage ? (
-                    <Image 
-                      source={{ uri: captchaImage }} 
-                      style={styles.captchaImage} 
+                    <Image
+                      source={{ uri: captchaImage }}
+                      style={styles.captchaImage}
                       resizeMode="contain"
                     />
                   ) : (
@@ -269,21 +282,21 @@ const LoginCommon = () => {
                   )}
                 </View>
 
-                <TouchableOpacity 
-                  onPress={generateCaptcha} 
+                <TouchableOpacity
+                  onPress={generateCaptcha}
                   style={styles.refreshBtn}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="refresh" size={22} color="#1e3a5f" />
+                  <Ionicons name="refresh-circle" size={34} color="#3b82f6" />
                 </TouchableOpacity>
               </View>
-              {showErrors && formik.errors.captcha && (
+              {formik.touched.captcha && formik.errors.captcha && (
                 <Text style={styles.errorText}>{formik.errors.captcha}</Text>
               )}
             </View>
 
             {/* Forgot Password */}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.forgotPasswordContainer}
               onPress={handleForgotPassword}
             >
@@ -292,17 +305,20 @@ const LoginCommon = () => {
 
             {/* Login Button */}
             <TouchableOpacity
-              style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+              style={[
+                styles.loginButton,
+                loading && styles.loginButtonDisabled
+              ]}
               onPress={formik.handleSubmit}
               disabled={loading}
               activeOpacity={0.85}
             >
               {loading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color="#fff" size="small" />
               ) : (
                 <>
-                  <Text style={styles.loginText}>LOGIN</Text>
-                  <Ionicons name="arrow-forward-outline" size={20} color="#fff" style={{ marginLeft: 8 }} />
+                  <Text style={styles.loginText}>SIGN IN</Text>
+                  <Ionicons name="arrow-forward" size={22} color="#fff" style={{ marginLeft: 10 }} />
                 </>
               )}
             </TouchableOpacity>
@@ -316,7 +332,7 @@ const LoginCommon = () => {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#0a2a4a',
+    backgroundColor: '#0f172a',
   },
   flexOne: {
     flex: 1,
@@ -324,120 +340,127 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingVertical: 30,
   },
-  backgroundLayer: {
+  glowOrb1: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(10, 42, 74, 0.9)',
+    top: -100,
+    right: -100,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: 'rgba(59, 130, 246, 0.12)',
   },
-  topDecoration: {
+  glowOrb2: {
     position: 'absolute',
-    top: -40,
-    right: -40,
+    bottom: -80,
+    left: -80,
+    width: 250,
+    height: 250,
+    borderRadius: 125,
+    backgroundColor: 'rgba(59, 130, 246, 0.08)',
+  },
+  glowOrb3: {
+    position: 'absolute',
+    top: '40%',
+    right: -50,
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-  },
-  bottomDecoration: {
-    position: 'absolute',
-    bottom: -30,
-    left: -30,
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(99, 102, 241, 0.06)',
   },
   card: {
-    backgroundColor: 'rgba(255,255,255,0.98)',
-    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 32,
     paddingHorizontal: 24,
-    paddingTop: 30,
-    paddingBottom: 32,
+    paddingTop: 32,
+    paddingBottom: 36,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.25,
+    shadowRadius: 40,
+    elevation: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   logoCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#0a2a4a',
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#0a2a4a',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
+    backgroundColor: '#3b82f6',
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 8,
   },
   welcomeText: {
-    fontSize: 16,
-    color: '#6b7280',
+    fontSize: 15,
+    color: '#64748b',
     textAlign: 'center',
-    marginBottom: 4,
+    marginBottom: 2,
+    fontWeight: '500',
+    letterSpacing: 0.5,
   },
   titleText: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: '800',
-    color: '#0a2a4a',
+    color: '#0f172a',
     textAlign: 'center',
     marginBottom: 6,
     letterSpacing: 0.5,
   },
   subtitleText: {
     fontSize: 14,
-    color: '#6b7280',
+    color: '#94a3b8',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 28,
+    letterSpacing: 0.3,
   },
   fieldBlock: {
     marginBottom: 16,
   },
   inputWrapper: {
-    minHeight: 52,
-    backgroundColor: '#f8fbff',
+    minHeight: 54,
+    backgroundColor: '#f8fafc',
     borderRadius: 16,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: '#d7e3ff',
+    paddingHorizontal: 16,
+    borderWidth: 2,
+    borderColor: '#e2e8f0',
     flexDirection: 'row',
     alignItems: 'center',
   },
   captchaInputWrapper: {
     flex: 1.2,
-    minHeight: 52,
-    backgroundColor: '#f8fbff',
+    minHeight: 54,
+    backgroundColor: '#f8fafc',
     borderRadius: 16,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: '#d7e3ff',
+    paddingHorizontal: 16,
+    borderWidth: 2,
+    borderColor: '#e2e8f0',
     flexDirection: 'row',
     alignItems: 'center',
   },
   inputWrapperError: {
     borderColor: '#ef4444',
-    backgroundColor: '#fff6f6',
+    backgroundColor: '#fef2f2',
   },
   leftIcon: {
-    marginRight: 10,
+    marginRight: 12,
   },
   input: {
     flex: 1,
-    color: '#111827',
+    color: '#0f172a',
     fontSize: 15,
     paddingVertical: 12,
+    fontWeight: '500',
   },
   eyeButton: {
     paddingLeft: 10,
@@ -450,65 +473,68 @@ const styles = StyleSheet.create({
   },
   captchaBox: {
     flex: 1,
-    minHeight: 52,
+    minHeight: 54,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#d7e3ff',
-    backgroundColor: '#f8fbff',
+    borderWidth: 2,
+    borderColor: '#e2e8f0',
+    backgroundColor: '#f8fafc',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 8,
   },
   captchaImage: {
     width: '100%',
-    height: 40,
+    height: 42,
   },
   captchaPlaceholderText: {
-    color: '#6b7280',
+    color: '#94a3b8',
     fontWeight: '600',
     fontSize: 13,
   },
   refreshBtn: {
-    width: 52,
-    height: 52,
+    width: 54,
+    height: 54,
     borderRadius: 16,
-    backgroundColor: '#eef4ff',
+    backgroundColor: '#f8fafc',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#d7e3ff',
+    borderWidth: 2,
+    borderColor: '#e2e8f0',
   },
   forgotPasswordContainer: {
     alignItems: 'flex-end',
-    marginBottom: 20,
+    marginBottom: 24,
+    paddingVertical: 4,
   },
   forgotPasswordText: {
-    color: '#0a2a4a',
+    color: '#3b82f6',
     fontSize: 14,
     fontWeight: '600',
+    letterSpacing: 0.3,
   },
   loginButton: {
     width: '100%',
-    height: 54,
-    backgroundColor: '#0a2a4a',
+    height: 56,
+    backgroundColor: '#3b82f6',
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
-    shadowColor: '#0a2a4a',
+    shadowColor: '#3b82f6',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 8,
   },
   loginButtonDisabled: {
-    opacity: 0.8,
+    opacity: 0.7,
+    backgroundColor: '#94a3b8',
   },
   loginText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
   },
   errorText: {
     color: '#ef4444',
