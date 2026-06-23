@@ -296,12 +296,12 @@ const LoginCommon = () => {
             </View>
 
             {/* Forgot Password */}
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.forgotPasswordContainer}
               onPress={handleForgotPassword}
             >
               <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             {/* Login Button */}
             <TouchableOpacity
@@ -313,14 +313,9 @@ const LoginCommon = () => {
               disabled={loading}
               activeOpacity={0.85}
             >
-              {loading ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
-                <>
+              
                   <Text style={styles.loginText}>SIGN IN</Text>
                   <Ionicons name="arrow-forward" size={22} color="#fff" style={{ marginLeft: 10 }} />
-                </>
-              )}
             </TouchableOpacity>
           </View>
         </ScrollView>
