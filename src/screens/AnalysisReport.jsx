@@ -23,6 +23,7 @@ import {
   commonAPICall,
   CONTEXT_HEADING,
   MARINEDISCHARGEDETAILS,
+  UPLOADANALYSISREPORT,
 } from '../utils/utils';
 import ImageBucketRN from '../utils/ImageBucketRN';
 
@@ -107,7 +108,7 @@ const AnalysisReport = () => {
         noticeFile: values.noticeFile,
       };
       
-      const res = await commonAPICall('SEND_NOTICE', payload, 'post', dispatch);
+      const res = await commonAPICall(UPLOADANALYSISREPORT, payload, 'post', dispatch);
       if (res.status === 200) {
         noticeFormik.resetForm();
         setShowNoticeModal(false);

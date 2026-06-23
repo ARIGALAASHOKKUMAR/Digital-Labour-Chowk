@@ -216,6 +216,7 @@ export const STARTDISCHARGE = "api/user/startDischarge"
 export const STARTREADINGEDITREQUEST = "api/user/raiseStartReadingEditRequest"
 
 
+export const UPLOADANALYSISREPORT = "api/user/uploadAnalysisReport"
 
 
 
