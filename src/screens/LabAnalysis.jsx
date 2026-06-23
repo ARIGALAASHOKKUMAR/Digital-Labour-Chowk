@@ -78,9 +78,12 @@ const LabAnalysis = () => {
       setLoading(true);
       const payload = {
         ...values,
-        postingId: rowData?.posting_id || scannedPostingId,
+        postingId: rowData?.posting_id ,
+        sampleQrCode:scannedPostingId
       };
       const res = await commonAPICall(UPLOADANALYSISREPORT, payload, 'post', dispatch);
+      console.log("test",res);
+      
       if (res.status === 200) {
         formik.resetForm();
         GetData();
