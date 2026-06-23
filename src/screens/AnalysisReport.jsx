@@ -845,12 +845,12 @@ const AnalysisReport = () => {
         </View>
 
         <View style={styles.cardBody}>
-          <View style={styles.headerPanel}>
+          {/* <View style={styles.headerPanel}>
             <Text style={styles.headerText}>{CONTEXT_HEADING}</Text>
             <Text style={styles.headerSubText}>
               Industry Standards for: <Text style={styles.headerSubTextBold}>{state?.username || 'Default'}</Text>
             </Text>
-          </View>
+          </View> */}
 
           {/* Scan QR Code Button */}
           {/* <View style={styles.scanButtonContainer}>
