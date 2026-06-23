@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Image,
   Linking,
+  FlatList,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useFormik } from 'formik';
@@ -18,6 +19,8 @@ import * as Yup from 'yup';
 import moment from 'moment';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { Picker } from '@react-native-picker/picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import {
   ASSIGNDISCHARGEDUTY,
   commonAPICall,
@@ -38,6 +41,8 @@ const AnalysisReport = () => {
   const [qrModal, setQrModal] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [tempDate, setTempDate] = useState(new Date());
 
   // Validation schema for Assign Duty
   const validationSchema = Yup.object({
@@ -150,7 +155,6 @@ const AnalysisReport = () => {
     if (scannedData) {
       try {
         setLoading(true);
-        // Find the item with matching posting_id
         const foundItem = data.find(item => item.posting_id === scannedData);
         
         if (foundItem) {
@@ -183,6 +187,15 @@ const AnalysisReport = () => {
   const closeScanner = () => {
     setScanning(false);
     setQrModal(false);
+  };
+
+  // Handle Date Change
+  const onDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || tempDate;
+    setShowDatePicker(Platform.OS === 'ios');
+    setTempDate(currentDate);
+    const formattedDate = currentDate.toISOString().split('T')[0];
+    formik.setFieldValue('dischargeAssignedDate', formattedDate);
   };
 
   useEffect(() => {
@@ -395,21 +408,28 @@ const AnalysisReport = () => {
               <Icon name="close" size={24} color="#000" />
             </TouchableOpacity>
           </View>
-          <View>
+          <ScrollView>
             <View style={styles.formGroup}>
               <Text style={styles.label}>Team Leader <Text style={styles.star}>*</Text></Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  formik.errors.dischargeAssignedTeamLeaderId &&
-                    formik.touched.dischargeAssignedTeamLeaderId &&
-                    styles.inputError,
-                ]}
-                placeholder="Select Team Leader"
-                value={formik.values.dischargeAssignedTeamLeaderId}
-                onChangeText={formik.handleChange('dischargeAssignedTeamLeaderId')}
-                onBlur={formik.handleBlur('dischargeAssignedTeamLeaderId')}
-              />
+              <View style={[
+                styles.pickerWrapper,
+                formik.errors.dischargeAssignedTeamLeaderId &&
+                  formik.touched.dischargeAssignedTeamLeaderId &&
+                  styles.inputError,
+              ]}>
+                <Picker
+                  selectedValue={formik.values.dischargeAssignedTeamLeaderId}
+                  onValueChange={(itemValue) => {
+                    formik.setFieldValue('dischargeAssignedTeamLeaderId', itemValue);
+                    formik.setFieldTouched('dischargeAssignedTeamLeaderId', true);
+                  }}
+                  style={styles.picker}
+                  dropdownIconColor="#666"
+                >
+                  <Picker.Item label="Select Team Leader" value="" />
+                  <Picker.Item label="TEAML" value="TEAML" />
+                </Picker>
+              </View>
               {formik.errors.dischargeAssignedTeamLeaderId &&
                 formik.touched.dischargeAssignedTeamLeaderId && (
                   <Text style={styles.errorText}>
@@ -420,18 +440,35 @@ const AnalysisReport = () => {
 
             <View style={styles.formGroup}>
               <Text style={styles.label}>Assigning Date <Text style={styles.star}>*</Text></Text>
-              <TextInput
+              <TouchableOpacity
                 style={[
-                  styles.input,
+                  styles.dateInputWrapper,
                   formik.errors.dischargeAssignedDate &&
                     formik.touched.dischargeAssignedDate &&
                     styles.inputError,
                 ]}
-                placeholder="YYYY-MM-DD"
-                value={formik.values.dischargeAssignedDate}
-                onChangeText={formik.handleChange('dischargeAssignedDate')}
-                onBlur={formik.handleBlur('dischargeAssignedDate')}
-              />
+                onPress={() => setShowDatePicker(true)}
+                activeOpacity={0.7}
+              >
+                <Text style={[
+                  styles.dateInputText,
+                  !formik.values.dischargeAssignedDate && styles.datePlaceholder
+                ]}>
+                  {formik.values.dischargeAssignedDate || 'YYYY-MM-DD'}
+                </Text>
+                <Icon name="calendar-outline" size={22} color="#666" />
+              </TouchableOpacity>
+              
+              {showDatePicker && (
+                <DateTimePicker
+                  value={tempDate}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={onDateChange}
+                  maximumDate={new Date()}
+                />
+              )}
+              
               {formik.errors.dischargeAssignedDate &&
                 formik.touched.dischargeAssignedDate && (
                   <Text style={styles.errorText}>
@@ -447,7 +484,7 @@ const AnalysisReport = () => {
             >
               {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitButtonText}>Submit</Text>}
             </TouchableOpacity>
-          </View>
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -636,105 +673,166 @@ const AnalysisReport = () => {
     );
   };
 
-  // Render Table Row
-  const renderTableRow = (item, index) => {
+  // Render Card
+  const renderCard = ({ item, index }) => {
     const limits = userIndustryLimits;
     const isAssigned = item.discharge_assigned_team_leader_id !== null;
+    const getGuardPondName = (id) => {
+      const pondMap = {
+        '1': 'Pond-1',
+        '2': 'Pond-2',
+        '3': 'Pond-3',
+        '4': 'Pond-4',
+      };
+      return pondMap[id] || pondMap[String(id)] || '-';
+    };
 
     return (
-      <View key={index} style={styles.tableRow}>
-        <Text style={[styles.tableCell, { width: 40, textAlign: 'center' }]}>
-          {index + 1}
-        </Text>
-        <Text style={[styles.tableCell, { width: 120 }]}>
-          {item?.discharge_request_industry || '-'}
-        </Text>
-        <Text style={[styles.tableCell, { width: 100 }]}>
-          {item?.sample_collected_date?.split(' ')[0] || '-'}
-        </Text>
-        <Text style={[styles.tableCell, { width: 100 }]}>
-          {item?.analysis_date?.split(' ')[0] || '-'}
-        </Text>
-        <Text style={[styles.tableCell, { width: 90 }]}>
-          {item?.guard_pond_id === 1 || item?.guard_pond_id === '1'
-            ? 'Pond-1'
-            : item?.guard_pond_id === 2 || item?.guard_pond_id === '2'
-            ? 'Pond-2'
-            : item?.guard_pond_id === 3 || item?.guard_pond_id === '3'
-            ? 'Pond-3'
-            : item?.guard_pond_id === 4 || item?.guard_pond_id === '4'
-            ? 'Pond-4'
-            : '-'}
-        </Text>
-        <Text style={[styles.tableCell, { width: 60, textAlign: 'right', ...getValueColor(item?.tds_value, limits?.tds) }]}>
-          {item?.tds_value || '-'}
-        </Text>
-        <Text style={[styles.tableCell, { width: 60, textAlign: 'right', ...getValueColor(item?.tss_value, limits?.tss) }]}>
-          {item?.tss_value || '-'}
-        </Text>
-        <Text style={[styles.tableCell, { width: 60, textAlign: 'right', ...getValueColor(item?.cod_value, limits?.cod) }]}>
-          {item?.cod_value || '-'}
-        </Text>
-        <Text style={[styles.tableCell, { width: 60, textAlign: 'right', ...getValueColor(item?.ph_value, limits?.ph, true) }]}>
-          {item?.ph_value || '-'}
-        </Text>
-        <Text style={[styles.tableCell, { width: 70, textAlign: 'right', ...getValueColor(item?.fluoride_value, limits?.fluoride) }]}>
-          {item?.fluoride_value || '-'}
-        </Text>
-        <Text style={[styles.tableCell, { width: 70, textAlign: 'right', ...getValueColor(item?.phenols_value, limits?.phenols) }]}>
-          {item?.phenols_value || '-'}
-        </Text>
-        <Text style={[styles.tableCell, { width: 80, textAlign: 'right', ...getValueColor(item?.ortho_phosphate_value, limits?.phosphate) }]}>
-          {item?.ortho_phosphate_value || '-'}
-        </Text>
-        <Text style={[styles.tableCell, { width: 80, textAlign: 'right', ...getValueColor(item?.nitrate_nitrogen_value, limits?.nitrate) }]}>
-          {item?.nitrate_nitrogen_value || '-'}
-        </Text>
-        <Text style={[styles.tableCell, { width: 80, textAlign: 'right', ...getValueColor(item?.ammonical_nitrogen_value, limits?.ammonical) }]}>
-          {item?.ammonical_nitrogen_value || '-'}
-        </Text>
-        <Text style={[styles.tableCell, { width: 80, textAlign: 'right', ...getValueColor(item?.hexavalent_chromium_value, limits?.chromium) }]}>
-          {item?.hexavalent_chromium_value || '-'}
-        </Text>
-        <View style={[styles.tableCell, { width: 120, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }]}>
-          {isAssigned ? (
+      <View style={styles.cardItem}>
+        <View style={styles.cardHeaderItem}>
+          <View style={styles.cardTitleRow}>
+            <Text style={styles.cardIndustry}>{item?.discharge_request_industry || '-'}</Text>
+            <View style={styles.cardBadge}>
+              <Text style={styles.cardBadgeText}>#{index + 1}</Text>
+            </View>
+          </View>
+          <Text style={styles.cardPond}>{getGuardPondName(item?.guard_pond_id)}</Text>
+        </View>
+
+        <View style={styles.cardBodyItem}>
+          <View style={styles.cardRow}>
+            <View style={styles.cardLabelContainer}>
+              <Text style={styles.cardLabel}>Collected Date</Text>
+              <Text style={styles.cardValue}>{item?.sample_collected_date?.split(' ')[0] || '-'}</Text>
+            </View>
+            <View style={styles.cardLabelContainer}>
+              <Text style={styles.cardLabel}>Analysis Date</Text>
+              <Text style={styles.cardValue}>{item?.analysis_date?.split(' ')[0] || '-'}</Text>
+            </View>
+          </View>
+
+          <View style={styles.cardRow}>
+            <View style={styles.cardLabelContainer}>
+              <Text style={styles.cardLabel}>Guard Pond</Text>
+              <Text style={styles.cardValue}>{getGuardPondName(item?.guard_pond_id)}</Text>
+            </View>
+            <View style={styles.cardLabelContainer}>
+              <Text style={styles.cardLabel}>Status</Text>
+              <View style={[
+                styles.statusBadge,
+                isAssigned ? styles.statusAssigned : styles.statusPending
+              ]}>
+                <Text style={[
+                  styles.statusText,
+                  isAssigned ? styles.statusTextAssigned : styles.statusTextPending
+                ]}>
+                  {isAssigned ? 'Assigned' : 'Pending'}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Parameter Grid */}
+          <View style={styles.parameterGrid}>
+            <View style={styles.parameterItem}>
+              <Text style={styles.parameterLabel}>TDS</Text>
+              <Text style={[styles.parameterValue, getValueColor(item?.tds_value, limits?.tds)]}>
+                {item?.tds_value || '-'}
+              </Text>
+            </View>
+            <View style={styles.parameterItem}>
+              <Text style={styles.parameterLabel}>TSS</Text>
+              <Text style={[styles.parameterValue, getValueColor(item?.tss_value, limits?.tss)]}>
+                {item?.tss_value || '-'}
+              </Text>
+            </View>
+            <View style={styles.parameterItem}>
+              <Text style={styles.parameterLabel}>COD</Text>
+              <Text style={[styles.parameterValue, getValueColor(item?.cod_value, limits?.cod)]}>
+                {item?.cod_value || '-'}
+              </Text>
+            </View>
+            <View style={styles.parameterItem}>
+              <Text style={styles.parameterLabel}>PH</Text>
+              <Text style={[styles.parameterValue, getValueColor(item?.ph_value, limits?.ph, true)]}>
+                {item?.ph_value || '-'}
+              </Text>
+            </View>
+            <View style={styles.parameterItem}>
+              <Text style={styles.parameterLabel}>Flouride</Text>
+              <Text style={[styles.parameterValue, getValueColor(item?.fluoride_value, limits?.fluoride)]}>
+                {item?.fluoride_value || '-'}
+              </Text>
+            </View>
+            <View style={styles.parameterItem}>
+              <Text style={styles.parameterLabel}>Phenols</Text>
+              <Text style={[styles.parameterValue, getValueColor(item?.phenols_value, limits?.phenols)]}>
+                {item?.phenols_value || '-'}
+              </Text>
+            </View>
+            <View style={styles.parameterItem}>
+              <Text style={styles.parameterLabel}>Phosphate</Text>
+              <Text style={[styles.parameterValue, getValueColor(item?.ortho_phosphate_value, limits?.phosphate)]}>
+                {item?.ortho_phosphate_value || '-'}
+              </Text>
+            </View>
+            <View style={styles.parameterItem}>
+              <Text style={styles.parameterLabel}>Nitrate</Text>
+              <Text style={[styles.parameterValue, getValueColor(item?.nitrate_nitrogen_value, limits?.nitrate)]}>
+                {item?.nitrate_nitrogen_value || '-'}
+              </Text>
+            </View>
+            <View style={styles.parameterItem}>
+              <Text style={styles.parameterLabel}>Ammonical</Text>
+              <Text style={[styles.parameterValue, getValueColor(item?.ammonical_nitrogen_value, limits?.ammonical)]}>
+                {item?.ammonical_nitrogen_value || '-'}
+              </Text>
+            </View>
+            <View style={styles.parameterItem}>
+              <Text style={styles.parameterLabel}>Chromium</Text>
+              <Text style={[styles.parameterValue, getValueColor(item?.hexavalent_chromium_value, limits?.chromium)]}>
+                {item?.hexavalent_chromium_value || '-'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.cardActions}>
+            {isAssigned ? (
+              <TouchableOpacity style={styles.disabledButton} disabled>
+                <Icon name="person-add-outline" size={14} color="#fff" />
+                <Text style={styles.disabledButtonText}>Assigned</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.assignButton}
+                onPress={() => {
+                  setShowModal(true);
+                  setRowData(item);
+                }}
+              >
+                <Icon name="person-add-outline" size={14} color="#fff" />
+                <Text style={styles.assignButtonText}>Assign Duty</Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
-              style={styles.disabledButton}
-              disabled
-            >
-              <Icon name="person-add-outline" size={12} color="#fff" />
-              <Text style={styles.disabledButtonText}>Assigned</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={styles.primaryButton}
+              style={styles.noticeButton}
               onPress={() => {
-                setShowModal(true);
+                setShowNoticeModal(true);
                 setRowData(item);
+                noticeFormik.resetForm();
               }}
             >
-              <Icon name="person-add-outline" size={12} color="#fff" />
-              <Text style={styles.primaryButtonText}>Assign</Text>
+              <Icon name="notifications-outline" size={14} color="#000" />
+              <Text style={styles.noticeButtonText}>Notice</Text>
             </TouchableOpacity>
-          )}
-          <TouchableOpacity
-            style={styles.warningButton}
-            onPress={() => {
-              setShowNoticeModal(true);
-              setRowData(item);
-              noticeFormik.resetForm();
-            }}
-          >
-            <Icon name="notifications-outline" size={12} color="#000" />
-            <Text style={styles.warningButtonText}>Notice</Text>
-          </TouchableOpacity>
+          </View>
         </View>
       </View>
     );
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       {renderAssignDutyModal()}
       {renderNoticeModal()}
       {renderQRScannerModal()}
@@ -769,40 +867,22 @@ const AnalysisReport = () => {
               <Text style={styles.loadingText}>Loading...</Text>
             </View>
           ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-              <View>
-                <View style={styles.tableHeader}>
-                  <Text style={[styles.tableHeaderText, { width: 40 }]}>S.No</Text>
-                  <Text style={[styles.tableHeaderText, { width: 120 }]}>Industry</Text>
-                  <Text style={[styles.tableHeaderText, { width: 100 }]}>Collected</Text>
-                  <Text style={[styles.tableHeaderText, { width: 100 }]}>Analysis</Text>
-                  <Text style={[styles.tableHeaderText, { width: 90 }]}>Pond</Text>
-                  <Text style={[styles.tableHeaderText, { width: 60 }]}>TDS</Text>
-                  <Text style={[styles.tableHeaderText, { width: 60 }]}>TSS</Text>
-                  <Text style={[styles.tableHeaderText, { width: 60 }]}>COD</Text>
-                  <Text style={[styles.tableHeaderText, { width: 60 }]}>PH</Text>
-                  <Text style={[styles.tableHeaderText, { width: 70 }]}>Flouride</Text>
-                  <Text style={[styles.tableHeaderText, { width: 70 }]}>Phenols</Text>
-                  <Text style={[styles.tableHeaderText, { width: 80 }]}>Phos</Text>
-                  <Text style={[styles.tableHeaderText, { width: 80 }]}>Nitrate</Text>
-                  <Text style={[styles.tableHeaderText, { width: 80 }]}>Ammonical</Text>
-                  <Text style={[styles.tableHeaderText, { width: 80 }]}>Chromium</Text>
-                  <Text style={[styles.tableHeaderText, { width: 120 }]}>Action</Text>
+            <FlatList
+              data={data}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={renderCard}
+              contentContainerStyle={styles.listContainer}
+              ListEmptyComponent={
+                <View style={styles.noRecords}>
+                  <Text style={styles.noRecordsText}>No Records Found</Text>
                 </View>
-
-                {data.length > 0 ? (
-                  data.map((item, index) => renderTableRow(item, index))
-                ) : (
-                  <View style={styles.noRecords}>
-                    <Text style={styles.noRecordsText}>No Records Found</Text>
-                  </View>
-                )}
-              </View>
-            </ScrollView>
+              }
+              showsVerticalScrollIndicator={false}
+            />
           )}
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -812,6 +892,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   card: {
+    flex: 1,
     margin: 10,
     backgroundColor: '#fff',
     borderRadius: 8,
@@ -833,6 +914,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   cardBody: {
+    flex: 1,
     padding: 10,
   },
   headerPanel: {
@@ -894,33 +976,184 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 14,
   },
-  tableHeader: {
-    flexDirection: 'row',
+  listContainer: {
+    paddingBottom: 20,
+  },
+  // Card Styles
+  cardItem: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  cardHeaderItem: {
     backgroundColor: '#f8f9fa',
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-    paddingVertical: 8,
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
   },
-  tableHeaderText: {
-    fontWeight: 'bold',
-    paddingHorizontal: 6,
-    fontSize: 10,
-    color: '#000',
-    textAlign: 'center',
-  },
-  tableRow: {
+  cardTitleRow: {
     flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-    borderTopWidth: 0,
-    paddingVertical: 8,
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  tableCell: {
-    paddingHorizontal: 6,
-    fontSize: 10,
-    color: '#000',
+  cardIndustry: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1e3a5f',
+    flex: 1,
   },
+  cardBadge: {
+    backgroundColor: '#007bff',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  cardBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  cardPond: {
+    fontSize: 12,
+    color: '#6c757d',
+    marginTop: 4,
+  },
+  cardBodyItem: {
+    padding: 12,
+  },
+  cardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  cardLabelContainer: {
+    flex: 1,
+  },
+  cardLabel: {
+    fontSize: 11,
+    color: '#6c757d',
+    marginBottom: 2,
+  },
+  cardValue: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  statusAssigned: {
+    backgroundColor: '#d4edda',
+  },
+  statusPending: {
+    backgroundColor: '#f8d7da',
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  statusTextAssigned: {
+    color: '#155724',
+  },
+  statusTextPending: {
+    color: '#721c24',
+  },
+  parameterGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 10,
+    marginBottom: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+    paddingTop: 10,
+  },
+  parameterItem: {
+    width: '50%',
+    paddingVertical: 3,
+  },
+  parameterLabel: {
+    fontSize: 10,
+    color: '#6c757d',
+  },
+  parameterValue: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  cardActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  assignButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#007bff',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    flex: 0.45,
+    justifyContent: 'center',
+  },
+  assignButtonText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  noticeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffc107',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    flex: 0.45,
+    justifyContent: 'center',
+  },
+  noticeButtonText: {
+    color: '#000',
+    fontSize: 11,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  disabledButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#6c757d',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    flex: 0.45,
+    justifyContent: 'center',
+  },
+  disabledButtonText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  noRecords: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  noRecordsText: {
+    color: 'red',
+    fontSize: 14,
+  },
+  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -932,7 +1165,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 20,
     width: '90%',
-    maxHeight: '80%',
+    maxHeight: '90%',
   },
   qrModalContent: {
     backgroundColor: '#fff',
@@ -995,6 +1228,36 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 5,
   },
+  pickerWrapper: {
+    borderWidth: 1,
+    borderColor: '#ced4da',
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    overflow: 'hidden',
+  },
+  picker: {
+    height: 50,
+    width: '100%',
+    color: '#333',
+  },
+  dateInputWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ced4da',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    backgroundColor: '#fff',
+  },
+  dateInputText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  datePlaceholder: {
+    color: '#999',
+  },
   uploadButton: {
     backgroundColor: '#f8f9fa',
     borderWidth: 1,
@@ -1045,61 +1308,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  primaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#007bff',
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    borderRadius: 4,
-    marginRight: 4,
-    marginBottom: 4,
-  },
-  primaryButtonText: {
-    color: '#fff',
-    fontSize: 8,
-    fontWeight: '500',
-    marginLeft: 2,
-  },
-  disabledButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#6c757d',
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    borderRadius: 4,
-    marginRight: 4,
-    marginBottom: 4,
-  },
-  disabledButtonText: {
-    color: '#fff',
-    fontSize: 8,
-    fontWeight: '500',
-    marginLeft: 2,
-  },
-  warningButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffc107',
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    borderRadius: 4,
-    marginBottom: 4,
-  },
-  warningButtonText: {
-    color: '#000',
-    fontSize: 8,
-    fontWeight: '500',
-    marginLeft: 2,
-  },
-  noRecords: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  noRecordsText: {
-    color: 'red',
-    fontSize: 14,
   },
   cameraContainer: {
     flex: 1,
