@@ -11,17 +11,19 @@ import {
   Alert,
   Share,
   Platform,
-  PermissionsAndroid,
   ToastAndroid,
-  Linking,
   Modal,
-  NativeModules,
+  FlatList,
 } from 'react-native';
 import { commonAPICall, CONTEXT_HEADING, GENERATEQRCODES } from '../utils/utils';
 import { useDispatch } from 'react-redux';
+import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
+import * as Sharing from 'expo-sharing';
+import * as Print from 'expo-print';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const { width } = Dimensions.get('window');
-const { RNFS } = NativeModules; // For React Native FS if available
 
 function GenerateQrCode() {
   const [qrCodes, setQrCodes] = useState([]);
@@ -30,6 +32,7 @@ function GenerateQrCode() {
   const [downloading, setDownloading] = useState(false);
   const [selectedQR, setSelectedQR] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [showQRDetailModal, setShowQRDetailModal] = useState(false);
   const dispatch = useDispatch();
 
   // Generate QR codes
@@ -37,7 +40,6 @@ function GenerateQrCode() {
     setLoading(true);
     try {
       const generatedQRs = [];
-      // Generate 10 QR codes with unique IDs
       for (let i = 0; i < 10; i++) {
         const uniqueId = `QR_${Date.now()}_${i}_${Math.random().toString(36).substring(7)}`;
         generatedQRs.push({
@@ -54,10 +56,10 @@ function GenerateQrCode() {
       const res = await commonAPICall(GENERATEQRCODES, payload, "post", dispatch);
       
       if (res.status === 200) {
-        // Map response data to QR codes with image URLs
         const qrCodesWithImages = generatedQRs.map((qr, index) => ({
           ...qr,
-          qrImageUrl: res.data.qrCodes?.[index]?.qrImageUrl || `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr.id)}`,
+          qrImageUrl: res.data.qrCodes?.[index]?.qrImageUrl || 
+            `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qr.id)}`,
           qrCodeId: res.data.qrCodes?.[index]?.id || qr.id,
         }));
         
@@ -73,64 +75,188 @@ function GenerateQrCode() {
     }
   };
 
-  // Save image to gallery using RNFS (if available)
-  const saveImageToGallery = async (imageUrl, fileName) => {
+  // Generate PDF with all QR codes
+  const generatePDF = async () => {
     try {
-      // For Android, request permission
-      if (Platform.OS === 'android') {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-          {
-            title: 'Storage Permission',
-            message: 'App needs access to storage to save QR codes',
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
-          }
-        );
-        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          Alert.alert('Permission Denied', 'Cannot save QR code without storage permission');
-          return false;
-        }
+      setDownloading(true);
+      
+      // Create HTML content for PDF
+      let qrImagesHTML = '';
+      qrCodes.forEach((qr, index) => {
+        qrImagesHTML += `
+          <div style="page-break-after: always; text-align: center; padding: 20px;">
+            <h2 style="color: #1e3a5f; margin-bottom: 10px;">QR Code ${index + 1}</h2>
+            <img src="${qr.qrImageUrl}" style="width: 300px; height: 300px; border: 2px solid #007bff; border-radius: 10px;" />
+            <p style="margin-top: 10px; font-size: 14px; color: #666;">
+              <strong>ID:</strong> ${qr.id}
+            </p>
+            <p style="font-size: 12px; color: #999;">
+              Generated: ${new Date(qr.timestamp).toLocaleString()}
+            </p>
+          </div>
+        `;
+      });
+
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>QR Codes - APEMCL Marine</title>
+            <style>
+              * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+              }
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                background: #f5f5f5;
+                padding: 20px;
+              }
+              .header {
+                text-align: center;
+                padding: 20px;
+                background: #007bff;
+                color: white;
+                border-radius: 10px;
+                margin-bottom: 30px;
+              }
+              .header h1 {
+                font-size: 24px;
+                margin: 0;
+              }
+              .header p {
+                margin: 5px 0 0;
+                opacity: 0.9;
+              }
+              .qr-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+                margin-top: 20px;
+              }
+              .qr-item {
+                background: white;
+                border-radius: 10px;
+                padding: 20px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                text-align: center;
+                border: 1px solid #e0e0e0;
+              }
+              .qr-item img {
+                width: 100%;
+                max-width: 200px;
+                height: auto;
+                border: 2px solid #007bff;
+                border-radius: 8px;
+              }
+              .qr-item h3 {
+                margin: 10px 0 5px;
+                color: #1e3a5f;
+                font-size: 16px;
+              }
+              .qr-item p {
+                margin: 0;
+                color: #666;
+                font-size: 12px;
+                word-break: break-all;
+              }
+              .footer {
+                text-align: center;
+                margin-top: 30px;
+                padding: 20px;
+                color: #666;
+                border-top: 1px solid #e0e0e0;
+                font-size: 12px;
+              }
+              @media print {
+                .qr-item {
+                  break-inside: avoid;
+                  page-break-inside: avoid;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>📱 APEMCL Marine - QR Codes</h1>
+              <p>Generated: ${new Date().toLocaleString()}</p>
+              <p>Total QR Codes: ${qrCodes.length}</p>
+            </div>
+            <div class="qr-grid">
+              ${qrCodes.map((qr, index) => `
+                <div class="qr-item">
+                  <img src="${qr.qrImageUrl}" alt="QR Code ${index + 1}" />
+                  <h3>QR Code ${index + 1}</h3>
+                  <p><strong>ID:</strong> ${qr.id}</p>
+                </div>
+              `).join('')}
+            </div>
+            <div class="footer">
+              <p>Generated by APEMCL Marine App</p>
+              <p>© ${new Date().getFullYear()} All Rights Reserved</p>
+            </div>
+          </body>
+        </html>
+      `;
+
+      // Generate PDF
+      const { uri } = await Print.printToFileAsync({
+        html: htmlContent,
+        base64: false,
+      });
+
+      // Share PDF
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, {
+          mimeType: 'application/pdf',
+          dialogTitle: 'QR Codes PDF',
+          UTI: 'com.adobe.pdf',
+        });
+      } else {
+        // Fallback: share as file
+        await Share.share({
+          message: `QR Codes PDF generated. Total: ${qrCodes.length} QR Codes`,
+          url: uri,
+          title: 'QR Codes PDF',
+        });
       }
 
-      // Use Linking to open the image URL - this will work on both platforms
-      await Linking.openURL(imageUrl);
-      
-      // Show success message
-      if (Platform.OS === 'android') {
-        ToastAndroid.show('Opening image for download', ToastAndroid.SHORT);
-      } else {
-        Alert.alert('Success', 'Image opened in browser. Tap share icon to save.');
-      }
-      
-      return true;
     } catch (error) {
-      console.error('Error saving image:', error);
-      Alert.alert('Error', 'Failed to open image for download');
-      return false;
+      console.error('Error generating PDF:', error);
+      Alert.alert('Error', 'Failed to generate PDF');
+    } finally {
+      setDownloading(false);
     }
   };
 
-  // Download QR code image (using browser download)
+  // Download single QR code image to gallery
   const downloadQRImage = async (qr, index) => {
     try {
       setDownloading(true);
       
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Cannot save QR code without storage permission');
+        return;
+      }
+
       const imageUrl = qr.qrImageUrl;
+      const fileUri = FileSystem.documentDirectory + `QR_Code_${index + 1}.png`;
       
-      // Open the image URL in browser which will trigger download/prompt
-      const supported = await Linking.canOpenURL(imageUrl);
+      const downloadResult = await FileSystem.downloadAsync(imageUrl, fileUri);
       
-      if (supported) {
-        await Linking.openURL(imageUrl);
+      if (downloadResult.status === 200) {
+        const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
+        await MediaLibrary.createAlbumAsync('QR Codes', asset, false);
+        
         if (Platform.OS === 'android') {
-          ToastAndroid.show(`Opening QR Code ${index + 1} for download`, ToastAndroid.SHORT);
+          ToastAndroid.show(`QR Code ${index + 1} saved to gallery`, ToastAndroid.SHORT);
         } else {
-          Alert.alert('Info', `QR Code ${index + 1} opened. Use browser's share button to save.`);
+          Alert.alert('Success', `QR Code ${index + 1} saved to gallery`);
         }
-      } else {
-        Alert.alert('Error', 'Cannot open URL for download');
       }
     } catch (error) {
       console.error('Error downloading QR code:', error);
@@ -140,23 +266,30 @@ function GenerateQrCode() {
     }
   };
 
-  // Share QR code image
+  // Share single QR code as image
   const shareQRImage = async (qr, index) => {
     try {
       const imageUrl = qr.qrImageUrl;
-      const message = `📱 QR Code ${index + 1}\n\nID: ${qr.id}\n\nDownload QR Code Image: ${imageUrl}`;
+      const fileUri = FileSystem.documentDirectory + `QR_Code_${index + 1}.png`;
       
-      await Share.share({
-        message: message,
-        title: `QR Code ${index + 1}`,
-        url: imageUrl, // For iOS, will try to share as URL
-      });
+      const downloadResult = await FileSystem.downloadAsync(imageUrl, fileUri);
+      
+      if (downloadResult.status === 200 && (await Sharing.isAvailableAsync())) {
+        await Sharing.shareAsync(downloadResult.uri, {
+          mimeType: 'image/png',
+          dialogTitle: `QR Code ${index + 1}`,
+        });
+      } else {
+        await Share.share({
+          message: `QR Code ${index + 1}\nID: ${qr.id}\nImage URL: ${imageUrl}`,
+          title: `QR Code ${index + 1}`,
+        });
+      }
     } catch (error) {
       console.error('Error sharing QR code:', error);
-      // Fallback: share only URL
       try {
         await Share.share({
-          message: `QR Code ${index + 1}: ${qr.id}\nImage: ${qr.qrImageUrl}`,
+          message: `QR Code ${index + 1}\nID: ${qr.id}`,
           title: `QR Code ${index + 1}`,
         });
       } catch (shareError) {
@@ -165,32 +298,7 @@ function GenerateQrCode() {
     }
   };
 
-  // Share all QR codes
-  const shareAllQRCodes = async () => {
-    if (qrCodes.length === 0) {
-      Alert.alert('Info', 'Please generate QR codes first');
-      return;
-    }
-
-    try {
-      let message = '📱 QR Codes List:\n\n';
-      qrCodes.forEach((qr, index) => {
-        message += `QR ${index + 1}:\n`;
-        message += `ID: ${qr.id}\n`;
-        message += `Download: ${qr.qrImageUrl}\n\n`;
-      });
-      
-      await Share.share({
-        message: message,
-        title: 'All QR Codes',
-      });
-    } catch (error) {
-      console.error('Error sharing QR codes:', error);
-      Alert.alert('Error', 'Failed to share QR codes');
-    }
-  };
-
-  // Download all QR codes
+  // Download all QR codes to gallery
   const downloadAllQRCodes = async () => {
     if (qrCodes.length === 0) {
       Alert.alert('Info', 'Please generate QR codes first');
@@ -200,35 +308,28 @@ function GenerateQrCode() {
     try {
       setDownloading(true);
       
-      Alert.alert(
-        'Download All QR Codes',
-        `Open ${qrCodes.length} QR codes in browser for download?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Open All', 
-            onPress: async () => {
-              let opened = 0;
-              for (let i = 0; i < qrCodes.length; i++) {
-                const imageUrl = qrCodes[i].qrImageUrl;
-                const supported = await Linking.canOpenURL(imageUrl);
-                if (supported) {
-                  await Linking.openURL(imageUrl);
-                  opened++;
-                  if (Platform.OS === 'android') {
-                    ToastAndroid.show(`Opening QR ${i + 1}/${qrCodes.length}`, ToastAndroid.SHORT);
-                  }
-                  // Add small delay between openings
-                  if (i < qrCodes.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                  }
-                }
-              }
-              Alert.alert('Success', `Opened ${opened} QR codes for download`);
-            }
-          }
-        ]
-      );
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Cannot save QR codes without storage permission');
+        return;
+      }
+
+      let downloaded = 0;
+      for (let i = 0; i < qrCodes.length; i++) {
+        const fileUri = FileSystem.documentDirectory + `QR_Code_${i + 1}.png`;
+        const downloadResult = await FileSystem.downloadAsync(qrCodes[i].qrImageUrl, fileUri);
+        
+        if (downloadResult.status === 200) {
+          const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
+          await MediaLibrary.createAlbumAsync('QR Codes', asset, false);
+          downloaded++;
+        }
+      }
+      
+      Alert.alert('Success', `${downloaded} QR Codes saved to gallery`);
+      if (Platform.OS === 'android') {
+        ToastAndroid.show(`${downloaded} QR Codes saved to gallery`, ToastAndroid.LONG);
+      }
     } catch (error) {
       console.error('Error downloading QR codes:', error);
       Alert.alert('Error', 'Failed to download QR codes');
@@ -237,41 +338,27 @@ function GenerateQrCode() {
     }
   };
 
-  // View QR code in modal
-  const viewQRCode = (qr, index) => {
+  // View QR code detail
+  const viewQRCodeDetail = (qr, index) => {
     setSelectedQR({ ...qr, index });
-    setShowPreviewModal(true);
+    setShowQRDetailModal(true);
   };
 
-  // Handle QR code actions
-  const handleQRAction = (action) => {
-    if (!selectedQR) return;
-    
-    const { qr, index } = selectedQR;
-    setShowPreviewModal(false);
-    
-    if (action === 'download') {
-      downloadQRImage(qr, index);
-    } else if (action === 'share') {
-      shareQRImage(qr, index);
-    }
-  };
-
-  // Render QR Code Preview Modal
-  const renderPreviewModal = () => (
+  // Render QR Code Detail Modal
+  const renderQRDetailModal = () => (
     <Modal
-      visible={showPreviewModal}
+      visible={showQRDetailModal}
       transparent
       animationType="fade"
-      onRequestClose={() => setShowPreviewModal(false)}
+      onRequestClose={() => setShowQRDetailModal(false)}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+        <View style={styles.detailModalContent}>
           <TouchableOpacity
             style={styles.modalCloseButton}
-            onPress={() => setShowPreviewModal(false)}
+            onPress={() => setShowQRDetailModal(false)}
           >
-            <Text style={styles.modalCloseText}>✕</Text>
+            <Icon name="close" size={24} color="#333" />
           </TouchableOpacity>
           
           {selectedQR && (
@@ -279,30 +366,49 @@ function GenerateQrCode() {
               <Text style={styles.modalTitle}>QR Code {selectedQR.index + 1}</Text>
               <Image
                 source={{ uri: selectedQR.qr.qrImageUrl }}
-                style={styles.modalQRImage}
+                style={styles.detailQRImage}
                 resizeMode="contain"
               />
-              <Text style={styles.modalQRId}>ID: {selectedQR.qr.id}</Text>
+              <View style={styles.detailInfoContainer}>
+                <View style={styles.detailInfoRow}>
+                  <Text style={styles.detailInfoLabel}>QR ID:</Text>
+                  <Text style={styles.detailInfoValue}>{selectedQR.qr.id}</Text>
+                </View>
+                <View style={styles.detailInfoRow}>
+                  <Text style={styles.detailInfoLabel}>Generated:</Text>
+                  <Text style={styles.detailInfoValue}>
+                    {new Date(selectedQR.qr.timestamp).toLocaleString()}
+                  </Text>
+                </View>
+                <View style={styles.detailInfoRow}>
+                  <Text style={styles.detailInfoLabel}>Type:</Text>
+                  <Text style={styles.detailInfoValue}>{selectedQR.qr.type || 'PRODUCT_QR'}</Text>
+                </View>
+              </View>
               
               <View style={styles.modalActionContainer}>
                 <TouchableOpacity
                   style={[styles.modalActionButton, styles.modalShareButton]}
-                  onPress={() => handleQRAction('share')}
+                  onPress={() => {
+                    setShowQRDetailModal(false);
+                    shareQRImage(selectedQR.qr, selectedQR.index);
+                  }}
                 >
-                  <Text style={styles.modalActionText}>📤 Share</Text>
+                  <Icon name="share-outline" size={20} color="#fff" />
+                  <Text style={styles.modalActionText}>Share</Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity
                   style={[styles.modalActionButton, styles.modalDownloadButton]}
-                  onPress={() => handleQRAction('download')}
+                  onPress={() => {
+                    setShowQRDetailModal(false);
+                    downloadQRImage(selectedQR.qr, selectedQR.index);
+                  }}
                 >
-                  <Text style={styles.modalActionText}>📥 Download</Text>
+                  <Icon name="download-outline" size={20} color="#fff" />
+                  <Text style={styles.modalActionText}>Download</Text>
                 </TouchableOpacity>
               </View>
-              
-              <Text style={styles.modalHint}>
-                Download will open the image in browser for saving
-              </Text>
             </>
           )}
         </View>
@@ -310,14 +416,32 @@ function GenerateQrCode() {
     </Modal>
   );
 
+  // Render QR Code Grid Item
+  const renderQRCodeItem = (qr, i) => (
+    <TouchableOpacity
+      key={i}
+      style={styles.gridItem}
+      // onPress={() => viewQRCodeDetail(qr, i)}
+      activeOpacity={0.8}
+    >
+      <Image
+        source={{ uri: qr.qrImageUrl }}
+        style={styles.qrImage}
+        resizeMode="contain"
+      />
+      <Text style={styles.qrLabel}>QR {i + 1}</Text>
+      {/* <Text style={styles.tapHint}>Tap to view</Text> */}
+    </TouchableOpacity>
+  );
+
   return (
     <ScrollView style={styles.container}>
-      {renderPreviewModal()}
+      {renderQRDetailModal()}
       
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>
-            <Text style={styles.icon}>⚓</Text> Marine Industry
+            <Icon name="water-outline" size={24} color="#333" /> Marine Industry
           </Text>
         </View>
 
@@ -337,7 +461,10 @@ function GenerateQrCode() {
                   {loading ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
-                    <Text style={styles.buttonText}>Generate QR Codes</Text>
+                    <>
+                      <Icon name="qr-code-outline" size={20} color="#fff" />
+                      <Text style={styles.buttonText}>Generate QR Codes</Text>
+                    </>
                   )}
                 </TouchableOpacity>
               </View>
@@ -356,43 +483,25 @@ function GenerateQrCode() {
               {showQRCodes && qrCodes.length > 0 && (
                 <>
                   <View style={styles.gridContainer}>
-                    {qrCodes.map((qr, i) => (
-                      <TouchableOpacity
-                        key={i}
-                        style={styles.gridItem}
-                        // onPress={() => viewQRCode(qr, i)}
-                        activeOpacity={0.8}
-                      >
-                        <Image
-                          source={{ uri: qr.qrImageUrl }}
-                          style={styles.qrImage}
-                          resizeMode="contain"
-                        />
-                        <Text style={styles.qrLabel}>QR {i + 1}</Text>
-                        {/* <Text style={styles.tapHint}>Tap to view</Text> */}
-                      </TouchableOpacity>
-                    ))}
+                    {qrCodes.map((qr, i) => renderQRCodeItem(qr, i))}
                   </View>
 
                   <View style={styles.actionButtonsContainer}>
                     <TouchableOpacity
-                      style={[styles.actionButton, styles.shareAllButton]}
-                      onPress={shareAllQRCodes}
-                    >
-                      <Text style={styles.buttonText}>Share All</Text>
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.downloadAllButton]}
-                      onPress={downloadAllQRCodes}
+                      style={[styles.actionButton, styles.pdfButton]}
+                      onPress={generatePDF}
                       disabled={downloading}
                     >
                       {downloading ? (
                         <ActivityIndicator color="#fff" size="small" />
                       ) : (
-                        <Text style={styles.buttonText}>Download All</Text>
+                        <>
+                          <Icon name="document-text-outline" size={16} color="#fff" />
+                          <Text style={styles.actionButtonText}>PDF</Text>
+                        </>
                       )}
                     </TouchableOpacity>
+
                   </View>
                 </>
               )}
@@ -433,9 +542,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#333',
   },
-  icon: {
-    marginRight: 8,
-  },
   cardBody: {
     padding: 16,
   },
@@ -464,12 +570,14 @@ const styles = StyleSheet.create({
     marginVertical: 12,
   },
   generateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#007bff',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 4,
     minWidth: 200,
-    alignItems: 'center',
+    justifyContent: 'center',
   },
   actionButtonsContainer: {
     flexDirection: 'row',
@@ -479,13 +587,18 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 4,
-    minWidth: 120,
-    alignItems: 'center',
+    minWidth: 100,
+    justifyContent: 'center',
     marginHorizontal: 4,
     marginVertical: 4,
+  },
+  pdfButton: {
+    backgroundColor: '#dc3545',
   },
   shareAllButton: {
     backgroundColor: '#17a2b8',
@@ -497,6 +610,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
+    marginLeft: 8,
+  },
+  actionButtonText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+    marginLeft: 6,
   },
   statsContainer: {
     padding: 12,
@@ -557,7 +677,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  modalContent: {
+  detailModalContent: {
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 24,
@@ -569,18 +689,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 10,
     right: 10,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#f0f0f0',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1,
-  },
-  modalCloseText: {
-    fontSize: 18,
-    color: '#333',
-    fontWeight: 'bold',
   },
   modalTitle: {
     fontSize: 18,
@@ -588,30 +703,49 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 16,
   },
-  modalQRImage: {
+  detailQRImage: {
     width: 250,
     height: 250,
     borderRadius: 8,
     backgroundColor: '#fff',
-    marginBottom: 12,
-  },
-  modalQRId: {
-    fontSize: 14,
-    color: '#666',
     marginBottom: 16,
-    textAlign: 'center',
+  },
+  detailInfoContainer: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  detailInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  detailInfoLabel: {
+    fontSize: 13,
+    color: '#666',
+    fontWeight: '500',
+  },
+  detailInfoValue: {
+    fontSize: 13,
+    color: '#333',
+    flex: 1,
+    textAlign: 'right',
   },
   modalActionContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 12,
+    width: '100%',
   },
   modalActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 10,
     paddingHorizontal: 24,
     borderRadius: 8,
     minWidth: 100,
-    alignItems: 'center',
+    justifyContent: 'center',
   },
   modalShareButton: {
     backgroundColor: '#17a2b8',
@@ -623,12 +757,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
-  },
-  modalHint: {
-    fontSize: 11,
-    color: '#666',
-    marginTop: 12,
-    textAlign: 'center',
+    marginLeft: 6,
   },
 });
 

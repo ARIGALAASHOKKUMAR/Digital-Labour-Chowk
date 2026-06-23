@@ -15,7 +15,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "org.indusaction.dlcap",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to save QR codes",
+        "NSPhotoLibraryAddUsageDescription": "This app needs permission to save QR codes to your photo library"
       }
     },
     "android": {
@@ -23,7 +25,12 @@
         "foregroundImage": "./assets/logo2.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "org.indusaction.dlcap"
+      "package": "org.indusaction.dlcap",
+      "permissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -50,6 +57,26 @@
           "android": {
             "buildArchs": ["arm64-v8a"]
           }
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos to save QR codes.",
+          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save QR codes to your photo library.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ],
+      [
+        "expo-file-system",
+        {
+          "filePermission": "Allow $(PRODUCT_NAME) to access files to download QR codes."
+        }
+      ],
+      [
+        "expo-sharing",
+        {
+          "sharingPermission": "Allow $(PRODUCT_NAME) to share QR codes."
         }
       ]
     ]
