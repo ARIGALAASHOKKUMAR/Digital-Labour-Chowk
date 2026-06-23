@@ -678,14 +678,13 @@ const styles = StyleSheet.create({
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'flex-start',
     marginVertical: 12,
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
     paddingTop: 12,
   },
   gridItemWrapper: {
-    width: width / 4,
+    width: 80,
     padding: 4,
     marginBottom: 8,
     alignItems: 'center',
