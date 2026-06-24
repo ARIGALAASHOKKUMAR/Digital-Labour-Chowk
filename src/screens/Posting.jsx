@@ -24,6 +24,7 @@ import {
 } from "../utils/utils";
 import ImageBucketRN from "../utils/ImageBucketRN";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { globalStyes } from "./GlobalStyles";
 
 const { width, height } = Dimensions.get('window');
 
@@ -385,13 +386,15 @@ const Posting = () => {
                 <Text style={styles.label}>
                   Guard Pond <Text style={styles.star}>*</Text>
                 </Text>
-                <View style={styles.pickerContainer}>
+                <View sstyle={globalStyes.selectBox}>
                   <Picker
                     selectedValue={formData.guardPondId}
                     onValueChange={(itemValue) => {
                       setFormData({ ...formData, guardPondId: itemValue });
                       setErrors({ ...errors, guardPondId: null });
                     }}
+                                  style={globalStyes.pickerText}
+                    
                   >
                     <Picker.Item label="Select" value="" />
                     <Picker.Item label="Guard Pond-1" value="1" />
