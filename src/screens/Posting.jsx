@@ -11,9 +11,10 @@ import {
   StyleSheet,
   FlatList,
   Image,
+  Linking,
+  Dimensions,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-// import DocumentPicker from 'react-native-document-picker';
 import { useDispatch } from "react-redux";
 import {
   commonAPICall,
@@ -22,14 +23,17 @@ import {
   MARINEDISCHARGEDETAILS,
 } from "../utils/utils";
 import ImageBucketRN from "../utils/ImageBucketRN";
-// import { commonAPICall, CONTEXT_HEADING, CREATEMARINEDISCHARGEPOSTING, MARINEDISCHARGEDETAILS } from '../../utils/utils';
-// import { showPDF } from '../../utils/CommonFunctions';
-// import ImageBucket from '../../utils/FileUploadUtils';
+import Ionicons from "react-native-vector-icons/Ionicons";
+
+const { width, height } = Dimensions.get('window');
 
 const Posting = () => {
   const [showModal, setShowModal] = useState(false);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedImageTitle, setSelectedImageTitle] = useState("");
   const [formData, setFormData] = useState({
     guardPondId: "",
     qtyReadyForDischarge: "",
@@ -59,6 +63,45 @@ const Posting = () => {
   const allowNumbersOnlyDot = (text) => {
     const regex = /^\d*\.?\d*$/;
     return regex.test(text);
+  };
+
+  // Check if URL is an image
+  const isImageUrl = (url) => {
+    if (!url) return false;
+    const imageExtensions = /\.(jpg|jpeg|png|gif|webp|bmp)$/i;
+    return imageExtensions.test(url);
+  };
+
+  // Check if URL is a PDF
+  const isPdfUrl = (url) => {
+    if (!url) return false;
+    return /\.pdf$/i.test(url);
+  };
+
+  // View Image in Modal
+  const viewImage = (imageUrl, title) => {
+    if (!imageUrl) {
+      Alert.alert('Error', 'No image available');
+      return;
+    }
+    setSelectedImage(imageUrl);
+    setSelectedImageTitle(title);
+    setImageModalVisible(true);
+  };
+
+  // Download file using Linking
+  const downloadFile = (fileUrl) => {
+    if (!fileUrl) {
+      Alert.alert('Error', 'No file available to download');
+      return;
+    }
+
+    try {
+      Linking.openURL(fileUrl);
+    } catch (error) {
+      console.error('Download error:', error);
+      Alert.alert('Error', 'Failed to open file');
+    }
   };
 
   const HandleSubmit = async () => {
@@ -102,6 +145,7 @@ const Posting = () => {
       guardPondImage: null,
     });
     setErrors({});
+    setTouched({});
   };
 
   const GetData = async () => {
@@ -113,7 +157,6 @@ const Posting = () => {
         dispatch,
       );
 
-      
       if (res.status === 200) {
         setData(res.data.MarineDischargePostingDetails || []);
       } else {
@@ -124,41 +167,8 @@ const Posting = () => {
     }
   };
 
-  //   const handleFileUpload = async (fieldName) => {
-  //     try {
-  //       const result = await DocumentPicker.pick({
-  //         type: [DocumentPicker.types.images, DocumentPicker.types.pdf],
-  //         maxSize: 20971520, // 20MB
-  //       });
-
-  //       if (result && result[0]) {
-  //         const file = result[0];
-  //         const path = 'APEMCL/MARNINEPOSTING/';
-
-  //         // Upload file using ImageBucket utility
-  //         const uploadResult = await ImageBucket(file, path, '20971520');
-
-  //         setFormData({
-  //           ...formData,
-  //           [fieldName]: uploadResult || file.uri,
-  //         });
-
-  //         // Clear error for this field
-  //         setErrors({
-  //           ...errors,
-  //           [fieldName]: null,
-  //         });
-  //       }
-  //     } catch (err) {
-  //       if (DocumentPicker.isCancel(err)) {
-  //         // User cancelled
-  //       } else {
-  //         Alert.alert('Error', 'Failed to select file');
-  //       }
-  //     }
-  //   };
-
-  const renderItem = ({ item, index }) => {
+  // Render Card
+  const renderCard = ({ item, index }) => {
     const getGuardPondName = (id) => {
       const pondMap = {
         1: "Guard Pond-1",
@@ -169,49 +179,130 @@ const Posting = () => {
       return pondMap[id] || "-";
     };
 
+    const getStatusColor = (status) => {
+      if (status === "Completed" || status === "Approved") return "#28a745";
+      if (status === "Pending" || status === "Submitted") return "#ffc107";
+      if (status === "Rejected") return "#dc3545";
+      return "#6c757d";
+    };
+
+    const getStatusBgColor = (status) => {
+      if (status === "Completed" || status === "Approved") return "#d4edda";
+      if (status === "Pending" || status === "Submitted") return "#fff3cd";
+      if (status === "Rejected") return "#f8d7da";
+      return "#e9ecef";
+    };
+
+    const gpMeterImage = item?.discharge_request_gp_level_meter_image;
+    const guardPondImage = item?.discharge_request_guard_pond_image;
+
     return (
-      <View style={styles.tableRow}>
-        <Text style={[styles.tableCell, styles.sNoCell]}>{index + 1}</Text>
-        <Text style={[styles.tableCell, styles.sampleIdCell]}>
-          {item?.discharge_request_id || "-"}
-        </Text>
-        <Text style={[styles.tableCell, styles.pondCell]}>
-          {getGuardPondName(item?.guard_pond_id)}
-        </Text>
-        <Text style={[styles.tableCell, styles.dateCell]}>
-          {item?.discharge_request_date || "-"}
-        </Text>
-        <View style={[styles.tableCell, styles.fileCell]}>
-          {item?.discharge_request_gp_level_meter_image ? (
-            <TouchableOpacity
-              style={styles.viewButton}
-              onPress={() =>
-                showPDF(item.discharge_request_gp_level_meter_image, dispatch)
-              }
-            >
-              <Text style={styles.viewButtonText}>View</Text>
-            </TouchableOpacity>
-          ) : (
-            <Text style={styles.noFileText}>-</Text>
-          )}
+      <View style={styles.cardItem}>
+        <View style={styles.cardHeaderItem}>
+          <View style={styles.cardTitleRow}>
+            <Text style={styles.cardId}>Sample #{item?.discharge_request_id || '-'}</Text>
+            <View style={[styles.statusBadge, { backgroundColor: getStatusBgColor(item?.current_status) }]}>
+              <Text style={[styles.statusText, { color: getStatusColor(item?.current_status) }]}>
+                {item?.current_status || 'Pending'}
+              </Text>
+            </View>
+          </View>
+          <Text style={styles.cardPond}>{getGuardPondName(item?.guard_pond_id)}</Text>
         </View>
-        <View style={[styles.tableCell, styles.fileCell]}>
-          {item?.discharge_request_guard_pond_image ? (
-            <TouchableOpacity
-              style={styles.viewButton}
-              onPress={() =>
-                showPDF(item.discharge_request_guard_pond_image, dispatch)
-              }
-            >
-              <Text style={styles.viewButtonText}>View</Text>
-            </TouchableOpacity>
-          ) : (
-            <Text style={styles.noFileText}>-</Text>
+
+        <View style={styles.cardBodyItem}>
+          <View style={styles.cardRow}>
+            <View style={styles.cardLabelContainer}>
+              <Text style={styles.cardLabel}>Requested Date</Text>
+              <Text style={styles.cardValue}>{item?.discharge_request_date || '-'}</Text>
+            </View>
+            <View style={styles.cardLabelContainer}>
+              <Text style={styles.cardLabel}>Volume (KL)</Text>
+              <Text style={styles.cardValue}>{item?.qty_ready_for_discharge || '-'}</Text>
+            </View>
+          </View>
+
+          {item?.discharge_request_remarks && (
+            <View style={styles.cardRemarksContainer}>
+              <Text style={styles.cardLabel}>Remarks</Text>
+              <Text style={styles.cardRemarks}>{item?.discharge_request_remarks}</Text>
+            </View>
           )}
+
+          <View style={styles.cardFilesContainer}>
+            {/* GP Meter Image */}
+            <View style={styles.cardFileItem}>
+              <Ionicons name="document-text-outline" size={20} color="#007bff" />
+              <Text style={styles.cardFileLabel}>GP Meter Image</Text>
+              {gpMeterImage ? (
+                <View style={styles.fileActions}>
+                  {isImageUrl(gpMeterImage) ? (
+                    <TouchableOpacity
+                      style={styles.viewButton}
+                      onPress={() => viewImage(gpMeterImage, `GP Meter - ${item?.discharge_request_id}`)}
+                    >
+                      <Ionicons name="eye-outline" size={16} color="#fff" />
+                      <Text style={styles.viewButtonText}>View</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.downloadButton}
+                      onPress={() => downloadFile(gpMeterImage)}
+                    >
+                      <Ionicons name="download-outline" size={16} color="#fff" />
+                      <Text style={styles.downloadButtonText}>Download</Text>
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity
+                    style={styles.downloadButton}
+                    onPress={() => downloadFile(gpMeterImage)}
+                  >
+                    <Ionicons name="download-outline" size={16} color="#fff" />
+                    <Text style={styles.downloadButtonText}>Download</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <Text style={styles.noFileText}>No file</Text>
+              )}
+            </View>
+
+            {/* Guard Pond Image */}
+            <View style={styles.cardFileItem}>
+              <Ionicons name="image-outline" size={20} color="#007bff" />
+              <Text style={styles.cardFileLabel}>Guard Pond Image</Text>
+              {guardPondImage ? (
+                <View style={styles.fileActions}>
+                  {isImageUrl(guardPondImage) ? (
+                    <TouchableOpacity
+                      style={styles.viewButton}
+                      onPress={() => viewImage(guardPondImage, `Guard Pond - ${item?.discharge_request_id}`)}
+                    >
+                      <Ionicons name="eye-outline" size={16} color="#fff" />
+                      <Text style={styles.viewButtonText}>View</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.downloadButton}
+                      onPress={() => downloadFile(guardPondImage)}
+                    >
+                      <Ionicons name="download-outline" size={16} color="#fff" />
+                      <Text style={styles.downloadButtonText}>Download</Text>
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity
+                    style={styles.downloadButton}
+                    onPress={() => downloadFile(guardPondImage)}
+                  >
+                    <Ionicons name="download-outline" size={16} color="#fff" />
+                    <Text style={styles.downloadButtonText}>Download</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <Text style={styles.noFileText}>No file</Text>
+              )}
+            </View>
+          </View>
         </View>
-        <Text style={[styles.tableCell, styles.statusCell]}>
-          {item?.current_status || "-"}
-        </Text>
       </View>
     );
   };
@@ -222,8 +313,58 @@ const Posting = () => {
 
   return (
     <View style={styles.container}>
+      {/* Image Preview Modal */}
+      <Modal
+        visible={imageModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setImageModalVisible(false)}
+      >
+        <View style={styles.imageModalOverlay}>
+          <View style={styles.imageModalContent}>
+            <View style={styles.imageModalHeader}>
+              <Text style={styles.imageModalTitle}>{selectedImageTitle || 'Image'}</Text>
+              <TouchableOpacity onPress={() => setImageModalVisible(false)}>
+                <Ionicons name="close" size={28} color="#fff" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.imageModalBody}>
+              {selectedImage ? (
+                <Image
+                  source={{ uri: selectedImage }}
+                  style={styles.imageModalImage}
+                  resizeMode="contain"
+                />
+              ) : (
+                <View style={styles.noImageContainer}>
+                  <Text style={styles.noImageText}>No image available</Text>
+                </View>
+              )}
+              <View style={styles.imageModalFooter}>
+                <TouchableOpacity
+                  style={styles.imageModalDownloadButton}
+                  onPress={() => {
+                    if (selectedImage) {
+                      downloadFile(selectedImage);
+                    }
+                  }}
+                >
+                  <Ionicons name="download-outline" size={20} color="#fff" />
+                  <Text style={styles.imageModalDownloadText}>Download</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* Modal for Add Posting */}
-      <Modal visible={showModal} animationType="slide" transparent={true}>
+      <Modal
+        visible={showModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowModal(false)}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
@@ -233,7 +374,12 @@ const Posting = () => {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalBody}>
+            <ScrollView
+              style={styles.modalBody}
+              contentContainerStyle={styles.modalBodyContent}
+              showsVerticalScrollIndicator={true}
+              keyboardShouldPersistTaps="handled"
+            >
               {/* Guard Pond Picker */}
               <View style={styles.formGroup}>
                 <Text style={styles.label}>
@@ -305,7 +451,6 @@ const Posting = () => {
               </View>
 
               {/* GP Level Meter Image */}
-              {/* GP Level Meter Image */}
               <View style={styles.formGroup}>
                 <Text style={styles.label}>
                   GP level meter image <Text style={styles.star}>*</Text>
@@ -322,7 +467,6 @@ const Posting = () => {
 
                     let path = "APEMCL/MARNINEPOSTING/";
 
-                    // Create formik-like object for ImageBucketRN
                     const formikLike = {
                       values: formData,
                       setFieldValue: (field, value) => {
@@ -335,7 +479,7 @@ const Posting = () => {
                       formikLike,
                       path,
                       "gpLevelMeterImage",
-                      20971520, // 20MB
+                      20971520,
                       "all",
                       dispatch,
                     );
@@ -354,10 +498,12 @@ const Posting = () => {
                         const isImage = /\.(jpg|jpeg|png)$/i.test(fileUrl);
                         const isPdf = /\.pdf$/i.test(fileUrl);
 
-                        // IMAGE PREVIEW
                         if (isImage) {
                           return (
-                            <View style={{ marginTop: 10 }}>
+                            <TouchableOpacity 
+                              style={{ marginTop: 10 }}
+                              onPress={() => viewImage(fileUrl, "GP Meter Image")}
+                            >
                               <Image
                                 source={{ uri: fileUrl }}
                                 style={{
@@ -367,11 +513,10 @@ const Posting = () => {
                                   resizeMode: "cover",
                                 }}
                               />
-                            </View>
+                            </TouchableOpacity>
                           );
                         }
 
-                        // PDF DOWNLOAD ICON
                         if (isPdf) {
                           return (
                             <TouchableOpacity
@@ -380,7 +525,7 @@ const Posting = () => {
                                 alignItems: "center",
                                 marginTop: 10,
                               }}
-                              onPress={() => Linking.openURL(fileUrl)}
+                              onPress={() => downloadFile(fileUrl)}
                             >
                               <Ionicons
                                 name="document-text-outline"
@@ -394,7 +539,6 @@ const Posting = () => {
                           );
                         }
 
-                        // DEFAULT (other files)
                         return (
                           <Text style={styles.fileNameText}>{fileUrl}</Text>
                         );
@@ -426,7 +570,6 @@ const Posting = () => {
 
                     let path = "APEMCL/MARNINEPOSTING/";
 
-                    // Create formik-like object for ImageBucketRN
                     const formikLike = {
                       values: formData,
                       setFieldValue: (field, value) => {
@@ -439,7 +582,7 @@ const Posting = () => {
                       formikLike,
                       path,
                       "guardPondImage",
-                      20971520, // 20MB
+                      20971520,
                       "all",
                       dispatch,
                     );
@@ -458,10 +601,12 @@ const Posting = () => {
                         const isImage = /\.(jpg|jpeg|png)$/i.test(fileUrl);
                         const isPdf = /\.pdf$/i.test(fileUrl);
 
-                        // IMAGE PREVIEW
                         if (isImage) {
                           return (
-                            <View style={{ marginTop: 10 }}>
+                            <TouchableOpacity 
+                              style={{ marginTop: 10 }}
+                              onPress={() => viewImage(fileUrl, "Guard Pond Image")}
+                            >
                               <Image
                                 source={{ uri: fileUrl }}
                                 style={{
@@ -471,11 +616,10 @@ const Posting = () => {
                                   resizeMode: "cover",
                                 }}
                               />
-                            </View>
+                            </TouchableOpacity>
                           );
                         }
 
-                        // PDF DOWNLOAD ICON
                         if (isPdf) {
                           return (
                             <TouchableOpacity
@@ -484,7 +628,7 @@ const Posting = () => {
                                 alignItems: "center",
                                 marginTop: 10,
                               }}
-                              onPress={() => Linking.openURL(fileUrl)}
+                              onPress={() => downloadFile(fileUrl)}
                             >
                               <Ionicons
                                 name="document-text-outline"
@@ -498,7 +642,6 @@ const Posting = () => {
                           );
                         }
 
-                        // DEFAULT (other files)
                         return (
                           <Text style={styles.fileNameText}>{fileUrl}</Text>
                         );
@@ -530,7 +673,9 @@ const Posting = () => {
       {/* Main Content */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Posting</Text>
+          <Text style={styles.cardTitle}>
+            <Ionicons name="list-outline" size={20} color="#333" /> Posting
+          </Text>
         </View>
 
         <View style={styles.cardBody}>
@@ -540,40 +685,31 @@ const Posting = () => {
               style={styles.addButton}
               onPress={() => setShowModal(true)}
             >
-              <Text style={styles.addButtonText}>+ Add Posting</Text>
+              <Ionicons name="add-outline" size={20} color="#fff" />
+              <Text style={styles.addButtonText}>Add Posting</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Table Header */}
-          <View style={styles.tableHeader}>
-            <Text style={[styles.headerCell, styles.sNoCell]}>S.No</Text>
-            <Text style={[styles.headerCell, styles.sampleIdCell]}>
-              Sample Id
-            </Text>
-            <Text style={[styles.headerCell, styles.pondCell]}>
-              Guard Pond (Volume)
-            </Text>
-            <Text style={[styles.headerCell, styles.dateCell]}>
-              Requested Date
-            </Text>
-            <Text style={[styles.headerCell, styles.fileCell]}>
-              GP Meter Image
-            </Text>
-            <Text style={[styles.headerCell, styles.fileCell]}>GP Image</Text>
-            <Text style={[styles.headerCell, styles.statusCell]}>Status</Text>
-          </View>
-
-          {/* Table Body */}
-          {data.length > 0 ? (
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#2196F3" />
+              <Text style={styles.loadingText}>Loading...</Text>
+            </View>
+          ) : data.length > 0 ? (
             <FlatList
               data={data}
-              renderItem={renderItem}
+              renderItem={renderCard}
               keyExtractor={(item, index) => index.toString()}
-              style={styles.tableBody}
+              contentContainerStyle={styles.listContainer}
+              showsVerticalScrollIndicator={false}
             />
           ) : (
             <View style={styles.noRecords}>
+              <Ionicons name="document-text-outline" size={50} color="#ccc" />
               <Text style={styles.noRecordsText}>No Records Found</Text>
+              <Text style={styles.noRecordsSubText}>
+                Click "Add Posting" to create a new entry
+              </Text>
             </View>
           )}
         </View>
@@ -596,6 +732,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    flex: 1,
   },
   cardHeader: {
     padding: 16,
@@ -610,6 +747,7 @@ const styles = StyleSheet.create({
   },
   cardBody: {
     padding: 16,
+    flex: 1,
   },
   panelHeader: {
     flexDirection: "row",
@@ -625,38 +763,211 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
   },
-  uploadButton: {
-  borderWidth: 1,
-  borderColor: '#ddd',
-  borderRadius: 8,
-  padding: 12,
-  backgroundColor: '#f9f9f9',
-  alignItems: 'center',
-},
-uploadButtonText: {
-  color: '#555',
-  fontSize: 14,
-},
-inputError: {
-  borderColor: 'red',
-  borderWidth: 2,
-},
-fileNameText: {
-  color: '#007bff',
-  fontSize: 12,
-  textDecorationLine: 'underline',
-  marginTop: 10,
-},
   addButton: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#009688",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     borderRadius: 8,
   },
   addButtonText: {
     color: "#fff",
     fontWeight: "600",
+    fontSize: 12,
+    marginLeft: 4,
+  },
+  // Card styles
+  cardItem: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  cardHeaderItem: {
+    backgroundColor: "#f8f9fa",
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+  },
+  cardTitleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  cardId: {
     fontSize: 14,
+    fontWeight: "bold",
+    color: "#1e3a5f",
+  },
+  cardPond: {
+    fontSize: 12,
+    color: "#6c757d",
+    marginTop: 2,
+  },
+  cardBodyItem: {
+    padding: 12,
+  },
+  cardRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  cardLabelContainer: {
+    flex: 1,
+  },
+  cardLabel: {
+    fontSize: 11,
+    color: "#6c757d",
+    marginBottom: 2,
+  },
+  cardValue: {
+    fontSize: 14,
+    color: "#333",
+    fontWeight: "500",
+  },
+  cardRemarksContainer: {
+    backgroundColor: "#f8f9fa",
+    padding: 8,
+    borderRadius: 4,
+    marginBottom: 10,
+  },
+  cardRemarks: {
+    fontSize: 13,
+    color: "#333",
+    marginTop: 2,
+  },
+  cardFilesContainer: {
+    marginTop: 4,
+  },
+  cardFileItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  cardFileLabel: {
+    fontSize: 12,
+    color: "#495057",
+    flex: 1,
+    marginLeft: 8,
+  },
+  fileActions: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  viewButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#007bff",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginRight: 4,
+  },
+  viewButtonText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "500",
+    marginLeft: 2,
+  },
+  downloadButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#28a745",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  downloadButtonText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "500",
+    marginLeft: 2,
+  },
+  noFileText: {
+    color: "#999",
+    fontSize: 11,
+  },
+  // Image Modal styles
+  imageModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imageModalContent: {
+    width: "95%",
+    height: "90%",
+    backgroundColor: "#000",
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  imageModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    backgroundColor: "rgba(0,0,0,0.8)",
+  },
+  imageModalTitle: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  imageModalBody: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imageModalImage: {
+    width: "100%",
+    height: "100%",
+  },
+  imageModalFooter: {
+    padding: 16,
+    backgroundColor: "rgba(0,0,0,0.8)",
+    alignItems: "center",
+  },
+  imageModalDownloadButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#28a745",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  imageModalDownloadText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+    marginLeft: 8,
+  },
+  noImageContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  noImageText: {
+    color: "#fff",
+    fontSize: 16,
   },
   // Modal styles
   modalOverlay: {
@@ -664,12 +975,14 @@ fileNameText: {
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
+    padding: 16,
   },
   modalContent: {
     backgroundColor: "#fff",
     borderRadius: 10,
-    width: "90%",
-    maxHeight: "100%",
+    width: "100%",
+    maxHeight: "80%",
+    minHeight: "40%",
   },
   modalHeader: {
     flexDirection: "row",
@@ -691,7 +1004,12 @@ fileNameText: {
     fontWeight: "bold",
   },
   modalBody: {
-    padding: 16,
+    flexGrow: 1,
+    paddingHorizontal: 16,
+  },
+  modalBodyContent: {
+    paddingVertical: 16,
+    paddingBottom: 24,
   },
   // Form styles
   formGroup: {
@@ -711,6 +1029,7 @@ fileNameText: {
     borderRadius: 8,
     padding: 10,
     fontSize: 14,
+    backgroundColor: "#fff",
   },
   textArea: {
     height: 80,
@@ -721,16 +1040,29 @@ fileNameText: {
     borderColor: "#ddd",
     borderRadius: 8,
     overflow: "hidden",
+    backgroundColor: "#fff",
   },
-  fileInput: {
+  uploadButton: {
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 8,
     padding: 12,
     backgroundColor: "#f9f9f9",
+    alignItems: "center",
   },
-  fileInputText: {
+  uploadButtonText: {
     color: "#555",
+    fontSize: 14,
+  },
+  inputError: {
+    borderColor: "red",
+    borderWidth: 2,
+  },
+  fileNameText: {
+    color: "#007bff",
+    fontSize: 12,
+    textDecorationLine: "underline",
+    marginTop: 10,
   },
   errorText: {
     color: "red",
@@ -752,75 +1084,32 @@ fileNameText: {
     fontSize: 16,
     fontWeight: "600",
   },
-  // Table styles
-  tableHeader: {
-    flexDirection: "row",
-    backgroundColor: "#f8f9fa",
-    borderBottomWidth: 1,
-    borderBottomColor: "#dee2e6",
-    paddingVertical: 10,
-  },
-  tableRow: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#dee2e6",
-    paddingVertical: 10,
+  loadingContainer: {
+    padding: 40,
     alignItems: "center",
   },
-  headerCell: {
-    fontSize: 12,
-    fontWeight: "bold",
-    color: "#495057",
-    paddingHorizontal: 4,
+  loadingText: {
+    marginTop: 10,
+    color: "#666",
+    fontSize: 14,
   },
-  tableCell: {
-    fontSize: 12,
-    color: "#495057",
-    paddingHorizontal: 4,
-  },
-  sNoCell: {
-    width: "8%",
-    textAlign: "center",
-  },
-  sampleIdCell: {
-    width: "15%",
-  },
-  pondCell: {
-    width: "18%",
-  },
-  dateCell: {
-    width: "15%",
-  },
-  fileCell: {
-    width: "12%",
-    alignItems: "center",
-  },
-  statusCell: {
-    width: "20%",
-  },
-  tableBody: {
-    maxHeight: 400,
-  },
-  viewButton: {
-    backgroundColor: "#007bff",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  viewButtonText: {
-    color: "#fff",
-    fontSize: 10,
-  },
-  noFileText: {
-    color: "#999",
+  listContainer: {
+    paddingBottom: 20,
   },
   noRecords: {
-    padding: 20,
+    padding: 40,
     alignItems: "center",
   },
   noRecordsText: {
     color: "#dc3545",
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: "600",
+    marginTop: 8,
+  },
+  noRecordsSubText: {
+    color: "#999",
+    fontSize: 12,
+    marginTop: 4,
   },
 });
 
