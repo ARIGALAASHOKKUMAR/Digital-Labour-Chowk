@@ -562,7 +562,7 @@ const Activities = () => {
       {renderStartModal()}
       {renderEndModal()}
 
-      <View style={styles.card}>
+      <View >
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>
             <Icon name="list" size={20} color="#000" /> Analysis Report
@@ -570,9 +570,9 @@ const Activities = () => {
         </View>
 
         <View style={styles.cardBody}>
-          <View style={styles.headerPanel}>
+          {/* <View style={styles.headerPanel}>
             <Text style={styles.headerText}>{CONTEXT_HEADING}</Text>
-          </View>
+          </View> */}
 
           {loading ? (
             <View style={styles.loadingContainer}>

@@ -557,7 +557,7 @@ const styles = StyleSheet.create({
   assignButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#007bff',
+    backgroundColor: 'green',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 6,
