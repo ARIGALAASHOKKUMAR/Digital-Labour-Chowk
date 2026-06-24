@@ -621,8 +621,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    borderBottomLeftRadius: 22,
-    borderBottomRightRadius: 22,
+    // borderBottomLeftRadius: 22,
+    // borderBottomRightRadius: 22,
   },
 
   headerLeft: {

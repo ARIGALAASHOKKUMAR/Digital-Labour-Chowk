@@ -757,7 +757,12 @@ const SampleCollectionRequests = () => {
               </>
             )}
             {roleId === 9 && (
-              <TouchableOpacity
+              item.current_status === "SAMPLE COLLECTED & SENT TO LAB"?<TouchableOpacity
+                style={styles.collectedButton}
+              >
+                <Icon name="flask-outline" size={14} color="#fff" />
+                <Text style={styles.collectButtonText}>{ item.current_status}</Text>
+              </TouchableOpacity>:<TouchableOpacity
                 style={styles.collectButton}
                 onPress={() => {
                   setSampleModal(true);
@@ -768,6 +773,7 @@ const SampleCollectionRequests = () => {
                 <Icon name="flask-outline" size={14} color="#fff" />
                 <Text style={styles.collectButtonText}>Collect Sample</Text>
               </TouchableOpacity>
+              
             )}
           </View>
         </View>
@@ -990,6 +996,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#28a745',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    flex: 0.9,
+    justifyContent: 'center',
+  },
+   collectedButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#6c716d',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 6,
