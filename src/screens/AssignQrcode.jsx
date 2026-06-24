@@ -788,7 +788,7 @@ const SampleCollectionRequests = () => {
       {renderSampleCollectionModal()}
       {renderQRScannerModal()}
 
-      <View style={styles.card}>
+      <View >
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>
             <Icon name="list" size={20} color="#000" /> Sample Collection Requests
@@ -796,9 +796,9 @@ const SampleCollectionRequests = () => {
         </View>
 
         <View style={styles.cardBody}>
-          <View style={styles.headerPanel}>
+          {/* <View style={styles.headerPanel}>
             <Text style={styles.headerText}>{CONTEXT_HEADING}</Text>
-          </View>
+          </View> */}
 
           {loading ? (
             <View style={styles.loadingContainer}>
@@ -843,8 +843,8 @@ const styles = StyleSheet.create({
   },
   cardHeader: {
     padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    // borderBottomWidth: 1,
+    // borderBottomColor: '#e0e0e0',
   },
   cardTitle: {
     fontSize: 16,

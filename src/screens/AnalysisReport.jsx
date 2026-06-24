@@ -837,7 +837,7 @@ const AnalysisReport = () => {
       {renderNoticeModal()}
       {renderQRScannerModal()}
 
-      <View style={styles.card}>
+      <View >
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>
             <Icon name="list" size={20} color="#000" /> Analysis Report - {state?.username || 'Industry'}
@@ -1100,7 +1100,7 @@ const styles = StyleSheet.create({
   assignButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#007bff',
+    backgroundColor: 'green',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 6,

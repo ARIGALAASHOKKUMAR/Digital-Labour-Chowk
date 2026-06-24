@@ -269,7 +269,7 @@ const EditRequests = () => {
     <View style={styles.container}>
       {renderRejectModal()}
 
-      <View style={styles.card}>
+      <View>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>
             <Icon name="list" size={20} color="#000" /> Analysis Report
@@ -277,9 +277,9 @@ const EditRequests = () => {
         </View>
 
         <View style={styles.cardBody}>
-          <View style={styles.headerPanel}>
+          {/* <View style={styles.headerPanel}>
             <Text style={styles.headerText}>{CONTEXT_HEADING}</Text>
-          </View>
+          </View> */}
 
           {loading ? (
             <View style={styles.loadingContainer}>
@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
   rejectButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffc107',
+    backgroundColor: '#d03723',
     paddingVertical: 8,
     paddingHorizontal: 20,
     borderRadius: 6,

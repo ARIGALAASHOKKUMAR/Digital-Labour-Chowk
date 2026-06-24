@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   View,
   StatusBar,
+  FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
@@ -44,9 +45,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 import labour_logo from "../../assets/logo2.png";
 
-const { width } = Dimensions.get("window");
-
-const CARD_WIDTH = (width - 52) / 4;
+const { width, height } = Dimensions.get("window");
 
 const FALLBACK_PROFILE =
   "https://cdn-icons-png.flaticon.com/512/149/149071.png";
@@ -81,6 +80,7 @@ const SiteLayout = ({
   const [selectedChild, setSelectedChild] = useState(null);
   const [profileMenuVisible, setProfileMenuVisible] = useState(false);
   const [logoutVisible, setLogoutVisible] = useState(false);
+  const [sidebarVisible, setSidebarVisible] = useState(false);
 
   const [activeUsersCount, setActiveUsersCount] = useState(
     Number(activeUsers || 0),
@@ -187,6 +187,7 @@ const SiteLayout = ({
       dispatch(logOut());
       setLogoutVisible(false);
       setProfileMenuVisible(false);
+      setSidebarVisible(false);
       dispatch(hideModal());
       navigation?.reset?.({
         index: 0,
@@ -232,6 +233,7 @@ const SiteLayout = ({
     if (hasChildren) {
       setSelectedParent(parent);
       setSelectedChild(null);
+      setSidebarVisible(false);
     } else {
       if (parent.targeturl) {
         if (parent.targeturl.startsWith("https")) {
@@ -274,6 +276,10 @@ const SiteLayout = ({
     setLogoutVisible(true);
   };
 
+  const toggleSidebar = () => {
+    setSidebarVisible(!sidebarVisible);
+  };
+
   // Determine current selection path and back button behavior
   const isChildSelected = !!selectedChild;
   const isParentSelected = !!selectedParent && !selectedChild;
@@ -296,6 +302,87 @@ const SiteLayout = ({
     return "";
   };
 
+  // Render Sidebar
+  const renderSidebar = () => (
+    <Modal
+      visible={sidebarVisible}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={() => setSidebarVisible(false)}
+    >
+      <View style={styles.sidebarOverlay}>
+        <TouchableOpacity
+          style={styles.sidebarBackdrop}
+          activeOpacity={1}
+          onPress={() => setSidebarVisible(false)}
+        />
+        <View style={styles.sidebarContainer}>
+          {/* Sidebar Header */}
+          <View style={styles.sidebarHeader}>
+            <Image source={labour_logo} style={styles.sidebarLogo} />
+            <Text style={styles.sidebarHeaderTitle}>APEMCL</Text>
+            <TouchableOpacity
+              style={styles.sidebarCloseBtn}
+              onPress={() => setSidebarVisible(false)}
+            >
+              <Ionicons name="close" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+
+          {/* User Info */}
+          <View style={styles.sidebarUserInfo}>
+            <Image source={profileSource} style={styles.sidebarUserImage} />
+            <Text style={styles.sidebarUserName}>{username || "User"}</Text>
+            <Text style={styles.sidebarUserRole}>{roleName || "Role"}</Text>
+          </View>
+
+          {/* Menu Items */}
+          <ScrollView style={styles.sidebarMenu} showsVerticalScrollIndicator={false}>
+            {parents.map((parent, index) => {
+              const bg = parentColors[index % parentColors.length];
+              const hasChildren = parent.childs && parent.childs.length > 0;
+
+              return (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.sidebarMenuItem}
+                  onPress={() => handleParentPress(parent)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.sidebarMenuIcon, { backgroundColor: bg }]}>
+                    <Icon name={getIconName(parent.menuitemname)} size={18} color="#fff" />
+                  </View>
+                  <Text style={styles.sidebarMenuText} numberOfLines={2}>
+                    {parent.menuitemname}
+                  </Text>
+                  {hasChildren && (
+                    <View style={styles.sidebarMenuBadge}>
+                      <Text style={styles.sidebarMenuBadgeText}>
+                        {parent.childs.length}
+                      </Text>
+                    </View>
+                  )}
+                  <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          {/* Sidebar Footer */}
+          <View style={styles.sidebarFooter}>
+            <TouchableOpacity
+              style={styles.sidebarFooterItem}
+              onPress={openLogoutPopup}
+            >
+              <Icon name="log-out" size={20} color="#DC2626" />
+              <Text style={styles.sidebarFooterLogoutText}>Logout</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar backgroundColor="#0F172A" barStyle="light-content" />
@@ -304,15 +391,16 @@ const SiteLayout = ({
         {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
+            <TouchableOpacity onPress={toggleSidebar}>
+              <Ionicons name="menu" size={28} color="#fff" />
+            </TouchableOpacity>
             <Image
               source={labour_logo}
               style={styles.logo}
               resizeMode="contain"
             />
-
             <View>
               <Text style={styles.headerTitle}>APEMCL</Text>
-
               <Text style={styles.headerSubTitle}>
                 APEMCL, Govt. of A.P
               </Text>
@@ -333,7 +421,6 @@ const SiteLayout = ({
                   size={18}
                   color="#fff"
                 />
-
                 <Text style={styles.userCountText}>{activeUsersCount}</Text>
               </TouchableOpacity>
             )}
@@ -348,6 +435,9 @@ const SiteLayout = ({
           </View>
         </View>
 
+        {/* SIDEBAR */}
+        {renderSidebar()}
+
         {/* PROFILE MENU */}
         {profileMenuVisible && (
           <View style={styles.profileMenu}>
@@ -358,34 +448,26 @@ const SiteLayout = ({
                   showModal(
                     <View>
                       <Text style={styles.modalTitle}>Profile Details</Text>
-
                       <Image source={profileSource} style={styles.modalImage} />
-
                       <Text style={styles.profileText}>
                         USER ID : {userId || "-"}
                       </Text>
-
                       <Text style={styles.profileText}>
                         Name : {username || "-"}
                       </Text>
-
                       <Text style={styles.profileText}>
                         Role : {roleName || "-"}
                       </Text>
-
                       <Text style={styles.profileText}>
                         Last Login : {formatSimpleHtmlText(lastLoginTime)}
                       </Text>
-
                       <Text style={styles.profileText}>
                         Last Logout : {formatSimpleHtmlText(lastLogoutTime)}
                       </Text>
-
                       <Text style={styles.profileText}>
                         Last Failure Attempt :{" "}
                         {formatSimpleHtmlText(lastFailureAttemptTime)}
                       </Text>
-
                       {!!loginLocation && roleId === 1 && (
                         <Text style={styles.profileText}>
                           Login Location : {loginLocation}
@@ -397,7 +479,6 @@ const SiteLayout = ({
               }
             >
               <Icon name="user" size={18} color="#111827" />
-
               <Text style={styles.profileMenuText}>Profile</Text>
             </TouchableOpacity>
 
@@ -406,7 +487,6 @@ const SiteLayout = ({
               onPress={openLogoutPopup}
             >
               <Icon name="log-out" size={18} color="#DC2626" />
-
               <Text style={styles.logoutText}>Logout</Text>
             </TouchableOpacity>
           </View>
@@ -423,7 +503,6 @@ const SiteLayout = ({
               onPress={selectedChild ? goBackToChildren : goBackToParents}
             >
               <Ionicons name="arrow-back" size={18} color="#fff" />
-
               <Text style={styles.backBtnText}>{getBackButtonText()}</Text>
             </TouchableOpacity>
           )}
@@ -438,54 +517,6 @@ const SiteLayout = ({
                 {getCurrentSelectionName()}
               </Text>
             </View>
-          )}
-
-          {/* PARENT MENU */}
-          {!selectedParent && (
-            <>
-              <Text style={styles.sectionTitle}>Services</Text>
-
-              <View style={styles.parentGrid}>
-                {parents.map((parent, index) => {
-                  const bg = parentColors[index % parentColors.length];
-                  const hasChildren = parent.childs && parent.childs.length > 0;
-
-                  return (
-                    <TouchableOpacity
-                      key={index}
-                      style={[
-                        styles.parentCard,
-                        {
-                          backgroundColor: bg,
-                        },
-                      ]}
-                      onPress={() => handleParentPress(parent)}
-                      activeOpacity={0.85}
-                    >
-                      <View style={styles.parentIconWrap}>
-                        <Icon
-                          name={getIconName(parent.menuitemname)}
-                          size={18}
-                          color="#fff"
-                        />
-                      </View>
-
-                      <Text style={styles.parentCardText} numberOfLines={2}>
-                        {parent.menuitemname}
-                      </Text>
-
-                      {hasChildren && (
-                        <View style={styles.countBadge}>
-                          <Text style={styles.countBadgeText}>
-                            {parent.childs.length}
-                          </Text>
-                        </View>
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </>
           )}
 
           {/* CHILDREN */}
@@ -513,12 +544,10 @@ const SiteLayout = ({
                           color="#4F46E5"
                         />
                       </View>
-
                       <Text style={styles.childText} numberOfLines={2}>
                         {child.menuitemname_c}
                       </Text>
                     </View>
-
                     <Ionicons name="open-outline" size={18} color="#94A3B8" />
                   </TouchableOpacity>
                 ))}
@@ -540,7 +569,7 @@ const SiteLayout = ({
         </ScrollView>
 
         {/* BOTTOM NAV */}
-        <View style={styles.bottomNav}>
+        {/* <View style={styles.bottomNav}>
           <TouchableOpacity style={styles.navItem}>
             <Ionicons name="home" size={22} color="#fff" />
             <Text style={styles.navLabel}>Home</Text>
@@ -564,7 +593,7 @@ const SiteLayout = ({
             <Ionicons name="settings" size={22} color="#fff" />
             <Text style={styles.navLabel}>Settings</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
       </View>
 
       {/* LOGOUT CONFIRMATION MODAL */}
@@ -606,7 +635,7 @@ export default SiteLayout;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#0F172A",
+    backgroundColor: "green",
   },
 
   container: {
@@ -615,14 +644,12 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    backgroundColor: "#0F172A",
+    backgroundColor: "green",
     paddingHorizontal: 16,
     paddingVertical: 14,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    // borderBottomLeftRadius: 22,
-    // borderBottomRightRadius: 22,
   },
 
   headerLeft: {
@@ -633,8 +660,8 @@ const styles = StyleSheet.create({
   },
 
   logo: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     borderRadius: 12,
     backgroundColor: "#fff",
   },
@@ -674,16 +701,158 @@ const styles = StyleSheet.create({
   },
 
   profileImage: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     borderWidth: 2,
     borderColor: "#fff",
   },
 
+  // Sidebar Styles
+  sidebarOverlay: {
+    flex: 1,
+    flexDirection: "row",
+  },
+
+  sidebarBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+
+  sidebarContainer: {
+    width: width * 0.75,
+    backgroundColor: "#0F172A",
+    height: "100%",
+    paddingTop: 20,
+    position: 'absolute',
+  left: 0,
+  top: 0,
+  bottom: 0,
+  },
+
+  sidebarHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.1)",
+  },
+
+  sidebarLogo: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: "#fff",
+  },
+
+  sidebarHeaderTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "800",
+    marginLeft: 12,
+    flex: 1,
+  },
+
+  sidebarCloseBtn: {
+    padding: 4,
+  },
+
+  sidebarUserInfo: {
+    alignItems: "center",
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.1)",
+  },
+
+  sidebarUserImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: "#4F46E5",
+  },
+
+  sidebarUserName: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
+    marginTop: 8,
+  },
+
+  sidebarUserRole: {
+    color: "#94A3B8",
+    fontSize: 12,
+    marginTop: 2,
+  },
+
+  sidebarMenu: {
+    flex: 1,
+    paddingTop: 10,
+  },
+
+  sidebarMenuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.05)",
+  },
+
+  sidebarMenuIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+
+  sidebarMenuText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "500",
+    flex: 1,
+  },
+
+  sidebarMenuBadge: {
+    backgroundColor: "#4F46E5",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+
+  sidebarMenuBadgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "700",
+  },
+
+  sidebarFooter: {
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.1)",
+    paddingVertical: 12,
+  },
+
+  sidebarFooterItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+
+  sidebarFooterLogoutText: {
+    color: "#DC2626",
+    fontSize: 14,
+    fontWeight: "600",
+    marginLeft: 12,
+  },
+
   profileMenu: {
     position: "absolute",
-    top: 90,
+    top: 80,
     right: 14,
     backgroundColor: "#fff",
     width: 180,
@@ -726,63 +895,6 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#0F172A",
     marginBottom: 14,
-  },
-
-  parentGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "flex-start",
-    gap: 8,
-  },
-
-  parentCard: {
-    width: CARD_WIDTH,
-    minHeight: 95,
-    borderRadius: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    marginBottom: 12,
-    justifyContent: "space-between",
-    alignItems: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-
-  parentIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  parentCardText: {
-    color: "#fff",
-    fontWeight: "700",
-    textAlign: "center",
-    fontSize: 11,
-  },
-
-  countBadge: {
-    position: "absolute",
-    top: 6,
-    right: 6,
-    backgroundColor: "#fff",
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  countBadgeText: {
-    color: "#111827",
-    fontWeight: "800",
-    fontSize: 10,
   },
 
   parentHeaderCard: {
@@ -999,7 +1111,6 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
 
-  // New styles for selected item display
   selectedItemContainer: {
     backgroundColor: "#E0E7FF",
     paddingHorizontal: 16,
@@ -1010,12 +1121,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexWrap: "wrap",
   },
+
   selectedItemLabel: {
     fontSize: 14,
     fontWeight: "600",
     color: "#4F46E5",
     marginRight: 8,
   },
+
   selectedItemName: {
     fontSize: 14,
     fontWeight: "700",

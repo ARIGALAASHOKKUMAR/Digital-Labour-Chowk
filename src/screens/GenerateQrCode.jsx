@@ -438,7 +438,7 @@ function GenerateQrCode() {
     <ScrollView style={styles.container}>
       {renderQRDetailModal()}
       
-      <View style={styles.card}>
+      <View>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>
             <Icon name="water-outline" size={24} color="#333" /> Marine Industry
@@ -447,9 +447,9 @@ function GenerateQrCode() {
 
         <View style={styles.cardBody}>
           <View style={styles.panel}>
-            <View style={styles.panelHeading}>
+            {/* <View style={styles.panelHeading}>
               <Text style={styles.panelTitle}>{CONTEXT_HEADING}</Text>
-            </View>
+            </View> */}
 
             <View style={styles.panelBody}>
               <View style={styles.buttonContainer}>
@@ -530,11 +530,11 @@ const styles = StyleSheet.create({
   },
   cardHeader: {
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    backgroundColor: '#f8f9fa',
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
+    // borderBottomWidth: 1,
+    // borderBottomColor: '#e0e0e0',
+    // backgroundColor: '#f8f9fa',
+    // borderTopLeftRadius: 8,
+    // borderTopRightRadius: 8,
   },
   cardTitle: {
     fontSize: 20,

@@ -13,6 +13,7 @@ import {
   ScrollView,
   Alert,
   Dimensions,
+  ImageBackground,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
@@ -161,6 +162,11 @@ const LoginCommon = () => {
 
   return (
     <View style={styles.screen}>
+      <ImageBackground 
+source={require('../../assets/MARINEBG.png')}
+  style={styles.screen}
+  contentFit="cover"
+>
       <StatusBar barStyle="light-content" backgroundColor="#0f172a" />
 
       <KeyboardAvoidingView
@@ -174,22 +180,11 @@ const LoginCommon = () => {
           keyboardShouldPersistTaps="handled"
         >
           {/* Background Decorations */}
-          <View style={styles.glowOrb1} />
-          <View style={styles.glowOrb2} />
-          <View style={styles.glowOrb3} />
-
+          
           {/* Card */}
-          <View style={styles.card}>
+          <View style={{marginTop:350}}>
             {/* Logo */}
-            <View style={styles.logoContainer}>
-              <View style={styles.logoCircle}>
-                <Ionicons name="boat-outline" size={44} color="#fff" />
-              </View>
-            </View>
-
-            <Text style={styles.welcomeText}>Welcome Back</Text>
-            <Text style={styles.titleText}>Marine Discharge</Text>
-            <Text style={styles.subtitleText}>Sign in to continue</Text>
+            
 
             {/* Username */}
             <View style={styles.fieldBlock}>
@@ -287,7 +282,7 @@ const LoginCommon = () => {
                   style={styles.refreshBtn}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="refresh-circle" size={34} color="#3b82f6" />
+                  <Ionicons name="refresh-circle" size={34} color="green" />
                 </TouchableOpacity>
               </View>
               {formik.touched.captcha && formik.errors.captcha && (
@@ -320,6 +315,7 @@ const LoginCommon = () => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      </ImageBackground>
     </View>
   );
 };
@@ -510,7 +506,7 @@ const styles = StyleSheet.create({
   loginButton: {
     width: '100%',
     height: 56,
-    backgroundColor: '#3b82f6',
+    backgroundColor: 'green',
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',

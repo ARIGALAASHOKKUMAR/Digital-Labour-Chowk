@@ -349,7 +349,7 @@ const DischargeSummary = () => {
     <View style={styles.container}>
       {renderAssignDutyModal()}
 
-      <View style={styles.card}>
+      <View>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>
             <Icon name="list" size={20} color="#000" /> Analysis Report
@@ -357,9 +357,9 @@ const DischargeSummary = () => {
         </View>
 
         <View style={styles.cardBody}>
-          <View style={styles.headerPanel}>
+          {/* <View style={styles.headerPanel}>
             <Text style={styles.headerText}>{CONTEXT_HEADING}</Text>
-          </View>
+          </View> */}
 
           {loading ? (
             <View style={styles.loadingContainer}>
@@ -403,8 +403,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   cardHeader: {
-    padding: 15,
-    borderBottomWidth: 1,
+    // padding: 15,
+    // borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
   cardTitle: {
