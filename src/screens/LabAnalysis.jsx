@@ -79,11 +79,11 @@ const LabAnalysis = () => {
       setLoading(true);
       const payload = {
         ...values,
-        postingId: rowData?.posting_id ,
+        postingId: rowData ,
         sampleQrCode:scannedPostingId
       };
       const res = await commonAPICall(UPLOADANALYSISREPORT, payload, 'post', dispatch);
-      console.log("test",res);
+      console.log("test",payload);
       
       if (res.status === 200) {
         formik.resetForm();
@@ -103,8 +103,10 @@ const LabAnalysis = () => {
     try {
       setLoading(true);
       const res = await commonAPICall(MARINEDISCHARGEDETAILS, {}, 'get', dispatch);
+
       if (res.status === 200) {
         setData(res.data.MarineDischargePostingDetails);
+        
       } else {
         setData([]);
       }
@@ -144,6 +146,7 @@ const LabAnalysis = () => {
         // if (response.status === 200 && response.data.valid) {
         if (response.status === 200) { // Remove this condition once you have real API
           setScannedPostingId(scannedData);
+          setRowData(response.data.postingId)
           setShowModal(true);
           Alert.alert('Success', 'QR Code validated successfully!');
         } else {
