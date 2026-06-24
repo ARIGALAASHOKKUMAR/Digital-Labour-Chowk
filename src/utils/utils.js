@@ -218,6 +218,8 @@ export const STARTREADINGEDITREQUEST = "api/user/raiseStartReadingEditRequest"
 
 export const UPLOADANALYSISREPORT = "api/user/uploadAnalysisReport"
 
+export const VALIDATEQRINLAB = "api/user/validateSampleQr?qrCode="
+
 
 
 

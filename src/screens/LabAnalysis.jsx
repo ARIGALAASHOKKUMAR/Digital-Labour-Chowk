@@ -22,6 +22,7 @@ import {
   CONTEXT_HEADING,
   MARINEDISCHARGEDETAILS,
   UPLOADANALYSISREPORT,
+  VALIDATEQRINLAB,
 } from '../utils/utils';
 import ImageBucketRN from '../utils/ImageBucketRN';
 
@@ -133,15 +134,15 @@ const LabAnalysis = () => {
         
         // Dummy API call - replace with actual endpoint
         const response = await commonAPICall(
-          'VALIDATE_QR_CODE', // Replace with your actual endpoint
-          validationPayload,
-          'post',
+          VALIDATEQRINLAB+scannedData, // Replace with your actual endpoint
+          {},
+          'get',
           dispatch
         );
         
         // For demo purposes, we'll assume the QR code is valid
         // if (response.status === 200 && response.data.valid) {
-        if (true) { // Remove this condition once you have real API
+        if (response.status === 200) { // Remove this condition once you have real API
           setScannedPostingId(scannedData);
           setShowModal(true);
           Alert.alert('Success', 'QR Code validated successfully!');
