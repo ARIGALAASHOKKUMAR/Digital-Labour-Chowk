@@ -20,6 +20,7 @@ import {
   commonAPICall,
   CONTEXT_HEADING,
   CREATEMARINEDISCHARGEPOSTING,
+  GUARDPONDSGET,
   MARINEDISCHARGEDETAILS,
 } from "../utils/utils";
 import ImageBucketRN from "../utils/ImageBucketRN";
@@ -46,6 +47,19 @@ const Posting = () => {
   const dispatch = useDispatch();
   const [touched, setTouched] = useState({});
 
+  const [ponds,setPonds] = useState([])
+
+
+  const getData = async()=>{
+     const res = await commonAPICall(GUARDPONDSGET,{},"get",dispatch)
+     if(res.status === 200){
+      setPonds(res.data.GuardPondDetails)
+     }
+  }
+
+  useEffect(()=>{
+    getData()
+  },[])
   // Validation function
   const validateForm = () => {
     const newErrors = {};
@@ -202,13 +216,13 @@ const Posting = () => {
         <View style={styles.cardHeaderItem}>
           <View style={styles.cardTitleRow}>
             <Text style={styles.cardId}>Sample #{item?.discharge_request_id || '-'}</Text>
-            <View style={[styles.statusBadge, { backgroundColor: getStatusBgColor(item?.current_status) }]}>
-              <Text style={[styles.statusText, { color: getStatusColor(item?.current_status) }]}>
+          </View>
+          <View style={[styles.statusBadge, { backgroundColor: getStatusBgColor(item?.current_status) }]}>
+              <Text style={[styles.statusText, { color: getStatusColor(item?.current_status),display:"block" }]}>
                 {item?.current_status || 'Pending'}
               </Text>
             </View>
-          </View>
-          <Text style={styles.cardPond}>{getGuardPondName(item?.guard_pond_id)}</Text>
+          <Text style={styles.cardPond}>{item?.guard_pond_id}</Text>
         </View>
 
         <View style={styles.cardBodyItem}>
@@ -397,10 +411,11 @@ const Posting = () => {
                     
                   >
                     <Picker.Item label="Select" value="" />
-                    <Picker.Item label="Guard Pond-1" value="1" />
-                    <Picker.Item label="Guard Pond-2" value="2" />
-                    <Picker.Item label="Guard Pond-3" value="3" />
-                    <Picker.Item label="Guard Pond-4" value="4" />
+                    {ponds.map((each)=>(
+ <Picker.Item label={each.guardpond_name} value={each.guardpond_id}/>
+                    ))}
+                   
+                   
                   </Picker>
                 </View>
                 {errors.guardPondId && (
@@ -674,7 +689,7 @@ const Posting = () => {
       </Modal>
 
       {/* Main Content */}
-      <View style={styles.card}>
+      <View>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>
             <Ionicons name="list-outline" size={20} color="#333" /> Posting
@@ -682,8 +697,7 @@ const Posting = () => {
         </View>
 
         <View style={styles.cardBody}>
-          <View style={styles.panelHeader}>
-            <Text style={styles.contextHeading}>{CONTEXT_HEADING}</Text>
+          <View style={{marginBottom:5}}>
             <TouchableOpacity
               style={styles.addButton}
               onPress={() => setShowModal(true)}

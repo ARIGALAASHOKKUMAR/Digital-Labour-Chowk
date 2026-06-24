@@ -221,6 +221,6 @@ export const UPLOADANALYSISREPORT = "api/user/uploadAnalysisReport"
 export const VALIDATEQRINLAB = "api/user/validateSampleQr?qrCode="
 
 export const APPROVEREJECTSEE = "api/user/startReadingEditRequestApprovalAction"
-
+export const GUARDPONDSGET="api/user/guard-pond-details"
 
 
