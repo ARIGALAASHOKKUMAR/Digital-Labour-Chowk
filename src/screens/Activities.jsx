@@ -557,7 +557,7 @@ const Activities = () => {
               {/* Show arrow button only if marine_seal_image is null (not started) */}
               {!item.marine_seal_image ? (
                 <TouchableOpacity
-                  style={[styles.actionButton, styles.startButton]}
+                  style={[styles.actionButton]}
                   onPress={() => {
                     setShowStartModal(true);
                     setRowData(item);
@@ -569,7 +569,7 @@ const Activities = () => {
               ) : (
                 // Show End button if marine_seal_image exists (started)
                 <TouchableOpacity
-                  style={[styles.actionButton, styles.endButton]}
+                  style={[styles.actionButton]}
                   onPress={() => {
                     setShowEndModal(true);
                     setRowData(item);
@@ -577,7 +577,6 @@ const Activities = () => {
                   disabled={!isStarted}
                 >
                   <Icon name="stop" size={18} color="#fff" />
-                  <Text style={styles.actionButtonText}>End</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -782,17 +781,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     // paddingVertical: 10,
-    paddingHorizontal: 30,
-    borderRadius: 6,
     justifyContent: 'center',
-    textAlign:"right"
-  },
-  startButton: {
-    // backgroundColor: 'green',
-    backgroundColor:"black"
-  },
-  endButton: {
-    backgroundColor: '#28a745',
+    textAlign:"right",
+    backgroundColor:"green",
+    borderRadius:"50%",
+    width:40,
+    display:"flex",
+    justifyContent:"center",
+    alignItems:"center"
   },
   completedContainer: {
     flexDirection: 'row',
@@ -804,6 +800,10 @@ const styles = StyleSheet.create({
   color: '#fff',
   fontSize: 24,
   fontWeight: 'bold',
+  textAlign:"center",
+  display:"flex",
+  alignItems:"center",
+  marginBottom:5
 },
 
   completedText: {
