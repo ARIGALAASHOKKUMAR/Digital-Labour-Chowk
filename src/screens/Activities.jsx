@@ -203,7 +203,7 @@ const Activities = () => {
                 ]}
                 placeholder="Enter Start Reading"
                 keyboardType="numeric"
-                value={startFormik.values.startReading}
+                value={String(startFormik.values.startReading) }
                 onChangeText={startFormik.handleChange('startReading')}
                 onBlur={startFormik.handleBlur('startReading')}
                 editable={rowData?.start_reading_edit_request_flag === '2'}
@@ -321,6 +321,9 @@ const Activities = () => {
       </View>
     </Modal>
   );
+
+  console.log("startFormik",startFormik.values);
+  
 
   // ================= RENDER END MODAL =================
   const renderEndModal = () => (
@@ -558,6 +561,7 @@ const Activities = () => {
                   onPress={() => {
                     setShowStartModal(true);
                     setRowData(item);
+                    // startFormik.setFieldValue("startRe")
                   }}
                 >
                   <Text style={styles.arrowButtonText}>→</Text>
