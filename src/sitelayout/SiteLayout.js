@@ -394,22 +394,22 @@ const SiteLayout = ({
             <TouchableOpacity onPress={toggleSidebar}>
               <Ionicons name="menu" size={28} color="#fff" />
             </TouchableOpacity>
-            <Image
+            {/* <Image
               source={labour_logo}
               style={styles.logo}
               resizeMode="contain"
-            />
+            /> */}
             <View>
               <Text style={styles.headerTitle}>APEMCL</Text>
-              <Text style={styles.headerSubTitle}>
+              {/* <Text style={styles.headerSubTitle}>
                 APEMCL, Govt. of A.P
-              </Text>
+              </Text> */}
             </View>
           </View>
 
           <View style={styles.headerRight}>
 
-            <Text style={{color:"white",fontWeight:"bold"}}>{username}</Text>
+            <Text style={{color:"white",fontWeight:"bold"}}>Welcome:{username}</Text>
           </View>
         </View>
 
