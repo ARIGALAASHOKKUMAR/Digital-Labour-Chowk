@@ -729,7 +729,7 @@ const AnalysisReport = () => {
           <View style={styles.cardRow}>
             <View style={styles.cardLabelContainer}>
               <Text style={styles.cardLabel}>Guard Pond</Text>
-              <Text style={styles.cardValue}>{getGuardPondName(item?.guard_pond_id)}</Text>
+              <Text style={styles.cardValue}>{item?.guardpond_name}</Text>
             </View>
             <View style={styles.cardLabelContainer}>
               <Text style={styles.cardLabel}>Status</Text>
