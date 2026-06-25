@@ -12,7 +12,7 @@ import {
   Platform,
   FlatList,
 } from 'react-native';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import moment from 'moment';
@@ -237,6 +237,9 @@ const DischargeSummary = () => {
   );
 
   // Render Card
+
+  const userId = useSelector((state)=>state.LoginReducer.userId)
+
   const renderCard = ({ item, index }) => {
     const isAssigned = item?.discharge_assigned_team_leader_id !== null;
 
@@ -329,8 +332,7 @@ const DischargeSummary = () => {
               <Text style={styles.parameterValue}>{item?.hexavalent_chromium_value || '-'}</Text>
             </View>
           </View>
-
-          <View style={styles.cardActions}>
+{userId!=="TEAML"&&(  <View style={[styles.cardActions]}>
             {isAssigned ? (
               <TouchableOpacity style={styles.disabledButton} disabled>
                 <Icon name="checkmark-circle" size={16} color="#fff" />
@@ -352,7 +354,8 @@ const DischargeSummary = () => {
               <Icon name="notifications-outline" size={16} color="#000" />
               <Text style={styles.noticeButtonText}>Notice</Text>
             </TouchableOpacity>
-          </View>
+          </View>)}
+        
         </View>
       </View>
     );
