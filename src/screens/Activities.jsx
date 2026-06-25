@@ -509,7 +509,7 @@ const Activities = () => {
             <Text style={styles.cardBadgeText}>#{index + 1}</Text>
           </View>
         </View>
-        <Text style={styles.cardPond}>{getGuardPondName(item?.guard_pond_id)}</Text>
+        <Text style={styles.cardPond}>{item?.guardpond_name}</Text>
       </View>
 
       <View style={styles.cardBodyItem}>
