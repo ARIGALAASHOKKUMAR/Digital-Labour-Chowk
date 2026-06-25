@@ -167,10 +167,7 @@ const DischargeSummary = () => {
                   dropdownIconColor="#666"
                 >
                   <Picker.Item label="Select Team Leader" value="" />
-                  <Picker.Item label="Team A" value="team_a" />
-                  <Picker.Item label="Team B" value="team_b" />
-                  <Picker.Item label="Team C" value="team_c" />
-                  <Picker.Item label="Team D" value="team_d" />
+                  <Picker.Item label="TEAML" value="TEAML" />
                 </Picker>
               </View>
               {formik.errors.dischargeAssignedTeamLeaderId &&
