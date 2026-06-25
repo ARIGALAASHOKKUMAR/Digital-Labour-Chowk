@@ -12,6 +12,7 @@ import {
   Image,
   Linking,
   FlatList,
+  Platform,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useFormik } from 'formik';
@@ -372,7 +373,7 @@ const AnalysisReport = () => {
 
   const getValueColor = (value, limit, isPH = false) => {
     if (value === null || value === undefined || value === '' || value === '-' || limit === undefined) {
-      return {};
+      return { isValid: true, color: 'green' };
     }
 
     const numericValue = parseFloat(value);
@@ -385,8 +386,8 @@ const AnalysisReport = () => {
     }
 
     return {
-      color: isValid ? 'green' : 'red',
-      fontWeight: '700',
+      isValid: isValid,
+      color: isValid ? 'green' : 'red'
     };
   };
 
@@ -687,6 +688,20 @@ const AnalysisReport = () => {
       return pondMap[id] || pondMap[String(id)] || '-';
     };
 
+    // Parameter configuration
+    const parameters = [
+      { key: 'TDS', value: item?.tds_value, limit: limits?.tds, isPH: false },
+      { key: 'TSS', value: item?.tss_value, limit: limits?.tss, isPH: false },
+      { key: 'COD', value: item?.cod_value, limit: limits?.cod, isPH: false },
+      { key: 'PH', value: item?.ph_value, limit: limits?.ph, isPH: true },
+      { key: 'Fluoride', value: item?.fluoride_value, limit: limits?.fluoride, isPH: false },
+      { key: 'Phenols', value: item?.phenols_value, limit: limits?.phenols, isPH: false },
+      { key: 'Phosphate', value: item?.ortho_phosphate_value, limit: limits?.phosphate, isPH: false },
+      { key: 'Nitrate', value: item?.nitrate_nitrogen_value, limit: limits?.nitrate, isPH: false },
+      { key: 'Ammonical', value: item?.ammonical_nitrogen_value, limit: limits?.ammonical, isPH: false },
+      { key: 'Chromium', value: item?.hexavalent_chromium_value, limit: limits?.chromium, isPH: false },
+    ];
+
     return (
       <View style={styles.cardItem}>
         <View style={styles.cardHeaderItem}>
@@ -732,68 +747,31 @@ const AnalysisReport = () => {
             </View>
           </View>
 
-          {/* Parameter Grid */}
+          {/* Parameter Grid - 5 items per row with circles */}
           <View style={styles.parameterGrid}>
-            <View style={styles.parameterItem}>
-              <Text style={styles.parameterLabel}>TDS</Text>
-              <Text style={[styles.parameterValue, getValueColor(item?.tds_value, limits?.tds)]}>
-                {item?.tds_value || '-'}
-              </Text>
-            </View>
-            <View style={styles.parameterItem}>
-              <Text style={styles.parameterLabel}>TSS</Text>
-              <Text style={[styles.parameterValue, getValueColor(item?.tss_value, limits?.tss)]}>
-                {item?.tss_value || '-'}
-              </Text>
-            </View>
-            <View style={styles.parameterItem}>
-              <Text style={styles.parameterLabel}>COD</Text>
-              <Text style={[styles.parameterValue, getValueColor(item?.cod_value, limits?.cod)]}>
-                {item?.cod_value || '-'}
-              </Text>
-            </View>
-            <View style={styles.parameterItem}>
-              <Text style={styles.parameterLabel}>PH</Text>
-              <Text style={[styles.parameterValue, getValueColor(item?.ph_value, limits?.ph, true)]}>
-                {item?.ph_value || '-'}
-              </Text>
-            </View>
-            <View style={styles.parameterItem}>
-              <Text style={styles.parameterLabel}>Flouride</Text>
-              <Text style={[styles.parameterValue, getValueColor(item?.fluoride_value, limits?.fluoride)]}>
-                {item?.fluoride_value || '-'}
-              </Text>
-            </View>
-            <View style={styles.parameterItem}>
-              <Text style={styles.parameterLabel}>Phenols</Text>
-              <Text style={[styles.parameterValue, getValueColor(item?.phenols_value, limits?.phenols)]}>
-                {item?.phenols_value || '-'}
-              </Text>
-            </View>
-            <View style={styles.parameterItem}>
-              <Text style={styles.parameterLabel}>Phosphate</Text>
-              <Text style={[styles.parameterValue, getValueColor(item?.ortho_phosphate_value, limits?.phosphate)]}>
-                {item?.ortho_phosphate_value || '-'}
-              </Text>
-            </View>
-            <View style={styles.parameterItem}>
-              <Text style={styles.parameterLabel}>Nitrate</Text>
-              <Text style={[styles.parameterValue, getValueColor(item?.nitrate_nitrogen_value, limits?.nitrate)]}>
-                {item?.nitrate_nitrogen_value || '-'}
-              </Text>
-            </View>
-            <View style={styles.parameterItem}>
-              <Text style={styles.parameterLabel}>Ammonical</Text>
-              <Text style={[styles.parameterValue, getValueColor(item?.ammonical_nitrogen_value, limits?.ammonical)]}>
-                {item?.ammonical_nitrogen_value || '-'}
-              </Text>
-            </View>
-            <View style={styles.parameterItem}>
-              <Text style={styles.parameterLabel}>Chromium</Text>
-              <Text style={[styles.parameterValue, getValueColor(item?.hexavalent_chromium_value, limits?.chromium)]}>
-                {item?.hexavalent_chromium_value || '-'}
-              </Text>
-            </View>
+            {parameters.map((param, idx) => {
+              const { isValid, color } = getValueColor(param.value, param.limit, param.isPH);
+              const displayValue = param.value || '-';
+              
+              return (
+                <View key={idx} style={styles.parameterItem}>
+                  <View style={styles.parameterCircleContainer}>
+                    <View style={[
+                      styles.parameterCircle,
+                      { borderColor: color }
+                    ]}>
+                      <Text style={[styles.parameterValue, { color: color }]}>
+                        {displayValue}
+                      </Text>
+                    </View>
+                    <Text style={styles.parameterLabel}>{param.key}</Text>
+                    {!isValid && displayValue !== '-' && (
+                      <View style={styles.warningDot} />
+                    )}
+                  </View>
+                </View>
+              );
+            })}
           </View>
 
           <View style={styles.cardActions}>
@@ -845,22 +823,6 @@ const AnalysisReport = () => {
         </View>
 
         <View style={styles.cardBody}>
-          {/* <View style={styles.headerPanel}>
-            <Text style={styles.headerText}>{CONTEXT_HEADING}</Text>
-            <Text style={styles.headerSubText}>
-              Industry Standards for: <Text style={styles.headerSubTextBold}>{state?.username || 'Default'}</Text>
-            </Text>
-          </View> */}
-
-          {/* Scan QR Code Button */}
-          {/* <View style={styles.scanButtonContainer}>
-            <TouchableOpacity style={styles.scanButton} onPress={openScanner} activeOpacity={0.8}>
-              <Icon name="qr-code-outline" size={24} color="#fff" />
-              <Text style={styles.scanButtonText}>Scan QR Code</Text>
-            </TouchableOpacity>
-            <Text style={styles.scanHint}>Scan QR code to assign duty</Text>
-          </View> */}
-
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#007bff" />
@@ -1077,18 +1039,52 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
     paddingTop: 10,
+    justifyContent: 'center',
   },
   parameterItem: {
-    width: '50%',
-    paddingVertical: 3,
+    width: '20%', // 5 items per row
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 6,
+    position: 'relative',
   },
-  parameterLabel: {
-    fontSize: 10,
-    color: '#6c757d',
+  parameterCircleContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  parameterCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    marginBottom: 4,
   },
   parameterValue: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  parameterLabel: {
+    fontSize: 9,
+    color: '#6c757d',
+    textAlign: 'center',
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  warningDot: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: 'red',
+    borderWidth: 1,
+    borderColor: '#fff',
   },
   cardActions: {
     flexDirection: 'row',

@@ -29,11 +29,13 @@ import {
 const DischargeSummary = () => {
   const dispatch = useDispatch();
   const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [rowData, setRowData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
+  const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'assigned', 'pending'
 
   // Validation Schema
   const validationSchema = Yup.object({
@@ -82,11 +84,14 @@ const DischargeSummary = () => {
       const res = await commonAPICall(MARINEDISCHARGEDETAILS, {}, 'get', dispatch);
       if (res.status === 200) {
         setData(res.data.MarineDischargePostingDetails);
+        setFilteredData(res.data.MarineDischargePostingDetails);
       } else {
         setData([]);
+        setFilteredData([]);
       }
     } catch (error) {
       setData([]);
+      setFilteredData([]);
       Alert.alert('Error', 'Failed to fetch data');
     } finally {
       setLoading(false);
@@ -106,6 +111,24 @@ const DischargeSummary = () => {
     const formattedDate = currentDate.toISOString().split('T')[0];
     formik.setFieldValue('dischargeAssignedDate', formattedDate);
   };
+
+  // Filter Data
+  const filterData = (filterType) => {
+    setActiveFilter(filterType);
+    if (filterType === 'all') {
+      setFilteredData(data);
+    } else if (filterType === 'assigned') {
+      const assigned = data.filter(item => item?.discharge_assigned_team_leader_id !== null);
+      setFilteredData(assigned);
+    } else if (filterType === 'pending') {
+      const pending = data.filter(item => item?.discharge_assigned_team_leader_id === null);
+      setFilteredData(pending);
+    }
+  };
+
+  // Get Assigned and Pending Counts
+  const getAssignedCount = () => data.filter(item => item?.discharge_assigned_team_leader_id !== null).length;
+  const getPendingCount = () => data.filter(item => item?.discharge_assigned_team_leader_id === null).length;
 
   // Render Assign Duty Modal
   const renderAssignDutyModal = () => (
@@ -225,27 +248,33 @@ const DischargeSummary = () => {
         <View style={styles.cardHeaderItem}>
           <View style={styles.cardTitleRow}>
             <Text style={styles.cardIndustry}>{item?.discharge_request_industry || '-'}</Text>
-            <View style={styles.cardBadge}>
-              <Text style={styles.cardBadgeText}>#{index + 1}</Text>
+            <View style={[
+              styles.statusBadge,
+              isAssigned ? styles.statusAssigned : styles.statusPending
+            ]}>
+              <Text style={[
+                styles.statusText,
+                isAssigned ? styles.statusTextAssigned : styles.statusTextPending
+              ]}>
+                {isAssigned ? '✓ Assigned' : '⏳ Pending'}
+              </Text>
             </View>
           </View>
         </View>
 
         <View style={styles.cardBodyItem}>
+          {/* Row 1: Collected Date, Analysis Date, Guard Pond */}
           <View style={styles.cardRow}>
             <View style={styles.cardLabelContainer}>
-              <Text style={styles.cardLabel}>Collected Date</Text>
+              <Text style={styles.cardLabel}>📅 Collected Date</Text>
               <Text style={styles.cardValue}>{item?.sample_collected_date?.split(' ')[0] || '-'}</Text>
             </View>
             <View style={styles.cardLabelContainer}>
-              <Text style={styles.cardLabel}>Analysis Date</Text>
+              <Text style={styles.cardLabel}>🔬 Analysis Date</Text>
               <Text style={styles.cardValue}>{item?.analysis_date?.split(' ')[0] || '-'}</Text>
             </View>
-          </View>
-
-          <View style={styles.cardRow}>
             <View style={styles.cardLabelContainer}>
-              <Text style={styles.cardLabel}>Guard Pond</Text>
+              <Text style={styles.cardLabel}>🏊 Guard Pond</Text>
               <Text style={styles.cardValue}>
                 {item?.guard_pond_id === 1 || item?.guard_pond_id === '1'
                   ? 'Pond-1'
@@ -258,23 +287,9 @@ const DischargeSummary = () => {
                   : '-'}
               </Text>
             </View>
-            <View style={styles.cardLabelContainer}>
-              <Text style={styles.cardLabel}>Status</Text>
-              <View style={[
-                styles.statusBadge,
-                isAssigned ? styles.statusAssigned : styles.statusPending
-              ]}>
-                <Text style={[
-                  styles.statusText,
-                  isAssigned ? styles.statusTextAssigned : styles.statusTextPending
-                ]}>
-                  {isAssigned ? 'Assigned' : 'Pending'}
-                </Text>
-              </View>
-            </View>
           </View>
 
-          {/* Parameter Grid */}
+          {/* Row 2: Parameters - 5 per row */}
           <View style={styles.parameterGrid}>
             <View style={styles.parameterItem}>
               <Text style={styles.parameterLabel}>TDS</Text>
@@ -293,7 +308,7 @@ const DischargeSummary = () => {
               <Text style={styles.parameterValue}>{item?.ph_value || '-'}</Text>
             </View>
             <View style={styles.parameterItem}>
-              <Text style={styles.parameterLabel}>Flouride</Text>
+              <Text style={styles.parameterLabel}>Fluoride</Text>
               <Text style={styles.parameterValue}>{item?.fluoride_value || '-'}</Text>
             </View>
             <View style={styles.parameterItem}>
@@ -321,6 +336,7 @@ const DischargeSummary = () => {
           <View style={styles.cardActions}>
             {isAssigned ? (
               <TouchableOpacity style={styles.disabledButton} disabled>
+                <Icon name="checkmark-circle" size={16} color="#fff" />
                 <Text style={styles.disabledButtonText}>Assigned</Text>
               </TouchableOpacity>
             ) : (
@@ -357,9 +373,53 @@ const DischargeSummary = () => {
         </View>
 
         <View style={styles.cardBody}>
-          {/* <View style={styles.headerPanel}>
-            <Text style={styles.headerText}>{CONTEXT_HEADING}</Text>
-          </View> */}
+          {/* Filter Section */}
+          <View style={styles.filterContainer}>
+            <TouchableOpacity
+              style={[
+                styles.filterButton,
+                activeFilter === 'all' && styles.filterButtonActive
+              ]}
+              onPress={() => filterData('all')}
+            >
+              <Text style={[
+                styles.filterButtonText,
+                activeFilter === 'all' && styles.filterButtonTextActive
+              ]}>
+                All ({data.length})
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.filterButton,
+                activeFilter === 'assigned' && styles.filterButtonActive
+              ]}
+              onPress={() => filterData('assigned')}
+            >
+              <Text style={[
+                styles.filterButtonText,
+                activeFilter === 'assigned' && styles.filterButtonTextActive
+              ]}>
+                ✅ Assigned ({getAssignedCount()})
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.filterButton,
+                activeFilter === 'pending' && styles.filterButtonActive
+              ]}
+              onPress={() => filterData('pending')}
+            >
+              <Text style={[
+                styles.filterButtonText,
+                activeFilter === 'pending' && styles.filterButtonTextActive
+              ]}>
+                ⏳ Pending ({getPendingCount()})
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           {loading ? (
             <View style={styles.loadingContainer}>
@@ -368,13 +428,21 @@ const DischargeSummary = () => {
             </View>
           ) : (
             <FlatList
-              data={data}
+              data={filteredData}
               keyExtractor={(item, index) => index.toString()}
               renderItem={renderCard}
               contentContainerStyle={styles.listContainer}
               ListEmptyComponent={
                 <View style={styles.noRecords}>
+                  <Icon name="document-text-outline" size={50} color="#ccc" />
                   <Text style={styles.noRecordsText}>No Records Found</Text>
+                  <Text style={styles.noRecordsSubText}>
+                    {activeFilter === 'all' 
+                      ? 'No records available' 
+                      : activeFilter === 'assigned' 
+                      ? 'No assigned records' 
+                      : 'No pending records'}
+                  </Text>
                 </View>
               }
               showsVerticalScrollIndicator={false}
@@ -391,24 +459,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  card: {
-    flex: 1,
-    margin: 10,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
   cardHeader: {
-    // padding: 15,
-    // borderBottomWidth: 1,
+    padding: 15,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
   cardTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#000',
     textAlign: 'center',
@@ -417,16 +475,41 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
   },
-  headerPanel: {
-    backgroundColor: '#007bff',
-    padding: 10,
-    borderRadius: 4,
-    marginBottom: 10,
+  // Filter Styles
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#fff',
+    padding: 8,
+    borderRadius: 10,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
   },
-  headerText: {
+  filterButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+  },
+  filterButtonActive: {
+    backgroundColor: '#007bff',
+    borderColor: '#007bff',
+  },
+  filterButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6c757d',
+  },
+  filterButtonTextActive: {
     color: '#fff',
-    fontWeight: 'bold',
-    textAlign: 'center',
   },
   loadingContainer: {
     padding: 40,
@@ -471,43 +554,33 @@ const styles = StyleSheet.create({
     color: '#1e3a5f',
     flex: 1,
   },
-  cardBadge: {
-    backgroundColor: '#007bff',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-  },
-  cardBadgeText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '600',
-  },
   cardBodyItem: {
     padding: 12,
   },
   cardRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   cardLabelContainer: {
     flex: 1,
+    marginHorizontal: 2,
   },
   cardLabel: {
     fontSize: 11,
     color: '#6c757d',
     marginBottom: 2,
+    fontWeight: '500',
   },
   cardValue: {
     fontSize: 14,
     color: '#333',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 3,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderRadius: 12,
-    alignSelf: 'flex-start',
   },
   statusAssigned: {
     backgroundColor: '#d4edda',
@@ -516,7 +589,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8d7da',
   },
   statusText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
   },
   statusTextAssigned: {
@@ -528,24 +601,28 @@ const styles = StyleSheet.create({
   parameterGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 10,
+    marginTop: 8,
     marginBottom: 12,
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
     paddingTop: 10,
   },
   parameterItem: {
-    width: '50%',
+    width: '20%', // 5 items per row
     paddingVertical: 4,
+    alignItems: 'center',
   },
   parameterLabel: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#6c757d',
+    textAlign: 'center',
+    fontWeight: '500',
   },
   parameterValue: {
     fontSize: 13,
     color: '#333',
-    fontWeight: '600',
+    fontWeight: '700',
+    textAlign: 'center',
   },
   cardActions: {
     flexDirection: 'row',
@@ -557,7 +634,7 @@ const styles = StyleSheet.create({
   assignButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'green',
+    backgroundColor: '#28a745',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 6,
@@ -587,18 +664,20 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   disabledButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#6c757d',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 6,
     flex: 0.45,
     justifyContent: 'center',
-    alignItems: 'center',
   },
   disabledButtonText: {
     color: '#fff',
     fontSize: 12,
     fontWeight: '600',
+    marginLeft: 6,
   },
   // Modal Styles
   modalOverlay: {
@@ -695,8 +774,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   noRecordsText: {
-    color: 'red',
-    fontSize: 14,
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 10,
+  },
+  noRecordsSubText: {
+    color: '#999',
+    fontSize: 13,
+    marginTop: 4,
   },
 });
 

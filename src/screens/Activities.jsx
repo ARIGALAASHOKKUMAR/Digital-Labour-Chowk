@@ -26,6 +26,7 @@ import {
   STARTREADINGEDITREQUEST,
 } from '../utils/utils';
 import ImageBucketRN from '../utils/ImageBucketRN';
+import { Picker } from '@react-native-picker/picker';
 
 const Activities = () => {
   const dispatch = useDispatch();
@@ -178,6 +179,14 @@ const Activities = () => {
             </TouchableOpacity>
           </View>
           <ScrollView>
+            {/* Flow Meter Header */}
+            <View style={styles.flowMeterContainer}>
+              <Icon name="speedometer-outline" size={20} color="#666" />
+              <Text style={styles.flowMeterText}>
+                Flow Meter: <Text style={styles.flowMeterName}>Flow Meter-1</Text>
+              </Text>
+            </View>
+
             <View style={styles.formGroup}>
               <View style={styles.labelRow}>
                 <Text style={styles.label}>Start Reading <Text style={styles.star}>*</Text></Text>
@@ -330,26 +339,37 @@ const Activities = () => {
             </TouchableOpacity>
           </View>
           <ScrollView>
+            {/* Start Reading Display */}
             <View style={styles.startReadingDisplay}>
-              <Text style={styles.startReadingLabel}>Start Reading:</Text>
-              <Text style={styles.startReadingValue}>{rowData?.start_reading || '-'}</Text>
+              <View style={styles.startReadingRow}>
+                <Text style={styles.startReadingLabel}>Start Reading:</Text>
+                <Text style={styles.startReadingValue}>{rowData?.start_reading || '-'}</Text>
+              </View>
+              <View style={styles.flowMeterRow}>
+                <Icon name="speedometer-outline" size={18} color="#666" />
+                <Text style={styles.flowMeterText}>
+                  Flow Meter: <Text style={styles.flowMeterName}>Flow Meter-2</Text>
+                </Text>
+              </View>
             </View>
 
             <View style={styles.formGroup}>
               <Text style={styles.label}>Discharge Type <Text style={styles.star}>*</Text></Text>
               <View style={styles.pickerContainer}>
-                <TextInput
-                  style={[
-                    styles.input,
-                    endFormik.errors.dischargeAction &&
-                      endFormik.touched.dischargeAction &&
-                      styles.inputError,
-                  ]}
-                  placeholder="Select Discharge Type"
-                  value={endFormik.values.dischargeAction}
-                  onChangeText={endFormik.handleChange('dischargeAction')}
-                  onBlur={endFormik.handleBlur('dischargeAction')}
-                />
+                <Picker
+                  selectedValue={endFormik.values.dischargeAction}
+                  onValueChange={(itemValue) => {
+                    endFormik.setFieldValue('dischargeAction', itemValue);
+                    endFormik.setFieldTouched('dischargeAction', true);
+                  }}
+                  style={styles.picker}
+                  dropdownIconColor="#666"
+                >
+                  <Picker.Item label="Select" value="" />
+                  <Picker.Item label="Completed" value="1" />
+                  <Picker.Item label="Continue to Next day" value="2" />
+                  <Picker.Item label="Abort" value="3" />
+                </Picker>
               </View>
               {endFormik.errors.dischargeAction && endFormik.touched.dischargeAction && (
                 <Text style={styles.errorText}>{endFormik.errors.dischargeAction}</Text>
@@ -439,123 +459,130 @@ const Activities = () => {
 
   // ================= RENDER CARD =================
   const renderCard = ({ item, index }) => {
-    const hasStartReading = item?.start_reading !== null && item?.start_reading !== undefined;
-    const hasEndReading = item?.end_reading !== null && item?.end_reading !== undefined;
-    const isStartDisabled = hasStartReading || hasEndReading;
-    const isEndDisabled = !hasStartReading || hasEndReading;
+  const hasStartReading = item?.start_reading !== null && item?.start_reading !== undefined;
+  const hasEndReading = item?.end_reading !== null && item?.end_reading !== undefined;
+  const hasMarineSealImage = item?.marine_seal_image !== null && item?.marine_seal_image !== undefined;
+  const isCompleted = hasStartReading && hasEndReading;
+  const isStarted = hasStartReading && !hasEndReading;
 
-    const totalDischarged = hasStartReading && hasEndReading
-      ? (Number(item.end_reading || 0) - Number(item.start_reading || 0)).toFixed(2)
-      : '-';
+  const totalDischarged = hasStartReading && hasEndReading
+    ? (Number(item.end_reading || 0) - Number(item.start_reading || 0)).toFixed(2)
+    : '-';
 
-    const getGuardPondName = (id) => {
-      const pondMap = {
-        '1': 'Guard Pond-1',
-        '2': 'Guard Pond-2',
-        '3': 'Guard Pond-3',
-        '4': 'Guard Pond-4',
-      };
-      return pondMap[id] || pondMap[String(id)] || '-';
+  const getGuardPondName = (id) => {
+    const pondMap = {
+      '1': 'Guard Pond-1',
+      '2': 'Guard Pond-2',
+      '3': 'Guard Pond-3',
+      '4': 'Guard Pond-4',
     };
+    return pondMap[id] || pondMap[String(id)] || '-';
+  };
 
-    return (
-      <View style={styles.cardItem}>
-        <View style={styles.cardHeaderItem}>
-          <View style={styles.cardTitleRow}>
-            <Text style={styles.cardIndustry}>{item?.discharge_request_industry || '-'}</Text>
-            <View style={styles.cardBadge}>
-              <Text style={styles.cardBadgeText}>#{index + 1}</Text>
+  const getStatusText = () => {
+    if (isCompleted) return 'Completed';
+    if (isStarted) return 'In Progress';
+    return 'Pending';
+  };
+
+  const getStatusColor = () => {
+    if (isCompleted) return '#28a745';
+    if (isStarted) return '#ffc107';
+    return '#dc3545';
+  };
+
+  const getStatusBgColor = () => {
+    if (isCompleted) return '#d4edda';
+    if (isStarted) return '#fff3cd';
+    return '#f8d7da';
+  };
+
+  return (
+    <View style={styles.cardItem}>
+      <View style={styles.cardHeaderItem}>
+        <View style={styles.cardTitleRow}>
+          <Text style={styles.cardIndustry}>{item?.discharge_request_industry || '-'}</Text>
+          <View style={styles.cardBadge}>
+            <Text style={styles.cardBadgeText}>#{index + 1}</Text>
+          </View>
+        </View>
+        <Text style={styles.cardPond}>{getGuardPondName(item?.guard_pond_id)}</Text>
+      </View>
+
+      <View style={styles.cardBodyItem}>
+        <View style={styles.cardRow}>
+          <View style={styles.cardLabelContainer}>
+            <Text style={styles.cardLabel}>Discharge Date</Text>
+            <Text style={styles.cardValue}>{item?.discharge_request_date?.split(' ')[0] || '-'}</Text>
+          </View>
+          <View style={styles.cardLabelContainer}>
+            <Text style={styles.cardLabel}>Status</Text>
+            <View style={[styles.statusBadge, { backgroundColor: getStatusBgColor() }]}>
+              <Text style={[styles.statusText, { color: getStatusColor() }]}>
+                {getStatusText()}
+              </Text>
             </View>
           </View>
-          <Text style={styles.cardPond}>{getGuardPondName(item?.guard_pond_id)}</Text>
         </View>
 
-        <View style={styles.cardBodyItem}>
-          <View style={styles.cardRow}>
-            <View style={styles.cardLabelContainer}>
-              <Text style={styles.cardLabel}>Discharge Date</Text>
-              <Text style={styles.cardValue}>{item?.discharge_request_date?.split(' ')[0] || '-'}</Text>
-            </View>
-            <View style={styles.cardLabelContainer}>
-              <Text style={styles.cardLabel}>Total Qty</Text>
-              <Text style={[styles.cardValue, styles.cardValueHighlight]}>{totalDischarged}</Text>
-            </View>
+        <View style={styles.cardRow}>
+          <View style={styles.cardLabelContainer}>
+            <Text style={styles.cardLabel}>Start Reading</Text>
+            <Text style={styles.cardValue}>{item?.start_reading || '-'}</Text>
           </View>
+          <View style={styles.cardLabelContainer}>
+            <Text style={styles.cardLabel}>End Reading</Text>
+            <Text style={styles.cardValue}>{item?.end_reading || '-'}</Text>
+          </View>
+        </View>
 
-          <View style={styles.cardRow}>
-            <View style={styles.cardLabelContainer}>
-              <Text style={styles.cardLabel}>Start Reading</Text>
-              <Text style={styles.cardValue}>{item?.start_reading || '-'}</Text>
+        <View style={styles.totalQtyContainer}>
+          <Text style={styles.totalQtyLabel}>Total Quantity Discharged</Text>
+          <Text style={styles.totalQtyValue}>{totalDischarged}</Text>
+        </View>
+
+        <View style={styles.cardActions}>
+          {isCompleted ? (
+            // Show Completed status
+            <View style={styles.completedContainer}>
+              <Icon name="checkmark-circle" size={20} color="#28a745" />
+              <Text style={styles.completedText}>Completed</Text>
             </View>
-            <View style={styles.cardLabelContainer}>
-              <Text style={styles.cardLabel}>End Reading</Text>
-              <Text style={styles.cardValue}>{item?.end_reading || '-'}</Text>
+          ) : (
+            // Show Start or End button
+            <View style={styles.buttonRow}>
+              {/* Show arrow button only if marine_seal_image is null (not started) */}
+              {!item.marine_seal_image ? (
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.startButton]}
+                  onPress={() => {
+                    setShowStartModal(true);
+                    setRowData(item);
+                  }}
+                >
+                  <Text style={styles.arrowButtonText}>→</Text>
+                </TouchableOpacity>
+              ) : (
+                // Show End button if marine_seal_image exists (started)
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.endButton]}
+                  onPress={() => {
+                    setShowEndModal(true);
+                    setRowData(item);
+                  }}
+                  disabled={!isStarted}
+                >
+                  <Icon name="stop" size={18} color="#fff" />
+                  <Text style={styles.actionButtonText}>End</Text>
+                </TouchableOpacity>
+              )}
             </View>
-          </View>
-
-          <View style={styles.cardActions}>
-            <TouchableOpacity
-              style={[styles.cardActionButton, isStartDisabled ? styles.cardButtonDisabled : styles.cardButtonStart]}
-              disabled={isStartDisabled}
-              onPress={() => {
-                setShowStartModal(true);
-                setRowData(item);
-              }}
-            >
-              <Icon
-                name={hasStartReading ? 'checkmark-circle' : 'play-circle'}
-                size={16}
-                color="#fff"
-              />
-              <Text style={styles.cardButtonText}>
-                {hasStartReading ? 'Started' : 'Start'}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.cardActionButton, isEndDisabled ? styles.cardButtonDisabled : styles.cardButtonEnd]}
-              disabled={isEndDisabled}
-              onPress={() => {
-                setShowEndModal(true);
-                setRowData(item);
-              }}
-            >
-              <Icon
-                name={hasEndReading ? 'checkmark-circle' : 'stop-circle'}
-                size={16}
-                color="#fff"
-              />
-              <Text style={styles.cardButtonText}>
-                {hasEndReading ? 'Completed' : 'End'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Status Indicator */}
-          <View style={styles.cardStatus}>
-            {hasStartReading && !hasEndReading && (
-              <View style={styles.statusBadgeInProgress}>
-                <View style={styles.statusDotInProgress} />
-                <Text style={styles.statusTextInProgress}>In Progress</Text>
-              </View>
-            )}
-            {hasStartReading && hasEndReading && (
-              <View style={styles.statusBadgeCompleted}>
-                <View style={styles.statusDotCompleted} />
-                <Text style={styles.statusTextCompleted}>Completed</Text>
-              </View>
-            )}
-            {!hasStartReading && !hasEndReading && (
-              <View style={styles.statusBadgePending}>
-                <View style={styles.statusDotPending} />
-                <Text style={styles.statusTextPending}>Pending</Text>
-              </View>
-            )}
-          </View>
+          )}
         </View>
       </View>
-    );
-  };
+    </View>
+  );
+};
 
   return (
     <View style={styles.container}>
@@ -565,7 +592,7 @@ const Activities = () => {
       <View >
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>
-            <Icon name="list" size={20} color="#000" /> Analysis Report
+            <Icon name="list" size={20} color="#000" /> Activities
           </Text>
         </View>
 
@@ -706,7 +733,7 @@ const styles = StyleSheet.create({
   cardRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   cardLabelContainer: {
     flex: 1,
@@ -721,106 +748,81 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '500',
   },
-  cardValueHighlight: {
-    color: '#007bff',
-    fontWeight: '700',
+  totalQtyContainer: {
+    backgroundColor: '#e8f4fd',
+    padding: 10,
+    borderRadius: 6,
+    marginVertical: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  totalQtyLabel: {
+    fontSize: 12,
+    color: '#495057',
+    fontWeight: '500',
+  },
+  totalQtyValue: {
     fontSize: 16,
+    color: '#007bff',
+    fontWeight: 'bold',
   },
   cardActions: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 10,
+    justifyContent: 'flex-end',
     paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
   },
-  cardActionButton: {
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    // paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderRadius: 6,
+    justifyContent: 'center',
+    textAlign:"right"
+  },
+  startButton: {
+    // backgroundColor: '#007bff',
+    backgroundColor:"black"
+  },
+  endButton: {
+    backgroundColor: '#28a745',
+  },
+  completedContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 20,
-    borderRadius: 6,
-    flex: 0.45,
-    justifyContent: 'center',
   },
-  cardButtonStart: {
-    backgroundColor: '#007bff',
-  },
-  cardButtonEnd: {
-    backgroundColor: '#28a745',
-  },
-  cardButtonDisabled: {
-    backgroundColor: '#6c757d',
-  },
-  cardButtonText: {
-    color: '#fff',
-    fontSize: 12,
+  arrowButtonText: {
+  color: '#fff',
+  fontSize: 24,
+  fontWeight: 'bold',
+},
+
+  completedText: {
+    color: '#28a745',
+    fontSize: 14,
     fontWeight: '600',
     marginLeft: 6,
   },
-  cardStatus: {
-    marginTop: 10,
-    alignItems: 'center',
+  actionButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
   },
-  statusBadgeInProgress: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff3cd',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
     borderRadius: 12,
+    alignSelf: 'flex-start',
   },
-  statusBadgeCompleted: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#d4edda',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusBadgePending: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f8d7da',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusDotInProgress: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#ffc107',
-    marginRight: 6,
-  },
-  statusDotCompleted: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#28a745',
-    marginRight: 6,
-  },
-  statusDotPending: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#dc3545',
-    marginRight: 6,
-  },
-  statusTextInProgress: {
+  statusText: {
     fontSize: 11,
-    color: '#856404',
-    fontWeight: '500',
-  },
-  statusTextCompleted: {
-    fontSize: 11,
-    color: '#155724',
-    fontWeight: '500',
-  },
-  statusTextPending: {
-    fontSize: 11,
-    color: '#721c24',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   // Modal Styles
   modalOverlay: {
@@ -920,14 +922,17 @@ const styles = StyleSheet.create({
   },
   startReadingDisplay: {
     backgroundColor: '#f5f5f5',
-    padding: 10,
+    padding: 12,
     borderRadius: 8,
     marginBottom: 15,
     borderWidth: 1,
     borderColor: '#ddd',
+  },
+  startReadingRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 6,
   },
   startReadingLabel: {
     fontSize: 14,
@@ -937,6 +942,42 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#0d6efd',
+  },
+  flowMeterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  flowMeterContainer: {
+    backgroundColor: '#f5f5f5',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  flowMeterText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 8,
+  },
+  flowMeterName: {
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#ced4da',
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    overflow: 'hidden',
+  },
+  picker: {
+    height: 50,
+    width: '100%',
+    color: '#333',
   },
   submitButton: {
     backgroundColor: '#28a745',
@@ -949,12 +990,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#ced4da',
-    borderRadius: 8,
-    backgroundColor: '#fff',
   },
   noRecords: {
     padding: 40,
