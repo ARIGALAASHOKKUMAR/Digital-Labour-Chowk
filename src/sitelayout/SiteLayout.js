@@ -408,30 +408,8 @@ const SiteLayout = ({
           </View>
 
           <View style={styles.headerRight}>
-            <SessionTime
-              remainingTime={remainingTime}
-              randomTrigger={randomTrigger}
-              navigation={navigation}
-            />
 
-            {activeUsersCount > 0 && (
-              <TouchableOpacity style={styles.userCountCard}>
-                <MaterialCommunityIcons
-                  name="account-group"
-                  size={18}
-                  color="#fff"
-                />
-                <Text style={styles.userCountText}>{activeUsersCount}</Text>
-              </TouchableOpacity>
-            )}
-
-            {showProfile && (
-              <TouchableOpacity
-                onPress={() => setProfileMenuVisible(!profileMenuVisible)}
-              >
-                <Image source={profileSource} style={styles.profileImage} />
-              </TouchableOpacity>
-            )}
+            <Text style={{color:"white",fontWeight:"bold"}}>{username}</Text>
           </View>
         </View>
 
@@ -679,9 +657,9 @@ const styles = StyleSheet.create({
   },
 
   headerRight: {
-    flexDirection: "row",
+    flexDirection: "column",
     alignItems: "center",
-    gap: 10,
+    gap: 1,
   },
 
   userCountCard: {
