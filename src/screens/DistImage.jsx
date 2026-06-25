@@ -753,7 +753,7 @@ export default GeoTagging;
 const styles = StyleSheet.create({
   tableHeader: {
     flexDirection: "row",
-    backgroundColor: "#007bff",
+    backgroundColor: "green",
     borderBottomWidth: 1,
     borderColor: "#ccc",
   },

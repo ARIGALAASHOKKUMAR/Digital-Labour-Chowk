@@ -283,7 +283,7 @@ const EditRequests = () => {
 
           {loading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#007bff" />
+              <ActivityIndicator size="large" color="green" />
               <Text style={styles.loadingText}>Loading...</Text>
             </View>
           ) : (
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   headerPanel: {
-    backgroundColor: '#007bff',
+    backgroundColor: 'green',
     padding: 10,
     borderRadius: 4,
     marginBottom: 10,
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardBadge: {
-    backgroundColor: '#007bff',
+    backgroundColor: 'green',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,

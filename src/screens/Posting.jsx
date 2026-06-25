@@ -247,7 +247,7 @@ const Posting = () => {
           <View style={styles.cardFilesContainer}>
             {/* GP Meter Image */}
             <View style={styles.cardFileItem}>
-              <Ionicons name="document-text-outline" size={20} color="#007bff" />
+              <Ionicons name="document-text-outline" size={20} color="green" />
               <Text style={styles.cardFileLabel}>GP Meter Image</Text>
               {gpMeterImage ? (
                 <View style={styles.fileActions}>
@@ -283,7 +283,7 @@ const Posting = () => {
 
             {/* Guard Pond Image */}
             <View style={styles.cardFileItem}>
-              <Ionicons name="image-outline" size={20} color="#007bff" />
+              <Ionicons name="image-outline" size={20} color="green" />
               <Text style={styles.cardFileLabel}>Guard Pond Image</Text>
               {guardPondImage ? (
                 <View style={styles.fileActions}>
@@ -893,7 +893,7 @@ const styles = StyleSheet.create({
   viewButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#007bff",
+    backgroundColor: "green",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
@@ -1076,7 +1076,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   fileNameText: {
-    color: "#007bff",
+    color: "green",
     fontSize: 12,
     textDecorationLine: "underline",
     marginTop: 10,

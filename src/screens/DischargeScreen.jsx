@@ -423,7 +423,7 @@ const DischargeSummary = () => {
 
           {loading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#007bff" />
+              <ActivityIndicator size="large" color="green" />
               <Text style={styles.loadingText}>Loading...</Text>
             </View>
           ) : (
@@ -500,8 +500,8 @@ const styles = StyleSheet.create({
     borderColor: '#dee2e6',
   },
   filterButtonActive: {
-    backgroundColor: '#007bff',
-    borderColor: '#007bff',
+    backgroundColor: 'green',
+    borderColor: 'green',
   },
   filterButtonText: {
     fontSize: 13,

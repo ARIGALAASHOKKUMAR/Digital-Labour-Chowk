@@ -87,7 +87,7 @@ function GenerateQrCode() {
         qrImagesHTML += `
           <div style="page-break-after: always; text-align: center; padding: 20px;">
             <h2 style="color: #1e3a5f; margin-bottom: 10px;">QR Code ${index + 1}</h2>
-            <img src="${qr.qrImageUrl}" style="width: 300px; height: 300px; border: 2px solid #007bff; border-radius: 10px;" />
+            <img src="${qr.qrImageUrl}" style="width: 300px; height: 300px; border: 2px solid green; border-radius: 10px;" />
             <p style="margin-top: 10px; font-size: 14px; color: #666;">
               <strong>ID:</strong> ${qr.id}
             </p>
@@ -119,7 +119,7 @@ function GenerateQrCode() {
               .header {
                 text-align: center;
                 padding: 20px;
-                background: #007bff;
+                background: green;
                 color: white;
                 border-radius: 10px;
                 margin-bottom: 30px;
@@ -150,7 +150,7 @@ function GenerateQrCode() {
                 width: 100%;
                 max-width: 200px;
                 height: auto;
-                border: 2px solid #007bff;
+                border: 2px solid green;
                 border-radius: 8px;
               }
               .qr-item h3 {
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   panelHeading: {
-    backgroundColor: '#007bff',
+    backgroundColor: 'green',
     padding: 12,
   },
   panelTitle: {
@@ -572,7 +572,7 @@ const styles = StyleSheet.create({
   generateButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#007bff',
+    backgroundColor: 'green',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 4,

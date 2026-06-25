@@ -586,7 +586,7 @@ const LabAnalysis = () => {
 
           {/* {loading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#007bff" />
+              <ActivityIndicator size="large" color="green" />
               <Text style={styles.loadingText}>Loading...</Text>
             </View>
           ) : (
@@ -639,7 +639,7 @@ const LabAnalysis = () => {
                             setShowModal(true);
                           }}
                         >
-                          <Icon name="create-outline" size={22} color="#007bff" />
+                          <Icon name="create-outline" size={22} color="green" />
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -688,7 +688,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   headerPanel: {
-    backgroundColor: '#007bff',
+    backgroundColor: 'green',
     padding: 10,
     borderRadius: 4,
     marginBottom: 10,
@@ -711,7 +711,7 @@ const styles = StyleSheet.create({
   scanButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#007bff',
+    backgroundColor: 'green',
     paddingHorizontal: 30,
     paddingVertical: 14,
     borderRadius: 12,
@@ -922,7 +922,7 @@ const styles = StyleSheet.create({
     width: 250,
     height: 250,
     borderWidth: 2,
-    borderColor: '#007bff',
+    borderColor: 'green',
     backgroundColor: 'transparent',
     borderRadius: 10,
   },
@@ -963,7 +963,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   permissionButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: 'green',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,

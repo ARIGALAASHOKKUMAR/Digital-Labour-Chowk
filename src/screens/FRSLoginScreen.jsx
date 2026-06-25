@@ -82,7 +82,7 @@ const FRSLogin = () => {
       <View style={styles.overlay}>
         {/* Avatar */}
         <View style={styles.avatarCircle}>
-          <Ionicons name="person" size={50} color="#007bff" />
+          <Ionicons name="person" size={50} color="green" />
         </View>
 
         <Text style={styles.title}>FRS Login</Text>
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     color: "#ddd",
   },
   loginBtn: {
-    backgroundColor: "#007bff",
+    backgroundColor: "green",
     padding: 14,
     borderRadius: 10,
     marginTop: 25,

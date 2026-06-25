@@ -920,7 +920,7 @@ const WorkerRegistration = ({ route, navigation }) => {
           <TouchableOpacity
             style={{
               marginLeft: 8,
-              backgroundColor: "#007BFF",
+              backgroundColor: "green",
               paddingHorizontal: 12,
               paddingVertical: 10,
               borderRadius: 6,
