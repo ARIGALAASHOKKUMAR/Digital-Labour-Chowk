@@ -49,6 +49,9 @@ const SampleCollectionRequests = () => {
   const [tempDate, setTempDate] = useState(new Date());
   const [tempUpdateDate, setTempUpdateDate] = useState(new Date());
 
+  console.log("renderCardrenderCard",data);
+  
+
   // Validation Schemas
   const validationSchema = Yup.object({
     assignedTeamLeaderId: Yup.string().required('required'),
@@ -182,6 +185,7 @@ const SampleCollectionRequests = () => {
       const res = await commonAPICall(MARINEDISCHARGEDETAILS, {}, 'get', dispatch);
       if (res.status === 200) {
         setData(res.data.MarineDischargePostingDetails);
+        
       } else {
         setData([]);
       }
@@ -685,11 +689,11 @@ const SampleCollectionRequests = () => {
               <Text style={styles.cardBadgeText}>#{index + 1}</Text>
             </View>
           </View>
-          <Text style={styles.cardPond}>{getGuardPondName(item?.guard_pond_id)}</Text>
+          <Text style={styles.cardPond}>{item?.guardpond_name}</Text>
         </View>
 
         <View style={styles.cardBodyItem}>
-          <View style={styles.cardRow}>
+          {/* <View style={styles.cardRow}>
             <View style={styles.cardLabelContainer}>
               <Text style={styles.cardLabel}>Sample ID</Text>
               <Text style={styles.cardValue}>{item?.posting_id || '-'}</Text>
@@ -708,11 +712,11 @@ const SampleCollectionRequests = () => {
                 </Text>
               </View>
             </View>
-          </View>
+          </View> */}
 
           <View style={styles.cardRow}>
             <View style={styles.cardLabelContainer}>
-              <Text style={styles.cardLabel}>Request Date</Text>
+              <Text style={styles.cardLabel}>Sample Request Date</Text>
               <Text style={styles.cardValue}>{item?.discharge_request_date || '-'}</Text>
             </View>
             {roleId === 9 && (
