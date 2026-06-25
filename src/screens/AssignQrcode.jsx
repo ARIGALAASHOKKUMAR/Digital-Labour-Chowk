@@ -689,7 +689,7 @@ const SampleCollectionRequests = () => {
               <Text style={styles.cardBadgeText}>#{index + 1}</Text>
             </View>
           </View>
-          <Text style={styles.cardPond}>{item?.guardpond_name}</Text>
+          <Text style={styles.cardPond}>{item?.guardpond_name}{item?.capacity}</Text>
         </View>
 
         <View style={styles.cardBodyItem}>
