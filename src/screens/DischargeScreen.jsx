@@ -256,7 +256,7 @@ const DischargeSummary = () => {
                 styles.statusText,
                 isAssigned ? styles.statusTextAssigned : styles.statusTextPending
               ]}>
-                {isAssigned ? '✓ Assigned' : '⏳ Pending'}
+                {isAssigned ? 'Completed' : '⏳ Pending'}
               </Text>
             </View>
           </View>
@@ -276,15 +276,7 @@ const DischargeSummary = () => {
             <View style={styles.cardLabelContainer}>
               <Text style={styles.cardLabel}>🏊 Guard Pond</Text>
               <Text style={styles.cardValue}>
-                {item?.guard_pond_id === 1 || item?.guard_pond_id === '1'
-                  ? 'Pond-1'
-                  : item?.guard_pond_id === 2 || item?.guard_pond_id === '2'
-                  ? 'Pond-2'
-                  : item?.guard_pond_id === 3 || item?.guard_pond_id === '3'
-                  ? 'Pond-3'
-                  : item?.guard_pond_id === 4 || item?.guard_pond_id === '4'
-                  ? 'Pond-4'
-                  : '-'}
+                {item?.guardpond_name}
               </Text>
             </View>
           </View>
@@ -401,7 +393,7 @@ const DischargeSummary = () => {
                 styles.filterButtonText,
                 activeFilter === 'assigned' && styles.filterButtonTextActive
               ]}>
-                ✅ Assigned ({getAssignedCount()})
+                Completed ({getAssignedCount()})
               </Text>
             </TouchableOpacity>
 
