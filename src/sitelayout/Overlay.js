@@ -68,7 +68,7 @@ function Overlay() {
           <ActivityIndicator size="large" color="#ffffff" />
           <Text style={styles.loadingText}>{userLoading}</Text>
 
-          {randomFact && (
+          {/* {randomFact && (
             <Text
               style={[
                 styles.factText,
@@ -77,7 +77,7 @@ function Overlay() {
             >
               {randomFact}
             </Text>
-          )}
+          )} */}
         </View>
       </View>
     </Modal>
