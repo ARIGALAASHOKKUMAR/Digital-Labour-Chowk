@@ -162,6 +162,9 @@ const Activities = () => {
     GetData();
   }, []);
 
+  console.log("| rowData?.start_reading_edit_request_flag",rowData?.start_reading_edit_request_flag);
+  
+
   // ================= RENDER START MODAL =================
   const renderStartModal = () => (
     <Modal
@@ -206,6 +209,7 @@ const Activities = () => {
                 value={String(startFormik.values.startReading) }
                 onChangeText={startFormik.handleChange('startReading')}
                 onBlur={startFormik.handleBlur('startReading')}
+                editable={rowData?.start_reading === null || rowData?.start_reading === "" || rowData?.start_reading_edit_request_flag === 2}
               />
               {startFormik.errors.startReading && startFormik.touched.startReading && (
                 <Text style={styles.errorText}>{startFormik.errors.startReading}</Text>
