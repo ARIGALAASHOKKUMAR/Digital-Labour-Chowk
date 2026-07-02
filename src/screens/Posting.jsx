@@ -396,11 +396,11 @@ const Posting = () => {
               keyboardShouldPersistTaps="handled"
             >
               {/* Guard Pond Picker */}
-              <View style={styles.formGroup}>
+              <View style={styles.inputBlock}>
                 <Text style={styles.label}>
                   Guard Pond <Text style={styles.star}>*</Text>
                 </Text>
-                <View sstyle={globalStyes.selectBox}>
+                <View style={globalStyes.selectBox}>
                   <Picker
                     selectedValue={formData.guardPondId}
                     onValueChange={(itemValue) => {
@@ -741,6 +741,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
     padding: 16,
   },
+  inputBlock: {
+    marginBottom: 16,
+  },
+   selectBox: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    overflow: "hidden",
+  },
   card: {
     backgroundColor: "#fff",
     borderRadius: 8,
@@ -1005,7 +1015,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#2196F3",
+    backgroundColor: "green",
     padding: 16,
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
