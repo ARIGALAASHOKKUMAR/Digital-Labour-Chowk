@@ -579,7 +579,7 @@ const Activities = () => {
                   }}
                   disabled={!isStarted}
                 >
-                  <Icon name="stop" size={18} color="#fff" />
+                  <Text style={styles.arrowButtonText}>→</Text>
                 </TouchableOpacity>
               )}
             </View>

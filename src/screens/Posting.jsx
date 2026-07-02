@@ -498,7 +498,7 @@ const Posting = () => {
                       path,
                       "gpLevelMeterImage",
                       20971520,
-                      "all",
+                      "camera",
                       dispatch,
                     );
                   }}
@@ -601,7 +601,7 @@ const Posting = () => {
                       path,
                       "guardPondImage",
                       20971520,
-                      "all",
+                      "camera",
                       dispatch,
                     );
                   }}

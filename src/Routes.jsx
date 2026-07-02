@@ -165,7 +165,7 @@ export default function Routes() {
                   <SessionChecking navigation={props.navigation}>
                     <SiteLayout
                       navigation={props.navigation}
-                      currentScreenName="SampleCollectionRequests"
+                      currentScreenName="DischargeSummary"
                       scrollEnabled={false}
                     >
                       <DischargeSummary {...props} />

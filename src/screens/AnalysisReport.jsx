@@ -391,6 +391,58 @@ const AnalysisReport = () => {
     };
   };
 
+  const showParameterInfo = (param) => {
+  const value = param.value || "-";
+
+  if (value === "-") {
+    Alert.alert(
+      param.key,
+      "No value available."
+    );
+    return;
+  }
+
+  if (param.isPH) {
+    const isValid =
+      parseFloat(value) >= param.limit.min &&
+      parseFloat(value) <= param.limit.max;
+
+    Alert.alert(
+      param.key,
+      isValid
+        ? `✅ Status: Normal
+
+Current Value: ${value}
+
+Allowed Range: ${param.limit.min} - ${param.limit.max}`
+        : `❌ Status: Out of Range
+
+Current Value: ${value}
+
+Allowed Range: ${param.limit.min} - ${param.limit.max}`
+    );
+  } else {
+    const isValid = parseFloat(value) <= param.limit;
+
+    Alert.alert(
+      param.key,
+      isValid
+        ? `✅ Status: Within Limit
+
+Current Value: ${value}
+
+Maximum Allowed: ${param.limit}`
+        : `❌ Status: Exceeded Limit
+
+Current Value: ${value}
+
+Maximum Allowed: ${param.limit}
+
+Exceeded By: ${(parseFloat(value) - param.limit).toFixed(2)}`
+    );
+  }
+};
+
   const userIndustryLimits = getIndustryLimitsByUsername();
 
   // Render Assign Duty Modal
@@ -711,7 +763,6 @@ const AnalysisReport = () => {
               <Text style={styles.cardBadgeText}>#{index + 1}</Text>
             </View>
           </View>
-          <Text style={styles.cardPond}>{getGuardPondName(item?.guard_pond_id)}</Text>
         </View>
 
         <View style={styles.cardBodyItem}>
@@ -754,7 +805,8 @@ const AnalysisReport = () => {
               const displayValue = param.value || '-';
               
               return (
-                <View key={idx} style={styles.parameterItem}>
+                <View key={idx} style={styles.parameterItem} >
+                  <TouchableOpacity onPress={() => showParameterInfo(param)}>
                   <View style={styles.parameterCircleContainer}>
                     <View style={[
                       styles.parameterCircle,
@@ -769,6 +821,7 @@ const AnalysisReport = () => {
                       <View style={styles.warningDot} />
                     )}
                   </View>
+                  </TouchableOpacity>
                 </View>
               );
             })}
