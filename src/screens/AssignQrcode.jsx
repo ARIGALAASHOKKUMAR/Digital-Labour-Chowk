@@ -12,6 +12,7 @@ import {
   Linking,
   FlatList,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useFormik } from 'formik';
@@ -317,7 +318,7 @@ const SampleCollectionRequests = () => {
                   mode="date"
                   display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                   onChange={onDateChange}
-                  maximumDate={new Date()}
+                  minimumDate={new Date()}
                 />
               )}
               
