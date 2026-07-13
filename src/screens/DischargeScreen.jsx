@@ -23,6 +23,7 @@ import {
   ASSIGNDISCHARGEDUTY,
   commonAPICall,
   CONTEXT_HEADING,
+  DISCHARGEFILTERFLAG,
   MARINEDISCHARGEDETAILS,
 } from '../utils/utils';
 
@@ -35,7 +36,7 @@ const DischargeSummary = () => {
   const [loading, setLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
-  const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'assigned', 'pending'
+  const [activeFilter, setActiveFilter] = useState(0); // 'all', 'assigned', 'pending'
 
   // Validation Schema
   const validationSchema = Yup.object({
@@ -78,29 +79,9 @@ const DischargeSummary = () => {
     }
   };
 
-  const GetData = async () => {
-    try {
-      setLoading(true);
-      const res = await commonAPICall(MARINEDISCHARGEDETAILS, {}, 'get', dispatch);
-      if (res.status === 200) {
-        setData(res.data.MarineDischargePostingDetails);
-        setFilteredData(res.data.MarineDischargePostingDetails);
-      } else {
-        setData([]);
-        setFilteredData([]);
-      }
-    } catch (error) {
-      setData([]);
-      setFilteredData([]);
-      Alert.alert('Error', 'Failed to fetch data');
-    } finally {
-      setLoading(false);
-    }
-  };
+  
 
-  useEffect(() => {
-    GetData();
-  }, []);
+  
 
   // Handle Date Change
   const onDateChange = (event, selectedDate) => {
@@ -113,18 +94,17 @@ const DischargeSummary = () => {
   };
 
   // Filter Data
-  const filterData = (filterType) => {
-    setActiveFilter(filterType);
-    if (filterType === 'all') {
-      setFilteredData(data);
-    } else if (filterType === 'assigned') {
-      const assigned = data.filter(item => item?.discharge_assigned_team_leader_id !== null);
-      setFilteredData(assigned);
-    } else if (filterType === 'pending') {
-      const pending = data.filter(item => item?.discharge_assigned_team_leader_id === null);
-      setFilteredData(pending);
+  const filterData = async(id) => {
+    const res = await commonAPICall(DISCHARGEFILTERFLAG+id,{},"get",dispatch)
+    if(res.status === 200){
+      setActiveFilter(id)
+      setData(res.data.MarineDischargeSummary)
     }
   };
+
+  useEffect(() => {
+    filterData(0);
+  }, []);
 
   // Get Assigned and Pending Counts
   const getAssignedCount = () => data.filter(item => item?.discharge_assigned_team_leader_id !== null).length;
@@ -243,6 +223,9 @@ const DischargeSummary = () => {
   const renderCard = ({ item, index }) => {
     const isAssigned = item?.discharge_assigned_team_leader_id !== null;
 
+    console.log("tem?.discharge_assigned_team_leader_id ",item?.discharge_assigned_team_leader_id );
+    
+
     return (
       <View style={styles.cardItem}>
         <View style={styles.cardHeaderItem}>
@@ -256,7 +239,7 @@ const DischargeSummary = () => {
                 styles.statusText,
                 isAssigned ? styles.statusTextAssigned : styles.statusTextPending
               ]}>
-                {isAssigned ? 'Completed' : '⏳ Pending'}
+                {item.current_status}
               </Text>
             </View>
           </View>
@@ -370,45 +353,59 @@ const DischargeSummary = () => {
             <TouchableOpacity
               style={[
                 styles.filterButton,
-                activeFilter === 'all' && styles.filterButtonActive
+                activeFilter === 0 && styles.filterButtonActive
               ]}
-              onPress={() => filterData('all')}
+              onPress={() => filterData(0)}
             >
               <Text style={[
                 styles.filterButtonText,
-                activeFilter === 'all' && styles.filterButtonTextActive
+                activeFilter === 0 && styles.filterButtonTextActive
               ]}>
-                All ({data.length})
+                All 
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[
                 styles.filterButton,
-                activeFilter === 'assigned' && styles.filterButtonActive
+                activeFilter === 3&& styles.filterButtonActive
               ]}
-              onPress={() => filterData('assigned')}
+              onPress={() => filterData(3)}
             >
               <Text style={[
                 styles.filterButtonText,
-                activeFilter === 'assigned' && styles.filterButtonTextActive
+                activeFilter === 3 && styles.filterButtonTextActive
               ]}>
-                Completed ({getAssignedCount()})
+                Completed 
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[
                 styles.filterButton,
-                activeFilter === 'pending' && styles.filterButtonActive
+                activeFilter === 1 && styles.filterButtonActive
               ]}
-              onPress={() => filterData('pending')}
+              onPress={() => filterData(1)}
             >
               <Text style={[
                 styles.filterButtonText,
-                activeFilter === 'pending' && styles.filterButtonTextActive
+                activeFilter === 1 && styles.filterButtonTextActive
               ]}>
-                ⏳ Pending ({getPendingCount()})
+                Pending 
+              </Text>
+            </TouchableOpacity>
+              <TouchableOpacity
+              style={[
+                styles.filterButton,
+                activeFilter === 2 && styles.filterButtonActive
+              ]}
+              onPress={() => filterData(2)}
+            >
+              <Text style={[
+                styles.filterButtonText,
+                activeFilter === 2 && styles.filterButtonTextActive
+              ]}>
+                Continue 
               </Text>
             </TouchableOpacity>
           </View>
@@ -420,7 +417,7 @@ const DischargeSummary = () => {
             </View>
           ) : (
             <FlatList
-              data={filteredData}
+              data={data}
               keyExtractor={(item, index) => index.toString()}
               renderItem={renderCard}
               contentContainerStyle={styles.listContainer}
