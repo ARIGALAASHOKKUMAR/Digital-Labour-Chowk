@@ -26,6 +26,7 @@ import {
   ASSIGNDISCHARGEDUTY,
   commonAPICall,
   CONTEXT_HEADING,
+  DISCHARGEFILTERFLAG,
   MARINEDISCHARGEDETAILS,
   UPLOADANALYSISREPORT,
 } from '../utils/utils';
@@ -44,6 +45,7 @@ const AnalysisReport = () => {
   const [permission, requestPermission] = useCameraPermissions();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
+  const [filterType, setFilterType] = useState(1); // 1 = Assigned, 0 = Unassigned
 
   // Validation schema for Assign Duty
   const validationSchema = Yup.object({
@@ -91,7 +93,7 @@ const AnalysisReport = () => {
       const res = await commonAPICall(ASSIGNDISCHARGEDUTY, payload, 'post', dispatch);
       if (res.status === 200) {
         formik.resetForm();
-        GetData();
+        GetData(filterType);
         setShowModal(false);
         Alert.alert('Success', 'Duty assigned successfully');
       }
@@ -129,12 +131,14 @@ const AnalysisReport = () => {
     }
   };
 
-  const GetData = async () => {
+  const GetData = async (flag) => {
     try {
       setLoading(true);
-      const res = await commonAPICall(MARINEDISCHARGEDETAILS, {}, 'get', dispatch);
+      const res = await commonAPICall(DISCHARGEFILTERFLAG + flag, {}, 'get', dispatch);
+      
       if (res.status === 200) {
-        setData(res.data.MarineDischargePostingDetails);
+        setData(res.data.MarineDischargeSummary || []);
+        
       } else {
         setData([]);
       }
@@ -145,6 +149,10 @@ const AnalysisReport = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    GetData(1); // Initially load Assigned (1)
+  }, []);
 
   // QR Code Scanning
   const handleBarCodeScanned = async ({ data: scannedData }) => {
@@ -199,9 +207,11 @@ const AnalysisReport = () => {
     formik.setFieldValue('dischargeAssignedDate', formattedDate);
   };
 
-  useEffect(() => {
-    GetData();
-  }, []);
+  // Handle Filter Change
+  const handleFilterChange = (flag) => {
+    setFilterType(flag);
+    GetData(flag);
+  };
 
   // Industry Limits
   const industryLimits = {
@@ -392,56 +402,38 @@ const AnalysisReport = () => {
   };
 
   const showParameterInfo = (param) => {
-  const value = param.value || "-";
+    const value = param.value || "-";
 
-  if (value === "-") {
-    Alert.alert(
-      param.key,
-      "No value available."
-    );
-    return;
-  }
+    if (value === "-") {
+      Alert.alert(
+        param.key,
+        "No value available."
+      );
+      return;
+    }
 
-  if (param.isPH) {
-    const isValid =
-      parseFloat(value) >= param.limit.min &&
-      parseFloat(value) <= param.limit.max;
+    if (param.isPH) {
+      const isValid =
+        parseFloat(value) >= param.limit.min &&
+        parseFloat(value) <= param.limit.max;
 
-    Alert.alert(
-      param.key,
-      isValid
-        ? `✅ Status: Normal
+      Alert.alert(
+        param.key,
+        isValid
+          ? `✅ Status: Normal\n\nCurrent Value: ${value}\n\nAllowed Range: ${param.limit.min} - ${param.limit.max}`
+          : `❌ Status: Out of Range\n\nCurrent Value: ${value}\n\nAllowed Range: ${param.limit.min} - ${param.limit.max}`
+      );
+    } else {
+      const isValid = parseFloat(value) <= param.limit;
 
-Current Value: ${value}
-
-Allowed Range: ${param.limit.min} - ${param.limit.max}`
-        : `❌ Status: Out of Range
-
-Current Value: ${value}
-
-Allowed Range: ${param.limit.min} - ${param.limit.max}`
-    );
-  } else {
-    const isValid = parseFloat(value) <= param.limit;
-
-    Alert.alert(
-      param.key,
-      isValid
-        ? `✅ Status: Within Limit
-
-Current Value: ${value}
-
-Maximum Allowed: ${param.limit}`
-        : `❌ Status: Exceeded Limit
-
-Current Value: ${value}
-
-Maximum Allowed: ${param.limit}
-
-Exceeded By: ${(parseFloat(value) - param.limit).toFixed(2)}`
-    );
-  }
-};
+      Alert.alert(
+        param.key,
+        isValid
+          ? `✅ Status: Within Limit\n\nCurrent Value: ${value}\n\nMaximum Allowed: ${param.limit}`
+          : `❌ Status: Exceeded Limit\n\nCurrent Value: ${value}\n\nMaximum Allowed: ${param.limit}\n\nExceeded By: ${(parseFloat(value) - param.limit).toFixed(2)}`
+      );
+    }
+  };
 
   const userIndustryLimits = getIndustryLimitsByUsername();
 
@@ -726,6 +718,51 @@ Exceeded By: ${(parseFloat(value) - param.limit).toFixed(2)}`
     );
   };
 
+  // Render Filter Buttons
+  const renderFilterButtons = () => (
+    <View style={styles.filterContainer}>
+      <TouchableOpacity
+        style={[
+          styles.filterButton,
+          filterType === 1 && styles.filterButtonActive,
+        ]}
+        onPress={() => handleFilterChange(1)}
+      >
+        <Icon 
+          name="checkmark-circle-outline" 
+          size={18} 
+          color={filterType === 1 ? '#fff' : '#2e7d32'} 
+        />
+        <Text style={[
+          styles.filterButtonText,
+          filterType === 1 && styles.filterButtonTextActive,
+        ]}>
+          Assigned
+        </Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity
+        style={[
+          styles.filterButton,
+          filterType === 0 && styles.filterButtonActive,
+        ]}
+        onPress={() => handleFilterChange(0)}
+      >
+        <Icon 
+          name="close-circle-outline" 
+          size={18} 
+          color={filterType === 0 ? '#fff' : '#d32f2f'} 
+        />
+        <Text style={[
+          styles.filterButtonText,
+          filterType === 0 && styles.filterButtonTextActive,
+        ]}>
+          Unassigned
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   // Render Card
   const renderCard = ({ item, index }) => {
     const limits = userIndustryLimits;
@@ -782,20 +819,7 @@ Exceeded By: ${(parseFloat(value) - param.limit).toFixed(2)}`
               <Text style={styles.cardLabel}>Guard Pond</Text>
               <Text style={styles.cardValue}>{item?.guardpond_name}</Text>
             </View>
-            <View style={styles.cardLabelContainer}>
-              <Text style={styles.cardLabel}>Status</Text>
-              <View style={[
-                styles.statusBadge,
-                isAssigned ? styles.statusAssigned : styles.statusPending
-              ]}>
-                <Text style={[
-                  styles.statusText,
-                  isAssigned ? styles.statusTextAssigned : styles.statusTextPending
-                ]}>
-                  {isAssigned ? 'Assigned' : 'Pending'}
-                </Text>
-              </View>
-            </View>
+           
           </View>
 
           {/* Parameter Grid - 5 items per row with circles */}
@@ -805,22 +829,22 @@ Exceeded By: ${(parseFloat(value) - param.limit).toFixed(2)}`
               const displayValue = param.value || '-';
               
               return (
-                <View key={idx} style={styles.parameterItem} >
+                <View key={idx} style={styles.parameterItem}>
                   <TouchableOpacity onPress={() => showParameterInfo(param)}>
-                  <View style={styles.parameterCircleContainer}>
-                    <View style={[
-                      styles.parameterCircle,
-                      { borderColor: color }
-                    ]}>
-                      <Text style={[styles.parameterValue, { color: color }]}>
-                        {displayValue}
-                      </Text>
+                    <View style={styles.parameterCircleContainer}>
+                      <View style={[
+                        styles.parameterCircle,
+                        { borderColor: color }
+                      ]}>
+                        <Text style={[styles.parameterValue, { color: color }]}>
+                          {displayValue}
+                        </Text>
+                      </View>
+                      <Text style={styles.parameterLabel}>{param.key}</Text>
+                      {!isValid && displayValue !== '-' && (
+                        <View style={styles.warningDot} />
+                      )}
                     </View>
-                    <Text style={styles.parameterLabel}>{param.key}</Text>
-                    {!isValid && displayValue !== '-' && (
-                      <View style={styles.warningDot} />
-                    )}
-                  </View>
                   </TouchableOpacity>
                 </View>
               );
@@ -868,7 +892,7 @@ Exceeded By: ${(parseFloat(value) - param.limit).toFixed(2)}`
       {renderNoticeModal()}
       {renderQRScannerModal()}
 
-      <View >
+      <View>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>
             <Icon name="list" size={20} color="#000" /> Analysis Report - {state?.username || 'Industry'}
@@ -876,6 +900,8 @@ Exceeded By: ${(parseFloat(value) - param.limit).toFixed(2)}`
         </View>
 
         <View style={styles.cardBody}>
+          {renderFilterButtons()}
+
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="green" />
@@ -932,6 +958,37 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
   },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    marginBottom: 12,
+    gap: 10,
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#2e7d32',
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+  },
+  filterButtonActive: {
+    backgroundColor: '#2e7d32',
+    borderColor: '#2e7d32',
+  },
+  filterButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#2e7d32',
+    marginLeft: 6,
+  },
+  filterButtonTextActive: {
+    color: '#fff',
+  },
   headerPanel: {
     backgroundColor: 'green',
     padding: 10,
@@ -951,36 +1008,6 @@ const styles = StyleSheet.create({
   },
   headerSubTextBold: {
     fontWeight: 'bold',
-  },
-  scanButtonContainer: {
-    alignItems: 'center',
-    marginBottom: 15,
-    padding: 15,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-    borderStyle: 'dashed',
-  },
-  scanButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'green',
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  scanButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 10,
-  },
-  scanHint: {
-    fontSize: 12,
-    color: '#6c757d',
-    textAlign: 'center',
   },
   loadingContainer: {
     padding: 40,
