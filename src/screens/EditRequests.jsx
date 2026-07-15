@@ -272,7 +272,7 @@ const EditRequests = () => {
       <View>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>
-            <Icon name="list" size={20} color="#000" /> Analysis Report
+            <Icon name="list" size={20} color="#000" /> Edit Request
           </Text>
         </View>
 
