@@ -225,5 +225,5 @@ export const GUARDPONDSGET="api/user/guard-pond-details"
 
 export const MARINEMAINDASHBOARD="api/user/marine-discharge-dashboard-counts"
 export const DISCHARGEFILTERFLAG="/api/user/marine-discharge-summary?summaryFlag="
-
+export const ANALYSISREPORTS = "api/user/marine-discharge-summary?assignmentFlag="
 

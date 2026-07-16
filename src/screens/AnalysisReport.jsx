@@ -23,6 +23,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {
+  ANALYSISREPORTS,
   ASSIGNDISCHARGEDUTY,
   commonAPICall,
   CONTEXT_HEADING,
@@ -134,7 +135,7 @@ const AnalysisReport = () => {
   const GetData = async (flag) => {
     try {
       setLoading(true);
-      const res = await commonAPICall(DISCHARGEFILTERFLAG + flag, {}, 'get', dispatch);
+      const res = await commonAPICall(ANALYSISREPORTS + flag, {}, 'get', dispatch);
       
       if (res.status === 200) {
         setData(res.data.MarineDischargeSummary || []);
